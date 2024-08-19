@@ -1,4 +1,6 @@
 import socket
+import json
+from global_consts import *
 
 class Client:
     def __init__(self, ip: str, port: int) -> None:
@@ -11,6 +13,7 @@ def start_client():
     client_socket.connect(server_address)
 
     try:
+        url = input("Enter url: ")
         nodes = input("Enter amount of nodes to open: ")
         path_nodes = input("Enter amount of nodes for the path of the message: ")
         
@@ -19,11 +22,17 @@ def start_client():
             client_socket.close()
             exit(1)
 
-        message = f'{nodes},{path_nodes}'
+        message = {
+            URL : url,
+            NODES : int(nodes),
+            PATH_NODES : int(path_nodes), 
+        }
+        
         print(f"Sending: {message}")
-        client_socket.sendall(message.encode())
+        serialized_message = json.dumps(message).encode()
+        client_socket.sendall(serialized_message)
 
-        data = client_socket.recv(1024)
+        data = client_socket.recv(AMOUNT_OF_BYTES)
         print(f"Received: {data.decode()}")
     finally:
         client_socket.close()
