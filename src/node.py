@@ -1,5 +1,7 @@
+import socket
+
 class Node:
-    def __init__(self) -> None:
+    def __init__(self, ip: str, port: int) -> None:
         pass
     
 

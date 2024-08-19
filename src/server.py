@@ -1,11 +1,32 @@
+import dpkt
+import socket
+
 class Server:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, ip: str, port: int) -> None:
+       self.__addr = (ip, port)
+    
+    
+    def run(self) -> None:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.socket:
+            self.socket.bind(self.__addr)
+            self.socket.listen()
+            
+            client_socket, client_addr = self.socket.accept()
+            
+            with client_socket:
+                print(f"Connected by {client_addr}")
+                while True:
+                    data = client_socket.recv(1024)
+                    if not data:
+                        break
+                    client_socket.sendall(data)
+                
     
 
 def main() -> None:
     print("Running server...")
-    server = Server()
+    server = Server('localhost', 8770)
+    server.run()
     
 
 if __name__ == "__main__":
