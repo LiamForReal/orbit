@@ -24,8 +24,8 @@ def start_client():
 
         message = {
             URL : url,
-            NODES : nodes,
-            PATH_NODES : path_nodes, 
+            NODES : int(nodes),
+            PATH_NODES : int(path_nodes), 
         }
         
         print(f"Sending: {message}")
