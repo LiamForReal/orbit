@@ -43,7 +43,7 @@ def start_client():
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
             print("Client opened new socket to talk with the node")
             client_to_first_node_socket.connect((node_data[NODE_IP], node_data[NODE_PORT]))
-            client_to_first_node_socket.sendall(b"localhost,8551")
+            client_to_first_node_socket.sendall(b"localhost,8551") # test
     except BaseException as be:
         print(be, "Client crash")
     
