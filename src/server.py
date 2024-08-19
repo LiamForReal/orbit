@@ -6,6 +6,7 @@ from global_consts import *
 from node import Node
 import subprocess
 import sys
+import random
 
 class Server:
     def __init__(self, ip: str, port: int) -> None:
@@ -33,17 +34,19 @@ class Server:
                                 
                         client_socket.sendall(f"Url: {data[URL]}, Opening {data[NODES]} nodes, selected path length: {data[PATH_NODES]}".encode())
                         
-                        node_data = {
-                            NODE_IP: 'localhost',
-                            NODE_PORT: 8550,
-                        }
+                        nodes_data = []
                                                 
                         for i in range(data[NODES]):
-                            subprocess.Popen(["python", "./node.py", str(node_data[NODE_IP]), str(node_data[NODE_PORT]+i)], shell = True)
+                            nodes_data.append(['localhost', FIRST_NODE_PORT+i])
+                            subprocess.Popen(["python", "./node.py", 'localhost', str(FIRST_NODE_PORT+i)], shell = True)
+                        
+                        random.shuffle(nodes_data)
+                        nodes_data = nodes_data[:data[PATH_NODES]]
+                        print(nodes_data)
                         
                         print("Node is running...")
                         
-                        serialized_node_data = json.dumps(node_data)
+                        serialized_node_data = json.dumps(nodes_data)
                         client_socket.sendall(serialized_node_data.encode())
                     
                         

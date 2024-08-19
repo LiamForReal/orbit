@@ -35,7 +35,8 @@ def start_client():
             data = client_socket.recv(AMOUNT_OF_BYTES)
             print(f"Received: {data.decode()}")
             
-            node_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
+            # currently first node data
+            node_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())[0]
             print(node_data)
                 
 
