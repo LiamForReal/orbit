@@ -19,7 +19,7 @@ class Server:
                 print(f"Connected by {client_addr}")
                 while True:
                     try:
-                        data = client_socket.recv(1024)
+                        data = client_socket.recv(AMOUNT_OF_BYTES)
                         
                         if not data:
                             break

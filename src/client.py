@@ -31,7 +31,7 @@ def start_client():
         print(f"Sending: {message}")
         client_socket.sendall(pickle.dumps(message))
 
-        data = client_socket.recv(1024)
+        data = client_socket.recv(AMOUNT_OF_BYTES)
         print(f"Received: {data.decode()}")
     finally:
         client_socket.close()
