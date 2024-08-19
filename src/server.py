@@ -1,7 +1,11 @@
+import os
 import dpkt
 import socket
 import json
 from global_consts import *
+from node import Node
+import subprocess
+import sys
 
 class Server:
     def __init__(self, ip: str, port: int) -> None:
@@ -28,6 +32,22 @@ class Server:
                         print(data)
                                 
                         client_socket.sendall(f"Url: {data[URL]}, Opening {data[NODES]} nodes, selected path length: {data[PATH_NODES]}".encode())
+                        
+                        node_data = {
+                            NODE_IP: 'localhost',
+                            NODE_PORT: 8550,
+                        }
+                        
+                        #os.system(f"python node.py {node_data[NODE_IP]} {node_data[NODE_PORT]}")
+                        
+                        subprocess.Popen(["python", "./node.py", str(node_data[NODE_IP]), str(node_data[NODE_PORT])], shell = True)
+                        
+                        print("Node is running...")
+                        
+                        serialized_node_data = json.dumps(node_data)
+                        client_socket.sendall(serialized_node_data.encode())
+                    
+                        
                     except BaseException as be:
                         print(be)
     
