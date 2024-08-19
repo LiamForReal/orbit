@@ -17,9 +17,10 @@ class Server:
                 print(f"Connected by {client_addr}")
                 while True:
                     data = client_socket.recv(1024)
+                    data = data.decode()
                     if not data:
                         break
-                    client_socket.sendall(data)
+                    client_socket.sendall(data.replace('!', '%').encode())
                 
     
 
