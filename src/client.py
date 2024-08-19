@@ -1,0 +1,37 @@
+import socket
+
+class Client:
+    def __init__(self, ip: str, port: int) -> None:
+        pass
+
+def start_client():
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    server_address = ('localhost', 8770)
+    client_socket.connect(server_address)
+
+    try:
+        nodes = input("Enter amount of nodes to open: ")
+        path_nodes = input("Enter amount of nodes for the path of the message: ")
+        
+        if not nodes.isnumeric() or not path_nodes.isnumeric():
+            print("Bad input")
+            client_socket.close()
+            exit(1)
+
+        message = f'{nodes},{path_nodes}'
+        print(f"Sending: {message}")
+        client_socket.sendall(message.encode())
+
+        data = client_socket.recv(1024)
+        print(f"Received: {data.decode()}")
+    finally:
+        client_socket.close()
+
+def main() -> None:
+    print("Running client...")
+    client = start_client()
+    
+
+if __name__ == "__main__":
+    main()
