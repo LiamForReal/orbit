@@ -1,6 +1,6 @@
 import dpkt
 import socket
-import pickle
+import json
 from global_consts import *
 
 class Server:
@@ -19,12 +19,12 @@ class Server:
                 print(f"Connected by {client_addr}")
                 while True:
                     try:
-                        data = client_socket.recv(AMOUNT_OF_BYTES)
+                        data = client_socket.recv(AMOUNT_OF_BYTES).decode()
                         
                         if not data:
                             break
                         
-                        data = pickle.loads(data)
+                        data = json.loads(data)
                         print(data)
                                 
                         client_socket.sendall(f"Url: {data[URL]}, Opening {data[NODES]} nodes, selected path length: {data[PATH_NODES]}".encode())

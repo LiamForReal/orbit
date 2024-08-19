@@ -1,5 +1,5 @@
 import socket
-import pickle
+import json
 from global_consts import *
 
 class Client:
@@ -29,7 +29,7 @@ def start_client():
         }
         
         print(f"Sending: {message}")
-        serialized_message = pickle.dumps(message)
+        serialized_message = json.dumps(message).encode()
         client_socket.sendall(serialized_message)
 
         data = client_socket.recv(AMOUNT_OF_BYTES)
