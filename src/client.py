@@ -5,11 +5,9 @@ class Client:
         pass
 
 def start_client():
-    # Create a TCP/IP socket
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    # Connect the socket to the server's address and port
-    server_address = ('localhost', 8770)  # Ensure this matches the server's address and port
+    server_address = ('localhost', 8770)
     client_socket.connect(server_address)
 
     try:
@@ -20,17 +18,14 @@ def start_client():
             print("Bad input")
             client_socket.close()
             exit(1)
-        
-        # Send data
+
         message = f'{nodes},{path_nodes}'
         print(f"Sending: {message}")
         client_socket.sendall(message.encode())
 
-        # Look for the response
-        data = client_socket.recv(1024)  # Receive 1024 bytes of data
+        data = client_socket.recv(1024)
         print(f"Received: {data.decode()}")
     finally:
-        # Close the socket
         client_socket.close()
 
 def main() -> None:
