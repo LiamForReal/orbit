@@ -37,10 +37,9 @@ class Server:
                             NODE_IP: 'localhost',
                             NODE_PORT: 8550,
                         }
-                        
-                        #os.system(f"python node.py {node_data[NODE_IP]} {node_data[NODE_PORT]}")
-                        
-                        subprocess.Popen(["python", "./node.py", str(node_data[NODE_IP]), str(node_data[NODE_PORT])], shell = True)
+                                                
+                        for i in range(data[NODES]):
+                            subprocess.Popen(["python", "./node.py", str(node_data[NODE_IP]), str(node_data[NODE_PORT]+i)], shell = True)
                         
                         print("Node is running...")
                         

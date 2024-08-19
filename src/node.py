@@ -10,13 +10,10 @@ class Node:
     def run(self) -> None:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.socket:
-                print(0.4)
                 self.socket.bind(self.__addr)
-                print(0.5)
                 self.socket.listen()
-                print(0.6)
                 client_socket, client_addr = self.socket.accept()
-                print(1)
+                print(self.__addr, "is running...")
 
                 with client_socket:
                     print(f"Connected by {client_addr}")
