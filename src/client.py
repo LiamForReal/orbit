@@ -13,8 +13,16 @@ def start_client():
     client_socket.connect(server_address)
 
     try:
+        nodes = input("Enter amount of nodes to open: ")
+        path_nodes = input("Enter amount of nodes for the path of the message: ")
+        
+        if not nodes.isnumeric() or not path_nodes.isnumeric():
+            print("Bad input")
+            client_socket.close()
+            exit(1)
+        
         # Send data
-        message = "Hello, Server!"
+        message = f'{nodes},{path_nodes}'
         print(f"Sending: {message}")
         client_socket.sendall(message.encode())
 

@@ -20,7 +20,12 @@ class Server:
                     data = data.decode()
                     if not data:
                         break
-                    client_socket.sendall(data.replace('!', '%').encode())
+                    else:
+                        nodes_data = data.split(',')
+                        nodes = int(nodes_data[0])
+                        path_nodes = int(nodes_data[1])
+                        
+                    client_socket.sendall(f"Opening {nodes} nodes, selected path length: {path_nodes}".encode())
                 
     
 
