@@ -26,16 +26,15 @@ class Node:
 
                         msg = f"ok next {self.next} updated"
                         prev_socket.sendall(msg.encode())
-                        
-                # TODO: back to listening
-                # while True:
-                #     data = prev_socket.recv(1024)
-                #     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
-                #         next_socket.connect(self.next)
-                #         next_socket.sendall(data)
-                #         data = next_socket.recv(1024)
-                #         prev_socket.sendall(data)
-                #         print("new sock")
+                else: # making 'proxy' between prev_socket and next_socket
+                    while True:
+                        data = prev_socket.recv(1024)
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
+                            next_socket.connect(self.next)
+                            next_socket.sendall(data)
+                            data = next_socket.recv(1024)
+                            prev_socket.sendall(data)
+                            print("new sock")
                     
         except BaseException as be:
             print(be)

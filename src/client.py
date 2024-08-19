@@ -46,7 +46,12 @@ def start_client():
             client_to_first_node_socket.sendall(b"localhost,8551")
     except BaseException as be:
         print(be, "Client crash")
-        
+    
+    # לולאה:
+    # לפי המסלול להעביר לכל נואוד בהתאמה את הנקסט שלו 
+    # כל נואוד שהעברנו אליו את הנקסט ישמור אותו וישלח הודעת קבלה שעל פיהם נוכל לדעת מתי הגענו לשרת ווב 
+    # סוף לולאה   
+    # כשהגענו לשרת ווב נשלח בקשה אליו
 
 def main() -> None:
     print("Running client...")
