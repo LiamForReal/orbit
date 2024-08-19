@@ -29,7 +29,8 @@ def start_client():
         }
         
         print(f"Sending: {message}")
-        client_socket.sendall(pickle.dumps(message))
+        serialized_message = pickle.dumps(message)
+        client_socket.sendall(serialized_message)
 
         data = client_socket.recv(AMOUNT_OF_BYTES)
         print(f"Received: {data.decode()}")
