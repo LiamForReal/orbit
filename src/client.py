@@ -10,6 +10,8 @@ class Client:
 
 def start_client():
     try:
+        path_nodes_aes_data = {}
+        
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_socket:
 
             server_address = ('localhost', 8770)
@@ -37,6 +39,20 @@ def start_client():
             print(f"Received: {data.decode()}")
             
             path_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
+            
+            for path_node_data in path_data:
+                node_port = path_node_data[1]
+                key = node_port.to_bytes(32, 'big')
+                init_vec = node_port.to_bytes(16, 'big')
+                cipher = Cipher(algorithms.AES(key), modes.GCM(init_vec))
+                path_nodes_aes_data[node_port] = {
+                    KEY : key,
+                    INIT_VEC : init_vec,
+                    CIPHER : cipher,
+                    ENCRYPTOR : cipher.encryptor(),
+                    DECRYPTOR : cipher.decryptor(), 
+                }
+            
             print(path_data)
             
             time.sleep(1)
