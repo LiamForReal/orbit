@@ -46,9 +46,9 @@ def start_client():
                 init_vec = node_port.to_bytes(16, 'big')
                 cipher = Cipher(algorithms.AES(key), modes.GCM(init_vec))
                 path_nodes_aes_data[node_port] = {
-                    KEY : key,
-                    INIT_VEC : init_vec,
-                    CIPHER : cipher,
+                    # KEY : key,
+                    # INIT_VEC : init_vec,
+                    # CIPHER : cipher,
                     ENCRYPTOR : cipher.encryptor(),
                     DECRYPTOR : cipher.decryptor(), 
                 }
