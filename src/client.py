@@ -36,7 +36,7 @@ def start_client():
             print(f"Received: {data.decode()}")
             
             path_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
-            print(path_data)
+            print(path_data) 
             
             time.sleep(1)
             
