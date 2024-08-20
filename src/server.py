@@ -38,7 +38,7 @@ class Server:
                                                 
                         for i in range(data[NODES]):
                             nodes_data.append(['localhost', FIRST_NODE_PORT+i])
-                            subprocess.Popen(["python", "./node.py", 'localhost', str(FIRST_NODE_PORT+i)], shell = True)
+                            subprocess.Popen(["python", "./node.py", 'localhost', str(FIRST_NODE_PORT+i)], shell=True)
                         
                         random.shuffle(nodes_data)
                         nodes_data = nodes_data[:data[PATH_NODES]]
