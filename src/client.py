@@ -38,7 +38,7 @@ def start_client():
             path_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
             print(path_data)
             
-            time.sleep(1)
+            time.sleep(3)
             
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
                 print("Client opened new socket to talk with the first node")
