@@ -1,0 +1,2 @@
+python node.py
+pause

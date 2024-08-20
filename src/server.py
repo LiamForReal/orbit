@@ -1,5 +1,12 @@
+import os
 import dpkt
 import socket
+import json
+from global_consts import *
+from node import Node
+import subprocess
+import sys
+import random
 
 class Server:
     def __init__(self, ip: str, port: int) -> None:
@@ -16,17 +23,33 @@ class Server:
             with client_socket:
                 print(f"Connected by {client_addr}")
                 while True:
-                    data = client_socket.recv(1024)
-                    data = data.decode()
-                    if not data:
-                        break
-                    else:
-                        nodes_data = data.split(',')
-                        nodes = int(nodes_data[0])
-                        path_nodes = int(nodes_data[1])
+                    try:
+                        data = client_socket.recv(AMOUNT_OF_BYTES).decode()
                         
-                    client_socket.sendall(f"Opening {nodes} nodes, selected path length: {path_nodes}".encode())
-                
+                        if not data:
+                            break
+                        
+                        data = json.loads(data)
+                        print(data)
+                                
+                        client_socket.sendall(f"Opening {data[NODES]} nodes, selected path length: {data[PATH_NODES]}".encode())
+                        
+                        nodes_data = []
+                                                
+                        for i in range(data[NODES]):
+                            nodes_data.append(['localhost', FIRST_NODE_PORT+i])
+                            subprocess.Popen(["python", "./node.py", 'localhost', str(FIRST_NODE_PORT+i)], shell=True)
+                        
+                        random.shuffle(nodes_data)
+                        nodes_data = nodes_data[:data[PATH_NODES]]
+                        print(nodes_data)
+                        
+                        serialized_node_data = json.dumps(nodes_data)
+                        client_socket.sendall(serialized_node_data.encode())
+                    
+                        
+                    except BaseException as be:
+                        print(be)
     
 
 def main() -> None:
