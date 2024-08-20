@@ -3,11 +3,17 @@ import json
 from global_consts import *
 import sys
 import requests
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class Node:
     def __init__(self, ip: str, port: int) -> None:
         self.next = ()
         self.__addr = (ip, port)
+        self.__key = port.to_bytes(32, 'big')
+        self.__init_vector = port.to_bytes(16, 'big')
+        self.__cipher = Cipher(algorithms.AES(self.__key), modes.GCM(self.__init_vector))
+        self.__encryptor = self.__cipher.encryptor()
+        self.__decryptor = self.__cipher.decryptor()
 
     def run(self) -> None:
         try:

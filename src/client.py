@@ -2,6 +2,7 @@ import socket
 import json
 from global_consts import *
 import time
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class Client:
     def __init__(self, ip: str, port: int) -> None:

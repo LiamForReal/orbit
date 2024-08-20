@@ -1,5 +1,6 @@
 import socket
 import json
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from global_consts import *
 import subprocess
 import random
