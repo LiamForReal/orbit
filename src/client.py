@@ -1,6 +1,7 @@
 import socket
 import json
 from global_consts import *
+import time
 
 class Client:
     def __init__(self, ip: str, port: int) -> None:
@@ -35,17 +36,26 @@ def start_client():
             print(f"Received: {data.decode()}")
             
             path_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
+            print(path_data)
+            
+            time.sleep(2)
             
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
                 print("Client opened new socket to talk with the first node")
+                print((path_data[0][0], path_data[0][1]))
                 client_to_first_node_socket.connect((path_data[0][0], path_data[0][1]))
+                print("CONNECTED TO FIRST NODE!")
             
                 for node_data in path_data[1:]:
+                    print("Client Before Sending Data")
                     client_to_first_node_socket.sendall(json.dumps(node_data).encode())
+                    time.sleep(1)
                     node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
+                    print(node_response)
                 
                 client_to_first_node_socket.sendall(url.encode())
                 html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
+                print(html_response)
 
                 
     except BaseException as be:
