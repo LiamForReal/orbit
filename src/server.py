@@ -44,8 +44,6 @@ class Server:
                         nodes_data = nodes_data[:data[PATH_NODES]]
                         print(nodes_data)
                         
-                        print("Node is running...")
-
                         serialized_node_data = json.dumps(nodes_data)
                         client_socket.sendall(serialized_node_data.encode())
                     

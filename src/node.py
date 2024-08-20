@@ -12,53 +12,55 @@ class Node:
     def run(self) -> None:
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as self.socket:
-                print(1)
                 print(self.__addr)
                 self.socket.bind(self.__addr)
                 self.socket.listen()
-                print(2)
                 prev_socket, prev_addr = self.socket.accept()
-                print(3)
-                print(self.__addr, "is running...")
-
-                if len(self.next) == 0:
-                    print("HERE")
-                    with prev_socket:
-                        print(f"Connected by {prev_addr}")
+                
+                with prev_socket:
+                    if len(self.next) == 0:
+                        print(f"Node {self.__addr} connected by {prev_addr}\n")
                         data = json.loads(prev_socket.recv(1024).decode())
-                        print("Received:", data)
-                        self.next = data
-
-                        msg = f"ok next updated"
+                        print(f"Node {self.__addr} Received:", data, "\n")
+                        
+                        msg = ""
+                        if len(data) == 2:
+                            self.next = (data[0], data[1])
+                            msg = "ok next updated"
+                        else:
+                            web_server_response = requests.get(data[0])
+                            msg = web_server_response.text
+                            
+                            print("Sends HTTPS request\n")
+                            
                         prev_socket.sendall(msg.encode())
-                    print("FINISHED HERE!")
-                else: # making 'proxy' between prev_socket and next_socket
-                    print("ELSE HERE")
-                    while True:
-                        data = prev_socket.recv(1024)
-                        print(data)
+                        
+                    # making 'proxy' between prev_socket and next_socket
+                    if len(data) == 2:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
                             next_socket.connect(self.next)
-                            next_socket.sendall(data)
-                            data = next_socket.recv(1024)
-                            print(data)
-                            prev_socket.sendall(data)
-                        print("FINISHED ELSE HERE!")
+                            while True:
+                                data = prev_socket.recv(1024)
+                                print(f"Node {self.__addr} Received:", data, "\n")
+                                next_socket.sendall(data)
+                                data = next_socket.recv(1024)
+                                print(f"Node {self.__addr} Sends:", data, "\n")
+                                prev_socket.sendall(data)                        
                     
         except BaseException as be:
             print(be)
             print("node crush!")
 
-def main() -> None:
-    print("Running node...")
-        
+def main() -> None:        
     if len(sys.argv) != 3:
         #print("DEFAULT")
         node = Node('localhost', 8550)
+        print("Node ('127.0.0.1', 8550) is running...")
     else:
         #print("Using ARGV")
         node = Node(sys.argv[1], int(sys.argv[2]))
-    
+        print(f"Node ({sys.argv[1]}, {sys.argv[2]}) is running...")
+
     
     node.run()
 

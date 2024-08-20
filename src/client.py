@@ -38,7 +38,7 @@ def start_client():
             path_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
             print(path_data)
             
-            time.sleep(2)
+            time.sleep(3)
             
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
                 print("Client opened new socket to talk with the first node")
@@ -47,25 +47,18 @@ def start_client():
                 print("CONNECTED TO FIRST NODE!")
             
                 for node_data in path_data[1:]:
-                    print("Client Before Sending Data")
                     client_to_first_node_socket.sendall(json.dumps(node_data).encode())
-                    time.sleep(1)
                     node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
                     print(node_response)
                 
-                client_to_first_node_socket.sendall(url.encode())
+                client_to_first_node_socket.sendall(json.dumps([url]).encode())
                 html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
                 print(html_response)
 
                 
     except BaseException as be:
         print(be, "Client crash")
-    
-    # לולאה:
-    # לפי המסלול להעביר לכל נואוד בהתאמה את הנקסט שלו 
-    # כל נואוד שהעברנו אליו את הנקסט ישמור אותו וישלח הודעת קבלה שעל פיהם נוכל לדעת מתי הגענו לשרת ווב 
-    # סוף לולאה   
-    # כשהגענו לשרת ווב נשלח בקשה אליו
+        
 
 def main() -> None:
     print("Running client...")
