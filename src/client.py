@@ -26,7 +26,7 @@ class Client:
                     
                 message = {
                     NODES : int(nodes),
-                    PATH_NODES : int(path_nodes), 
+                    PATH_NODES : int(path_nodes),
                 }
                 
                 print(f"Sending: {message}")
