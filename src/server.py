@@ -47,7 +47,7 @@ class Server:
                         
                     except BaseException as be:
                         print(be)
-    
+
 
 def main() -> None:
     print("Running server...")
