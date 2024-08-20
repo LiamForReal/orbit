@@ -1,6 +1,7 @@
 import socket
 from global_consts import *
 import sys
+import requests
 
 class Node:
     def __init__(self, ip: str, port: int) -> None:

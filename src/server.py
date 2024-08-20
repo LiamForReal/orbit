@@ -32,7 +32,7 @@ class Server:
                         data = json.loads(data)
                         print(data)
                                 
-                        client_socket.sendall(f"Url: {data[URL]}, Opening {data[NODES]} nodes, selected path length: {data[PATH_NODES]}".encode())
+                        client_socket.sendall(f"Opening {data[NODES]} nodes, selected path length: {data[PATH_NODES]}".encode())
                         
                         nodes_data = []
                                                 

@@ -23,7 +23,6 @@ def start_client():
                 exit(1)
                 
             message = {
-                URL : url,
                 NODES : int(nodes),
                 PATH_NODES : int(path_nodes), 
             }
@@ -35,15 +34,20 @@ def start_client():
             data = client_socket.recv(AMOUNT_OF_BYTES)
             print(f"Received: {data.decode()}")
             
-            # currently first node data
-            node_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())[0]
-            print(node_data)
+            path_data = json.loads(client_socket.recv(AMOUNT_OF_BYTES).decode())
+            
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
+                print("Client opened new socket to talk with the first node")
+                client_to_first_node_socket.connect((path_data[0][0], path_data[0][1]))
+            
+                for node_data in path_data[1:]:
+                    client_to_first_node_socket.sendall(json.dumps(node_data).encode())
+                    node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
                 
+                client_to_first_node_socket.sendall(url.encode())
+                html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
-            print("Client opened new socket to talk with the node")
-            client_to_first_node_socket.connect((node_data[NODE_IP], node_data[NODE_PORT]))
-            client_to_first_node_socket.sendall(b"localhost,8551") # test
+                
     except BaseException as be:
         print(be, "Client crash")
     
