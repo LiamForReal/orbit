@@ -15,5 +15,5 @@ decryptor = cipher.decryptor()
 # Encrypt and decrypt data
 chipertext = encryptor.update(b"a secret message") + encryptor.finalize()
 print(chipertext)
-plaintext = decryptor.update(chipertext) # + decryptor.finalize()
-print(plaintext) # 'a secret message
+plaintext = decryptor.update(chipertext)
+print(plaintext)
