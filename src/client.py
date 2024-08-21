@@ -44,9 +44,6 @@ class Client:
                     init_vec = node_port.to_bytes(16, 'big')
                     cipher = Cipher(algorithms.AES(key), modes.GCM(init_vec))
                     self.path_nodes_aes_data[node_port] = {
-                        # KEY : key,
-                        # INIT_VEC : init_vec,
-                        # CIPHER : cipher,
                         ENCRYPTOR : cipher.encryptor(),
                         DECRYPTOR : cipher.decryptor(), 
                     }
@@ -85,9 +82,6 @@ class Client:
                         print(node_response)
                         
                         loop_limit += 1
-
-                        #print("END")
-                        #exit(1)
                     
                     encrypted_url = json.dumps([url]).encode()
                     
