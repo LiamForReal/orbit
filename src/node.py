@@ -40,7 +40,7 @@ class Node:
                             
                             print("Sends HTTPS request\n")
                             
-                        prev_socket.sendall(msg.encode())
+                        prev_socket.sendall(self.__encryptor.update(msg.encode()))
                         
                     # making 'proxy' between prev_socket and next_socket
                     if len(data) == 2:

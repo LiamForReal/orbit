@@ -89,9 +89,22 @@ class Client:
                         #print("END")
                         #exit(1)
                     
-                    client_to_first_node_socket.sendall(json.dumps([url]).encode())
-                    html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
-                    print(html_response)
+                    encrypted_url = json.dumps([url]).encode()
+                    
+                    for _, node_port in path_data:
+                        node_encryptor = self.path_nodes_aes_data[node_port][ENCRYPTOR]
+                        encrypted_url = node_encryptor.update(encrypted_url)
+                    
+                    client_to_first_node_socket.sendall(encrypted_url)
+                    
+                    
+                    html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES)
+                    
+                    for _, node_port in path_data[::-1]:
+                        node_decryptor = self.path_nodes_aes_data[node_port][DECRYPTOR]
+                        html_response = node_decryptor.update(html_response)
+                    
+                    print(html_response.decode())
 
                     
         except BaseException as be:
