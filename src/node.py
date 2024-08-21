@@ -26,8 +26,9 @@ class Node:
                 with prev_socket:
                     if len(self.next) == 0:
                         print(f"Node {self.__addr} connected by {prev_addr}\n")
-                        data = json.loads(prev_socket.recv(1024).decode())
-                        print(f"Node {self.__addr} Received:", data, "\n")
+                        encrypted_data = prev_socket.recv(AMOUNT_OF_BYTES)
+                        data = json.loads(self.__decryptor.update(encrypted_data).decode())
+                        print(f"Node {self.__addr} Received [Decrypted]:", data, "\n")
                         
                         msg = ""
                         if len(data) == 2:
@@ -46,10 +47,10 @@ class Node:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
                             next_socket.connect(self.next)
                             while True:
-                                data = prev_socket.recv(1024)
+                                data = prev_socket.recv(AMOUNT_OF_BYTES)
                                 print(f"Node {self.__addr} Received:", data, "\n")
                                 next_socket.sendall(data)
-                                data = next_socket.recv(1024)
+                                data = next_socket.recv(AMOUNT_OF_BYTES)
                                 print(f"Node {self.__addr} Sends:", data, "\n")
                                 prev_socket.sendall(data)                        
                     

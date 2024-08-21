@@ -57,14 +57,20 @@ class Client:
                 
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
                     print("Client opened new socket to talk with the first node")
+                    # path_data[0] is the [ip, port] list of the first node in the path
                     print((path_data[0][0], path_data[0][1]))
                     client_to_first_node_socket.connect((path_data[0][0], path_data[0][1]))
                     print("CONNECTED TO FIRST NODE!")
                 
                     for node_data in path_data[1:]:
-                        client_to_first_node_socket.sendall(json.dumps(node_data).encode())
+                        first_node_encryptor = self.path_nodes_aes_data[path_data[0][1]][ENCRYPTOR]
+                        encrypted_data = first_node_encryptor.update(json.dumps(node_data).encode()) + first_node_encryptor.finalize()
+                        client_to_first_node_socket.sendall(encrypted_data)
                         node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
                         print(node_response)
+                        
+                        print("END")
+                        exit(1)
                     
                     client_to_first_node_socket.sendall(json.dumps([url]).encode())
                     html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
