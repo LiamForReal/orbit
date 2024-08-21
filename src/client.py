@@ -78,7 +78,7 @@ class Client:
                         #* decrypt node response in onion style
                         
                         node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES) #.decode()
-                        for _, node_port in path_data[::-1][:loop_limit]:
+                        for _, node_port in path_data[:loop_limit][::-1]:
                             node_decryptor = self.path_nodes_aes_data[node_port][DECRYPTOR]
                             node_response = node_decryptor.update(node_response)
                         
