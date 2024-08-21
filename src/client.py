@@ -61,16 +61,33 @@ class Client:
                     print((path_data[0][0], path_data[0][1]))
                     client_to_first_node_socket.connect((path_data[0][0], path_data[0][1]))
                     print("CONNECTED TO FIRST NODE!")
+                    
+                    loop_limit = 1
                 
                     for node_data in path_data[1:]:
-                        first_node_encryptor = self.path_nodes_aes_data[path_data[0][1]][ENCRYPTOR]
-                        encrypted_data = first_node_encryptor.update(json.dumps(node_data).encode()) + first_node_encryptor.finalize()
+                        #* encryption loop in onion style
+
+                        encrypted_data = json.dumps(node_data).encode()
+
+                        for _, node_port in path_data[:loop_limit]:
+                            node_encryptor = self.path_nodes_aes_data[node_port][ENCRYPTOR]
+                            encrypted_data = node_encryptor.update(encrypted_data)
+                                                
                         client_to_first_node_socket.sendall(encrypted_data)
-                        node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()
+                        
+                        #* decrypt node response in onion style
+                        
+                        node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES) #.decode()
+                        for _, node_port in path_data[::-1][:loop_limit]:
+                            node_decryptor = self.path_nodes_aes_data[node_port][DECRYPTOR]
+                            node_response = node_decryptor.update(node_response)
+                        
                         print(node_response)
                         
-                        print("END")
-                        exit(1)
+                        loop_limit += 1
+
+                        #print("END")
+                        #exit(1)
                     
                     client_to_first_node_socket.sendall(json.dumps([url]).encode())
                     html_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES).decode()

@@ -34,8 +34,8 @@ decryptor = cipher.decryptor()
 encryptor2 = cipher2.encryptor()
 decryptor2 = cipher2.decryptor()
 
-chipertext = encryptor.update(b"a secret message") + encryptor.finalize()
-chipertext2 = encryptor2.update(b"a secret message") + encryptor2.finalize()
+chipertext = encryptor.update(b"a secret message") #+ encryptor.finalize()
+chipertext2 = encryptor2.update(b"a secret message") #+ encryptor2.finalize()
 
 print(chipertext == chipertext2)
 plaintext = decryptor.update(chipertext)

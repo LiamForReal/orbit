@@ -47,11 +47,11 @@ class Node:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
                             next_socket.connect(self.next)
                             while True:
-                                data = prev_socket.recv(AMOUNT_OF_BYTES)
-                                print(f"Node {self.__addr} Received:", data, "\n")
+                                data = self.__decryptor.update(prev_socket.recv(AMOUNT_OF_BYTES))
+                                print(f"Node {self.__addr} Received [Decrypted One Layer]:", data, "\n")
                                 next_socket.sendall(data)
-                                data = next_socket.recv(AMOUNT_OF_BYTES)
-                                print(f"Node {self.__addr} Sends:", data, "\n")
+                                data = self.__encryptor.update(next_socket.recv(AMOUNT_OF_BYTES))
+                                print(f"Node {self.__addr} Sends [Encrypted One Layer]:", data, "\n")
                                 prev_socket.sendall(data)                        
                     
         except BaseException as be:
