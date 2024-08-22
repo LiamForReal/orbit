@@ -3,11 +3,17 @@ import json
 from global_consts import *
 import sys
 import requests
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 class Node:
     def __init__(self, ip: str, port: int) -> None:
         self.next = ()
         self.__addr = (ip, port)
+        key = port.to_bytes(32, 'big')
+        init_vector = port.to_bytes(16, 'big')
+        cipher = Cipher(algorithms.AES(key), modes.GCM(init_vector))
+        self.__encryptor = cipher.encryptor()
+        self.__decryptor = cipher.decryptor()
 
     def run(self) -> None:
         try:
@@ -20,8 +26,9 @@ class Node:
                 with prev_socket:
                     if len(self.next) == 0:
                         print(f"Node {self.__addr} connected by {prev_addr}\n")
-                        data = json.loads(prev_socket.recv(1024).decode())
-                        print(f"Node {self.__addr} Received:", data, "\n")
+                        encrypted_data = prev_socket.recv(AMOUNT_OF_BYTES)
+                        data = json.loads(self.__decryptor.update(encrypted_data).decode())
+                        print(f"Node {self.__addr} Received [Decrypted]:", data, "\n")
                         
                         msg = ""
                         if len(data) == 2:
@@ -33,18 +40,18 @@ class Node:
                             
                             print("Sends HTTPS request\n")
                             
-                        prev_socket.sendall(msg.encode())
+                        prev_socket.sendall(self.__encryptor.update(msg.encode()))
                         
                     # making 'proxy' between prev_socket and next_socket
                     if len(data) == 2:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as next_socket:
                             next_socket.connect(self.next)
                             while True:
-                                data = prev_socket.recv(1024)
-                                print(f"Node {self.__addr} Received:", data, "\n")
+                                data = self.__decryptor.update(prev_socket.recv(AMOUNT_OF_BYTES))
+                                print(f"Node {self.__addr} Received [Decrypted One Layer]:", data, "\n")
                                 next_socket.sendall(data)
-                                data = next_socket.recv(1024)
-                                print(f"Node {self.__addr} Sends:", data, "\n")
+                                data = self.__encryptor.update(next_socket.recv(AMOUNT_OF_BYTES))
+                                print(f"Node {self.__addr} Sends [Encrypted One Layer]:", data, "\n")
                                 prev_socket.sendall(data)                        
                     
         except BaseException as be:
