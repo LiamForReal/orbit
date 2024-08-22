@@ -23,6 +23,16 @@ class Client:
                     print("Bad input")
                     client_socket.close()
                     exit(1)
+                
+                if int(nodes) > 20 or int(path_nodes) > 20:
+                    print("Input exceeds limit of nodes")
+                    client_socket.close()
+                    exit(1)                    
+                
+                if int(nodes) < int(path_nodes):
+                    print("Path cannot be greater than total amount of nodes!")
+                    client_socket.close()
+                    exit(1)
                     
                 message = {
                     NODES : int(nodes),
@@ -50,7 +60,7 @@ class Client:
                 
                 print(path_data)
                 
-                time.sleep(1)
+                time.sleep(int(path_nodes) / 3)
                 
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client_to_first_node_socket:
                     print("Client opened new socket to talk with the first node")
@@ -74,12 +84,12 @@ class Client:
                         
                         #* decrypt node response in onion style
                         
-                        node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES) #.decode()
+                        node_response = client_to_first_node_socket.recv(AMOUNT_OF_BYTES)
                         for _, node_port in path_data[:loop_limit][::-1]:
                             node_decryptor = self.path_nodes_aes_data[node_port][DECRYPTOR]
                             node_response = node_decryptor.update(node_response)
                         
-                        print(node_response)
+                        print(node_response.decode())
                         
                         loop_limit += 1
                     
