@@ -1,0 +1,118 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0" version="24.7.7">
+  <diagram name="Page-1" id="RCV1wqwRzOv9mQUZXe0J">
+    <mxGraphModel dx="2049" dy="956" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-1" value="Web Server" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="610" y="190" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-2" value="Directory Server" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="40" y="150" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-12" value="Open 5 nodes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-3" target="_F7x2HmqeKyNNGQgZelu-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-3" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="65" y="340" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-6" value="Node 1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="305" y="180" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-7" value="Node 2" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="420" y="140" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-8" value="Node 3" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="385" y="290" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-9" value="Node 4" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="260" y="350" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-10" value="Node 5" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="350" y="30" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-13" value="runs node in process" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.375;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-2" target="_F7x2HmqeKyNNGQgZelu-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="160" y="210" as="sourcePoint" />
+            <mxPoint x="210" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-14" value="runs node in process" style="endArrow=classic;html=1;rounded=0;entryX=0.405;entryY=-0.004;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.987;exitY=0.66;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-2" target="_F7x2HmqeKyNNGQgZelu-9">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="130" y="180" as="sourcePoint" />
+            <mxPoint x="450" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-17" value="runs node in process" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.375;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-2" target="_F7x2HmqeKyNNGQgZelu-7">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="370" as="sourcePoint" />
+            <mxPoint x="450" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-18" value="runs node in process" style="endArrow=classic;html=1;rounded=0;exitX=1.004;exitY=0.634;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-2" target="_F7x2HmqeKyNNGQgZelu-8">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="370" as="sourcePoint" />
+            <mxPoint x="450" y="320" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-19" value="runs node in process" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.25;exitDx=0;exitDy=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-2" target="_F7x2HmqeKyNNGQgZelu-10">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="310" as="sourcePoint" />
+            <mxPoint x="450" y="260" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-20" value="" style="endArrow=none;dashed=1;html=1;rounded=0;strokeWidth=2;endSize=6;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="4" y="471" as="sourcePoint" />
+            <mxPoint x="844" y="471" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-21" value="Web Server" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="620" y="660" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-22" value="Directory Server" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="50" y="620" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-24" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+          <mxGeometry x="75" y="810" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-25" value="&lt;div&gt;Node 1&lt;/div&gt;*Calculates its AES key after creation*" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="315" y="650" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-26" value="&lt;div&gt;Node 2 *Calculates its AES key after creation*&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="430" y="610" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-27" value="&lt;div&gt;Node 3&lt;/div&gt;*Calculates its AES key after creation*" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="395" y="760" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-28" value="&lt;div&gt;Node 4&lt;/div&gt;*Calculates its AES key after creation*" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="270" y="820" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-29" value="&lt;div&gt;Node 5&lt;/div&gt;*Calculates its AES key after creation*" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+          <mxGeometry x="360" y="500" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-35" value="your path is node4, node1, node3" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-22" target="_F7x2HmqeKyNNGQgZelu-24">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="400" y="740" as="sourcePoint" />
+            <mxPoint x="450" y="690" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-39" value="Calculates the AES keys of nodes 4, 1 and 3 according to their ports" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="90" y="920" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-41" value="" style="endArrow=classic;html=1;rounded=0;exitX=1;exitY=0.3333333333333333;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="_F7x2HmqeKyNNGQgZelu-24" target="_F7x2HmqeKyNNGQgZelu-39">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="250" y="910" as="sourcePoint" />
+            <mxPoint x="300" y="860" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="_F7x2HmqeKyNNGQgZelu-42" value="" style="endArrow=none;dashed=1;html=1;rounded=0;strokeWidth=2;endSize=6;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="6" y="1011" as="sourcePoint" />
+            <mxPoint x="846" y="1011" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
