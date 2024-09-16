@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0" version="24.7.13">
   <diagram name="Page-1" id="vETeGXP-aBrHGzmp88HL">
-    <mxGraphModel dx="1606" dy="402" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="2173" dy="703" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -122,6 +122,74 @@
         </mxCell>
         <mxCell id="839j30qjqIvmwMfTqIHc-7" value="&lt;b style=&quot;font-size: 14px;&quot;&gt;ORBit Directory Server Flowchart&lt;br&gt;&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
           <mxGeometry x="-195" y="360" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-8" target="839j30qjqIvmwMfTqIHc-10">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-10" y="450.3809523809523" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-8" value="listen to clients (socket connections)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-190" y="420" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-10" target="839j30qjqIvmwMfTqIHc-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-10" target="839j30qjqIvmwMfTqIHc-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-10" target="839j30qjqIvmwMfTqIHc-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-10" value="open thread for each new client and handle the client there" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-10" y="420" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-12" value="thread 1" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-195" y="540" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-13" value="thread 2" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-50" y="540" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-14" target="839j30qjqIvmwMfTqIHc-19">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="190" y="660" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-14" value="thread n" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="90" y="540" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-19" target="839j30qjqIvmwMfTqIHc-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-19" value="Key Exchange with the client" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="669" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-21" target="839j30qjqIvmwMfTqIHc-25">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-21" value="Receive amount of nodes to open,and circuit length" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="669" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-27" value="False" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-25" target="839j30qjqIvmwMfTqIHc-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-28" value="True" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-25">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="680" y="699" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-25" value="check if it is able to open such circuit" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="649" width="160" height="101" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="839j30qjqIvmwMfTqIHc-29" target="839j30qjqIvmwMfTqIHc-33">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="830" y="699" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-29" value="opens relays and according to bandwidth create a circuit with a CircID" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="669.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="839j30qjqIvmwMfTqIHc-33" value="Send the circuit to the client" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="830" y="669" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
