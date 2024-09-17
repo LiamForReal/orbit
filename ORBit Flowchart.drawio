@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.0" version="24.7.14">
   <diagram name="Page-1" id="vETeGXP-aBrHGzmp88HL">
-    <mxGraphModel dx="1485" dy="338" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1512" dy="352" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -193,6 +193,75 @@
         </mxCell>
         <mxCell id="jY4I4no07hSwZHqBocRI-1" value="&lt;font size=&quot;1&quot;&gt;&lt;b style=&quot;font-size: 14px;&quot;&gt;Node Flowchart&lt;/b&gt;&lt;/font&gt;" style="text;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="-185" y="810" width="110" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-2" target="jY4I4no07hSwZHqBocRI-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-2" target="jY4I4no07hSwZHqBocRI-13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-2" value="After created be connected with socket to the server" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-185" y="860" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-3" target="jY4I4no07hSwZHqBocRI-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-3" value="Wait to a connection from a client using socket" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-30" y="860" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-4" value="Starts a thread that notifies the server the node is running (sends cells)" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-185" y="1020" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-9" value="False" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-7" target="jY4I4no07hSwZHqBocRI-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-10" value="True" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-7" target="jY4I4no07hSwZHqBocRI-16">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="330" y="890" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-7" value="Connected with socket to a client " style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="850" width="140" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-11" value="Key Exchange with the connected client" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="490" y="860" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-13" target="jY4I4no07hSwZHqBocRI-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-13" target="jY4I4no07hSwZHqBocRI-20">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-30.000000000000227" y="1030" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-13" value="Key Exchange with the server" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-185" y="940" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-16" target="jY4I4no07hSwZHqBocRI-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-16" value="Opens a thread to handle the client connection" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="860" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-20" target="jY4I4no07hSwZHqBocRI-21">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-20" value="Listen to bandwidth request from the server" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-40.00000000000023" y="1020" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-23" value="False" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-21" target="jY4I4no07hSwZHqBocRI-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-24" value="True" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="jY4I4no07hSwZHqBocRI-21" target="jY4I4no07hSwZHqBocRI-25">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="290" y="1050.1052631578948" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-21" value="Received bandwidth request" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="1010" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="jY4I4no07hSwZHqBocRI-25" value="Check bandwidth and send results to the server" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="305" y="1020" width="120" height="60" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
