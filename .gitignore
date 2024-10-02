@@ -620,3 +620,10 @@ FodyWeavers.xsd
 .vscode
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudio,visualstudiocode,c++,python
+
+# Start of ORBit dependencies ignore
+boost/
+boost_1_86_0/
+build/
+b2-5.2.1/
+# End of ORBit dependencies ignore
