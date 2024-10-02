@@ -12,7 +12,15 @@ endif()
 
 find_package(Boost 1.70 REQUIRED COMPONENTS system filesystem)
 
-add_executable(${PROJECT_NAME} main.cpp)
+set(SOURCE_FILES
+    main.cpp
+)
+
+set(HEADER_FILES
+
+)
+
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
 
 if(Boost_FOUND)
     target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIR})
