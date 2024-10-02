@@ -1,8 +1,18 @@
 #include <iostream>
-//#include <boost/asio.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
+
+using uint4096_t = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<4096, 4096, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>, boost::multiprecision::et_off>;
 
 int main()
 {
-    std::cout << "Hello world!" << std::endl;
+    uint4096_t n = 0xFFFFFFFFFFFFFFF;
+    for (int i = 0; i < 400; i++)
+    {
+        n *= 0xFFFFFFFFFFFFFFF;
+    }
+
+    std::cout << n << std::endl;
+
+    getchar();
     return 0;
 }
