@@ -36,11 +36,22 @@ set(NODE_HEADER_FILES
 	./networking/node.h
 )
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${HEADER_FILES})
+add_executable(client.exe ${CLIENT_SOURCE_FILES} ${CLIENT_HEADER_FILES})
+
+add_executable(server.exe ${SERVER_SOURCE_FILES} ${SERVER_HEADER_FILES})
+
+add_executable(node.exe ${NODE_SOURCE_FILES} ${NODE_HEADER_FILES})
 
 if(Boost_FOUND)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIR})
-    target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+    target_include_directories(client.exe PUBLIC ${Boost_INCLUDE_DIR})
+    target_link_libraries(client.exe ${Boost_LIBRARIES})
+	
+	target_include_directories(server.exe PUBLIC ${Boost_INCLUDE_DIR})
+    target_link_libraries(server.exe ${Boost_LIBRARIES})
+	
+	target_include_directories(node.exe PUBLIC ${Boost_INCLUDE_DIR})
+    target_link_libraries(node.exe ${Boost_LIBRARIES})
+
     message(STATUS "Found BOOST ${Boost_VERSION_STRING}")
 else()
     message(STATUS "Could not find BOOST")
