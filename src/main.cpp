@@ -10,9 +10,9 @@ int main()
     {
         n *= 0xFFFFFFFFFFFFFFF;
     }
-
+	
     std::cout << n << std::endl;
-
-    getchar();
+	
+	system("pause");
     return 0;
 }
