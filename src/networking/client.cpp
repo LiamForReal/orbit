@@ -1,39 +1,47 @@
 #include "client.h"
 #include <iostream>
+#include <array>
 #include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
 
-int main() {
-    try {
+int main(int argc, char* argv[])
+{
+    try
+    {
+        if (argc != 2)
+        {
+        std::cerr << "Usage: client <host>" << std::endl;
+        return 1;
+        }
+
         boost::asio::io_context io_context;
 
-        // Creating a TCP socket and resolving the server's address
         tcp::resolver resolver(io_context);
-        tcp::resolver::results_type endpoints = resolver.resolve("127.0.0.1", "12345");
+        tcp::resolver::results_type endpoints =
+        resolver.resolve(argv[1], "daytime");
 
         tcp::socket socket(io_context);
         boost::asio::connect(socket, endpoints);
 
-        // Sending data to the server
-        std::string request = "Hello from Client!";
-        boost::asio::write(socket, boost::asio::buffer(request));
+        for (;;)
+        {
+        std::array<char, 128> buf;
+        boost::system::error_code error;
 
-        std::cout << "Sent to server: " << request << std::endl;
+        size_t len = socket.read_some(boost::asio::buffer(buf), error);
 
-        // Buffer to hold the server's response
-        std::string buffer;
-        std::error_code error;
+        if (error == boost::asio::error::eof)
+            break; // Connection closed cleanly by peer.
+        else if (error)
+            throw boost::system::system_error(error); // Some other error.
 
-        // Receiving the server's response
-        size_t len = socket.read_some(boost::asio::buffer(buffer), error);
-
-        if (!error) {
-            std::cout << "Received from server: " << std::string(buffer.data(), len) << std::endl;
+        std::cout.write(buf.data(), len);
         }
-
-    } catch (std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    catch (std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
     }
 
     return 0;
