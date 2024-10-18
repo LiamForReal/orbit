@@ -25,7 +25,9 @@ set(SERVER_SOURCE_FILES
 )
 
 set(SERVER_HEADER_FILES
-	./networking/server.h
+	./networking/tcpConnection.hpp
+	./networking/tcpServer.h
+	
 )
 
 set(NODE_SOURCE_FILES
