@@ -1,4 +1,3 @@
-#include "client.h"
 #include <iostream>
 #include <array>
 #include <boost/asio.hpp>
@@ -21,36 +20,41 @@ int main(int argc, char* argv[])
         boost::system::error_code error;
 
         int amountOfNodes = 0, pathLength = 0; 
-        do{
+        do {
             std::cout << "Enter amount of nodes you want to use: ";
             std::cin >> amountOfNodes;
             std::cout << "Enter path length nodes you want to use: ";
             std::cin >> pathLength;
-        }while(amountOfNodes >= 4 || amountOfNodes <= 0);
+        } while (amountOfNodes >= 4 || amountOfNodes <= 0);
 
-        std::string message = std::to_string(amountOfNodes) + " " +  std::to_string(pathLength); //msg
+        std::string message = std::to_string(amountOfNodes) + " " +  std::to_string(pathLength) + "\n"; //msg
 
-        boost::system::error_code ignored_error;
-        boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
+        boost::asio::write(socket, boost::asio::buffer(message), error);
+        if (error)
+        {
+            std::cerr << "Error writing to server: " << error.message() << std::endl;
+            return 1;
+        }
 
         size_t len = socket.read_some(boost::asio::buffer(buf), error);
-
         if (error == boost::asio::error::eof)
         {
-            throw boost::system::system_error(error); // Some other error.
+            std::cout << "Connection closed by server.\n";
         }
         else if (error)
         {
-            throw boost::system::system_error(error); // Some other error.
+            std::cerr << "Error reading from server: " << error.message() << std::endl;
+            return 1;
         }
 
+        std::cout << "Response from server: ";
         std::cout.write(buf.data(), len);
+        std::cout << std::endl;
     }
     catch (std::exception& e)
     {
         std::cerr << e.what() << std::endl;
     }
 
-    getchar();
     return 0;
 }
