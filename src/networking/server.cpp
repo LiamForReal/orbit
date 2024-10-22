@@ -1,59 +1,115 @@
 #include "server.h"
-#include <functional>
-#include <iostream>
-#include <ctime>
-#include <string>
-#include <boost/asio.hpp>
 
-using boost::asio::ip::tcp;
+#define AMOUNT_OF_BYTES 1250
+// using static const instead of macros 
+static const unsigned short PORT = 9787;
+static const unsigned int IFACE = 0;
 
-std::string make_daytime_string()
+using std::string;
+using std::vector;
+
+
+Server::Server()
 {
-    using namespace std; // For time_t, time and ctime;
-    time_t now = time(0);
-    return ctime(&now);
+	// notice that we step out to the global namespace
+	// for the resolution of the function socket
+	_socket= socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
+	if (_socket == INVALID_SOCKET)
+		throw std::runtime_error("server run error socket");
+}
+
+Server::~Server()
+{
+	std::cout << "closing accepting socket\n";
+	// why is this try necessarily ?
+	try
+	{
+		// the only use of the destructor should be for freeing 
+		// resources that was allocated in the constructor
+		::closesocket(_socket);
+	}
+	catch (...) {}
+}
+
+void Server::serve()
+{
+	bindAndListen();
+	std::string input_string;
+	while (true)
+	{
+		// the main thread is only accepting clients 
+		// and add then to the list of handlers
+		std::cout << "accepting client...\n" ;
+		acceptClient();
+
+	}
+}
+
+
+// listen to connecting requests from clients
+// accept them, and create thread for each client
+void Server::bindAndListen()
+{
+	struct sockaddr_in sa = { 0 };
+	sa.sin_port = htons(PORT);
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = IFACE;
+	// again stepping out to the global namespace
+	if (::bind(_socket, (struct sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
+		throw std::runtime_error("server bind error");
+	std::cout << "binded\n";
+
+	if (::listen(_socket, SOMAXCONN) == SOCKET_ERROR)
+		throw std::runtime_error("server listen error");
+	std::cout << "listening...\n";
+
+}
+
+void Server::acceptClient()
+{
+	SOCKET client_socket = accept(_socket, NULL, NULL);
+	if (client_socket == INVALID_SOCKET)
+		throw std::runtime_error("invalid socket accepted");
+
+	std::cout << "Client accepted !\n";
+	// create new thread for client	and detach from it
+	std::thread tr(&Server::clientHandler, this, client_socket);
+	tr.detach();
+
+}
+
+void Server::clientHandler(const SOCKET client_socket)
+{
+    std::string msg = "";
+    char recvMsg[100]; 
+    std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
+    int res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES , 0);
+	if (res == INVALID_SOCKET)
+	{
+		std::string s = "Error while recieving from socket: ";
+		s += std::to_string(client_socket);
+		throw std::runtime_error(s.c_str());
+	}
+
+    std::cout << "client sent: " << recvMsg << std::endl; 
+    msg = "Hello client!";
+	std::cout << "sending msg...\n";
+    int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);
+
 }
 
 int main()
 {
     try
     {
-        boost::asio::io_context io_context;
-
-        tcp::acceptor acceptor(io_context, tcp::endpoint(tcp::v4(), 13)); // 13 is the port
-
-        for (;;)
-        {
-            std::array<char, 128> buf;
-            boost::system::error_code error;
-
-            tcp::socket socket(io_context);
-            acceptor.accept(socket);
-
-            std::string message = make_daytime_string();
-
-            boost::system::error_code ignored_error;
-            boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
-
-            size_t len = socket.read_some(boost::asio::buffer(buf), error);
-
-            if (error == boost::asio::error::eof)
-            {
-                break; // Connection closed cleanly by peer.
-            }
-            else if (error)
-            {
-                throw boost::system::system_error(error); // Some other error.
-            }
-
-            std::cout.write(buf.data(), len);
-        }
+        WSAInitializer wsa = WSAInitializer();
+        Server server = Server(); 
+        server.serve();
     }
-
-    catch (std::exception& e)
+    catch(const std::runtime_error& e)
     {
-        std::cerr << e.what() << std::endl;
+        std::cerr << e.what() << '\n';
     }
-
-  return 0;
+    system("pause");
+    return 0; 
 }

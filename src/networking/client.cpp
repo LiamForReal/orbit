@@ -1,52 +1,76 @@
 #include "client.h"
-#include <iostream>
-#include <array>
-#include <boost/asio.hpp>
 
-namespace ip = boost::asio::ip;
-using ip::tcp;
 
-int main(int argc, char* argv[])
+
+static const unsigned short PORT = 9787;
+
+Client::Client()
 {
+	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
+	_clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	if (_clientSocket == INVALID_SOCKET)
+		throw std::runtime_error("server run error socket");
+
+}
+
+Client::~Client()
+{
+	try
+	{
+		// the only use of the destructor should be for freeing 
+		// resources that was allocated in the constructor
+		closesocket(_clientSocket);
+	}
+	catch (...) {}
+}
+
+
+void Client::connectToServer(std::string serverIP, int port)
+{
+
+	struct sockaddr_in sa = { 0 };
+
+	sa.sin_port = htons(port); // port that server will listen to
+	sa.sin_family = AF_INET;   // must be AF_INET
+	sa.sin_addr.s_addr =  inet_addr(serverIP.c_str());    // the IP of the server
+
+	// the process will not continue until the server accepts the client
+	int status = connect(_clientSocket, (struct sockaddr*)&sa, sizeof(sa));
+
+	if (status == INVALID_SOCKET)
+		throw std::runtime_error("Cant connect to server");
+}
+
+void Client::startConversation()
+{
+    char m[100];
+    std::string msg = "";
+
+	std::cout << "enter msg : " << std::endl;
+	std::cin >> msg;
+	send(_clientSocket, msg.c_str(), msg.size(), 0);  // last parameter: flag. for us will be 0.
+	std::cout << "Message send to server..." << std::endl;
+
+	
+	recv(_clientSocket, m, 99, 0);
+    std::cout << "Message from server: " << m << std::endl;
+}
+
+int main()
+{
+   
     try
-    { 
-        boost::asio::io_context io_context;
-
-        tcp::resolver resolver(io_context);
-        tcp::resolver::results_type endpoints = resolver.resolve("127.0.0.1", "13");
-
-        tcp::socket socket(io_context);
-        boost::asio::connect(socket, endpoints);
-
-        for (;;)
-        {
-            std::array<char, 128> buf;
-            boost::system::error_code error;
-
-            std::string message = "HaShem is the G-d!";
-
-            size_t len = socket.read_some(boost::asio::buffer(buf), error);
-
-            if (error == boost::asio::error::eof)
-            {
-                break; // Connection closed cleanly by peer.
-            }
-            else if (error)
-            {
-                throw boost::system::system_error(error); // Some other error.
-            }
-
-            std::cout.write(buf.data(), len);
-
-            boost::system::error_code ignored_error;
-            boost::asio::write(socket, boost::asio::buffer(message), ignored_error);
-        }
-    }
-    catch (std::exception& e)
     {
-        std::cerr << e.what() << std::endl;
+		WSAInitializer wsa = WSAInitializer();
+		Client client = Client(); 
+        client.connectToServer("127.0.0.1", PORT);
+        client.startConversation();
     }
-
-    getchar();
-    return 0;
+    catch(const std::runtime_error e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    system("pause");
+    return 0; 
 }
