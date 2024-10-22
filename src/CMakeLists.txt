@@ -14,26 +14,32 @@ find_package(Boost 1.70 REQUIRED COMPONENTS system filesystem)
 
 set(CLIENT_SOURCE_FILES
 	./networking/client.cpp
+	./networking/WSAInitializer.cpp
 )
 
 set(CLIENT_HEADER_FILES
 	./networking/client.h
+	./networking/WSAInitializer.h
 )
 
 set(SERVER_SOURCE_FILES
     ./networking/server.cpp
+	./networking/WSAInitializer.cpp
 )
 
 set(SERVER_HEADER_FILES
 	./networking/server.h
+	./networking/WSAInitializer.h
 )
 
 set(NODE_SOURCE_FILES
 	./networking/node.cpp
+	./networking/WSAInitializer.cpp
 )
 
 set(NODE_HEADER_FILES
 	./networking/node.h
+	./networking/WSAInitializer.h
 )
 
 add_executable(client ${CLIENT_SOURCE_FILES} ${CLIENT_HEADER_FILES})
