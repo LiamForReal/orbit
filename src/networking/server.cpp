@@ -81,6 +81,7 @@ void Server::acceptClient()
 void Server::clientHandler(const SOCKET client_socket)
 {
     std::string msg = "";
+	int nodes_to_open = 0, nodes_to_use = 0, space_pos = 0;
     char recvMsg[100]; 
     std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
     int res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES , 0);
@@ -90,9 +91,19 @@ void Server::clientHandler(const SOCKET client_socket)
 		s += std::to_string(client_socket);
 		throw std::runtime_error(s.c_str());
 	}
-
     std::cout << "client sent: " << recvMsg << std::endl; 
-    msg = "Hello client!";
+
+	msg = recvMsg;
+	space_pos = msg.find(' ');
+	if(space_pos == -1 || space_pos == 0)
+	{
+		throw std::runtime_error("msg is illigal");
+	}
+
+	nodes_to_open = std::stoi(msg.substr(0, space_pos)); 
+	nodes_to_use = std::stoi(msg.substr(space_pos + 1)); 
+
+    msg = std::to_string(nodes_to_open) + " opened successfully and only " + std::to_string(nodes_to_use) + " of them will be used";
 	std::cout << "sending msg...\n";
     int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);
 
