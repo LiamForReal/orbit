@@ -59,11 +59,6 @@ typedef struct CircuitConfirmationResponse
     list<pair<string, unsigned int>> nodesPath; 
 } CircuitConfirmationResponse;
 
-typedef struct BandwidthResponse
-{
-	unsigned int status; 
-} BandwidthResponse;
-
 typedef struct LinkResponse
 {
 	unsigned int status; 

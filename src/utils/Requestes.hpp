@@ -64,10 +64,4 @@ typedef struct DeleteCircuitRequest
 typedef struct AliveMsgRequest 
 {
     unsigned char data;
-    unsigned int circuit_id; 
 } AliveMsgRequest;
-
-typedef struct BandwidthRequest 
-{
-    unsigned int circuit_id; 
-} BandwidthRequest;
