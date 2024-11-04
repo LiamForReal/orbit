@@ -54,7 +54,6 @@ typedef struct NodeOpenResponse
 	unsigned int status; 
 } NodeOpenResponse;
 
-
 typedef struct CircuitConfirmationResponse
 {
     list<pair<string, unsigned int>> nodesPath; 
@@ -80,6 +79,11 @@ typedef struct CloseConnectionResponse
 {
 	unsigned int status; 
 } CloseConnectionResponse;
+
+typedef struct AliveMsgResponse
+{
+	unsigned int status; 
+} AliveMsgResponse;
 
 typedef struct DeleteCircuitResponse
 {

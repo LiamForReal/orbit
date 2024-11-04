@@ -60,3 +60,14 @@ typedef struct DeleteCircuitRequest
     unsigned int circuit_id; 
 } DeleteCircuitRequest;
 
+
+typedef struct AliveMsgRequest 
+{
+    unsigned char data;
+    unsigned int circuit_id; 
+} AliveMsgRequest;
+
+typedef struct BandwidthRequest 
+{
+    unsigned int circuit_id; 
+} BandwidthRequest;

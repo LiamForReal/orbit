@@ -15,21 +15,31 @@ find_package(Boost 1.70 REQUIRED COMPONENTS system filesystem)
 set(CLIENT_SOURCE_FILES
 	./networking/client.cpp
 	./networking/WSAInitializer.cpp
+	./utils/SerializerResponses.cpp
+	./utils/DeserializerRequests.cpp
 )
 
 set(CLIENT_HEADER_FILES
 	./networking/client.h
 	./networking/WSAInitializer.h
+	./utils/SerializerResponses.h
+	./utils/DeserializerRequests.h
+	./utils/json.hpp
 )
 
 set(SERVER_SOURCE_FILES
     ./networking/server.cpp
 	./networking/WSAInitializer.cpp
+	./utils/SerializerRequests.cpp
+	./utils/DeserializerResponses.cpp
 )
 
 set(SERVER_HEADER_FILES
 	./networking/server.h
 	./networking/WSAInitializer.h
+	./utils/SerializerRequests.h
+	./utils/DeserializerResponses.h
+	./utils/json.hpp
 )
 
 set(NODE_SOURCE_FILES
@@ -40,6 +50,7 @@ set(NODE_SOURCE_FILES
 set(NODE_HEADER_FILES
 	./networking/node.h
 	./networking/WSAInitializer.h
+	./utils/json.hpp
 )
 
 add_executable(client ${CLIENT_SOURCE_FILES} ${CLIENT_HEADER_FILES})
