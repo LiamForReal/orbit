@@ -13,35 +13,35 @@ endif()
 find_package(Boost 1.70 REQUIRED COMPONENTS system filesystem)
 
 set(CLIENT_SOURCE_FILES
+	./utils/SerializerRequests.cpp
+	./utils/DeserializerResponses.cpp
+	./utils/utils.cpp
 	./networking/client.cpp
+	./networking/WSAInitializer.cpp
+)
+
+set(CLIENT_HEADER_FILES
+	./utils/json.hpp
+	./utils/utils.hpp
+	./utils/SerializerRequests.h
+	./utils/DeserializerResponses.h
+	./networking/client.h
+	./networking/WSAInitializer.h
+)
+
+set(SERVER_SOURCE_FILES
+    ./networking/server.cpp
 	./networking/WSAInitializer.cpp
 	./utils/SerializerResponses.cpp
 	./utils/DeserializerRequests.cpp
 	./utils/utils.cpp
 )
 
-set(CLIENT_HEADER_FILES
-	./networking/client.h
-	./networking/WSAInitializer.h
-	./utils/SerializerResponses.h
-	./utils/DeserializerRequests.h
-	./utils/json.hpp
-	./utils/utils.hpp
-)
-
-set(SERVER_SOURCE_FILES
-    ./networking/server.cpp
-	./networking/WSAInitializer.cpp
-	./utils/SerializerRequests.cpp
-	./utils/DeserializerResponses.cpp
-	./utils/utils.cpp
-)
-
 set(SERVER_HEADER_FILES
 	./networking/server.h
 	./networking/WSAInitializer.h
-	./utils/SerializerRequests.h
-	./utils/DeserializerResponses.h
+	./utils/SerializerResponses.h
+	./utils/DeserializerRequests.h
 	./utils/json.hpp
 	./utils/utils.hpp
 )

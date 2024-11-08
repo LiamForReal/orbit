@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include "WSAInitializer.h"
+#include "../utils/SerializerRequests.h"
 
 class Client
 {

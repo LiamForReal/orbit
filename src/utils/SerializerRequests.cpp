@@ -7,22 +7,25 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
 
     unsigned int len = 0;
 
-    //json requestJson = {
-    //    {"public_key", json(rsaKeyExchangeRequest.public_key)},
-    //};
+    json public_key = rsaKeyExchangeRequest.public_key.str();
 
-    // std::string requestJson = erJson.dump();
-	//std::cout << requestJson << std::endl;
+    std::cout << public_key << std::endl;
+
+    json requestJson = {
+        {"public_key", public_key},
+    };
+    
+    std::string requestJsonStr = requestJson.dump();
+	std::cout << requestJsonStr << std::endl;
 
 	// Insert Message Length Into Vector
-	//len = (unsigned int)(requestJson.size()); // possible lose of data for 64 bits.
+	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
 	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
 
 	vec.resize(INIT_VEC_SIZE + len);
 
 	// Insert Message Into Vector
-	//vec.insert(vec.end(), requestJson.begin(), requestJson.end());
-
+	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
 
     return vec;
 }
