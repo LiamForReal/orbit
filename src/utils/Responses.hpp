@@ -1,16 +1,16 @@
 #pragma once 
 #include <iostream> 
 #include <list> 
+#include "utils.hpp"
+
 using std::list;
 using std::pair; 
 using std::string;
-#include <boost/multiprecision/cpp_int.hpp>
-using uint1024_t = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<1024, 1024, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>, boost::multiprecision::et_off>;
 
 typedef enum Status
 {
-	RSA_KEY_EXCHANG_STATUS = 11,
-	ECDHE_KEY_EXCHANG_STATUS = 21,
+	RSA_KEY_EXCHANGE_STATUS = 11,
+	ECDHE_KEY_EXCHANGE_STATUS = 21,
 	NODE_OPEN_STATUS = 31,
 	CIRCUIT_CONFIRMATION_STATUS = 41,
 	BANDWIDTH_STATUS = 51,
@@ -25,8 +25,8 @@ typedef enum Status
 
 typedef enum Errors
 {
-	RSA_KEY_EXCHANG_ERROR = 15,
-	ECDHE_KEY_EXCHANG_ERROR = 25,
+	RSA_KEY_EXCHANGE_ERROR = 15,
+	ECDHE_KEY_EXCHANGE_ERROR = 25,
 	NODE_OPEN_ERROR = 35,
 	CIRCUIT_CONFIRMATION_ERROR = 45,
 	BANDWIDTH_ERROR = 55,
@@ -46,7 +46,7 @@ typedef struct RsaKeyExchangeResponse
 typedef struct EcdheKeyExchangeResponse
 {
 	unsigned int status; 
-	//calc resulte
+	//calc result
 } EcdheKeyExchangeResponse;
 
 typedef struct NodeOpenResponse

@@ -1,14 +1,14 @@
 #pragma once 
 #include <iostream> 
-#include <boost/multiprecision/cpp_int.hpp>
-using uint1024_t = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<1024, 1024, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>, boost::multiprecision::et_off>;
+#include "utils.hpp"
+
 using std::pair; 
 using std::string;
 
 typedef enum RequestCode
 {
-	RSA_KEY_EXCHANG_RC = 10,
-	ECDHE_KEY_EXCHANG_RC = 20,
+	RSA_KEY_EXCHANGE_RC = 10,
+	ECDHE_KEY_EXCHANGE_RC = 20,
 	NODE_OPEN_RC = 30,
 	CIRCUIT_CONFIRMATION_RC = 40,     
 	BANDWIDTH_RC = 50,
@@ -33,8 +33,8 @@ typedef struct EcdheKeyExchangeRequest
 
 typedef struct NodeOpenRequest
 {
-    unsigned int amout_to_open; 
-    unsigned int amout_to_use; 
+    unsigned int amount_to_open; 
+    unsigned int amount_to_use; 
     unsigned int circuit_id; 
 } NodeOpenRequest;
 
@@ -46,7 +46,7 @@ typedef struct LinkRequest
 
 typedef struct HttpGetRequest
 { 
-    string msg; //maybe in cpp the librery have other way to save the content and it will be swiched there 
+    string msg; //maybe in cpp the library have other way to save the content and it will be switched there 
     unsigned int circuit_id; 
 } HttpGetRequest;
 

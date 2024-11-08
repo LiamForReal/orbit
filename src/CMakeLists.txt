@@ -17,6 +17,7 @@ set(CLIENT_SOURCE_FILES
 	./networking/WSAInitializer.cpp
 	./utils/SerializerResponses.cpp
 	./utils/DeserializerRequests.cpp
+	./utils/utils.cpp
 )
 
 set(CLIENT_HEADER_FILES
@@ -25,6 +26,7 @@ set(CLIENT_HEADER_FILES
 	./utils/SerializerResponses.h
 	./utils/DeserializerRequests.h
 	./utils/json.hpp
+	./utils/utils.hpp
 )
 
 set(SERVER_SOURCE_FILES
@@ -32,6 +34,7 @@ set(SERVER_SOURCE_FILES
 	./networking/WSAInitializer.cpp
 	./utils/SerializerRequests.cpp
 	./utils/DeserializerResponses.cpp
+	./utils/utils.cpp
 )
 
 set(SERVER_HEADER_FILES
@@ -40,17 +43,20 @@ set(SERVER_HEADER_FILES
 	./utils/SerializerRequests.h
 	./utils/DeserializerResponses.h
 	./utils/json.hpp
+	./utils/utils.hpp
 )
 
 set(NODE_SOURCE_FILES
 	./networking/node.cpp
 	./networking/WSAInitializer.cpp
+	./utils/utils.cpp
 )
 
 set(NODE_HEADER_FILES
 	./networking/node.h
 	./networking/WSAInitializer.h
 	./utils/json.hpp
+	./utils/utils.hpp
 )
 
 add_executable(client ${CLIENT_SOURCE_FILES} ${CLIENT_HEADER_FILES})
