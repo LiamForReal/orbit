@@ -1,0 +1,13 @@
+version: '3.8'  # Specify the Docker Compose version
+
+services:
+  my_service:  # Define a service name
+    build:
+      context: .       # Use the current directory for the build context
+      dockerfile: Dockerfile  # Path to the Dockerfile (optional if named Dockerfile)
+    ports:
+      - "8080:8080"    # Map host port to container port (adjust as needed)
+    environment:
+      - ENV_VAR=value  # Set any environment variables (optional)
+    volumes:
+      - ./data:/data   # Mount a volume if needed (optional)

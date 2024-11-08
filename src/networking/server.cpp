@@ -103,6 +103,17 @@ void Server::clientHandler(const SOCKET client_socket)
 	nodes_to_open = std::stoi(msg.substr(0, space_pos)); 
 	nodes_to_use = std::stoi(msg.substr(space_pos + 1)); 
 
+	std::vector<HANDLE> dockerProcces; 
+	STARTUPINFOA startupInfo = { 0 };
+    PROCESS_INFORMATION processInfo = { 0 };
+	std::string command = "docker-compose up --build -d";  // -d flag runs it in detached mode
+	for(int i = 0; i < nodes_to_open; i++)
+	{
+		int result = std::system(command.c_str());
+		if (result == 0) 
+        	std::cout << "Docker Compose process started successfully." << std::endl;
+    	else std::cerr << "Failed to start Docker Compose process. Error code: " << result << std::endl;
+	}
     msg = std::to_string(nodes_to_open) + " opened successfully and only " + std::to_string(nodes_to_use) + " of them will be used";
 	std::cout << "sending msg...\n";
     int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);

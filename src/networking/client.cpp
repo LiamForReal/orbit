@@ -2,7 +2,7 @@
 
 
 #define MAX_NODES_TO_OPEN 5
-#define MIN_NODES_TO_OPEN 0
+#define MIN_NODES_TO_OPEN 1
 static const unsigned short PORT = 9787;
 
 Client::Client()
