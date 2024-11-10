@@ -138,6 +138,7 @@ void Server::clientHandler(const SOCKET client_socket)
             containerIP += buffer;
         }
         _pclose(pipe);
+		containerIP = containerIP.substr(0, containerIP.find("\n"));
 		nodesIp.push_back(containerIP);
     }
 
@@ -146,6 +147,7 @@ void Server::clientHandler(const SOCKET client_socket)
 	{
 		msg += " " + *it + ",";
 	}
+	msg = msg.substr(0,msg.length() - 1);
 	msg += " ]";
     std::cout << "sending msg...\n";
     int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);
