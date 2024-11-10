@@ -6,6 +6,7 @@
 #include <string>
 #include <thread>  
 #include <vector>
+#include <List>
 #include "WSAInitializer.h"
 
 class Server

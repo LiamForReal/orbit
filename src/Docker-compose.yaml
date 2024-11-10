@@ -1,13 +1,18 @@
-version: '3.8'  # Specify the Docker Compose version
+version: '3.8'
 
 services:
-  my_service:  # Define a service name
+  tor_network_service:  # Define a custom service name for your Tor network
     build:
-      context: .       # Use the current directory for the build context
-      dockerfile: Dockerfile  # Path to the Dockerfile (optional if named Dockerfile)
+      context: .  # Use the current directory for the build context
+      dockerfile: Dockerfile  # Use your custom Dockerfile to configure the Tor network
     ports:
-      - "8080:8080"    # Map host port to container port (adjust as needed)
+      - "9050:9050"  # Expose a port for SOCKS5 proxy (default for Tor routing)
+      - "9051:9051"  # Optionally expose the control port for Tor, if needed
     environment:
-      - ENV_VAR=value  # Set any environment variables (optional)
-    volumes:
-      - ./data:/data   # Mount a volume if needed (optional)
+      - TOR_PORT=9050  # Environment variable to make the port configurable
+    networks:
+      - tor_network  # Attach to a custom network for IP management
+
+networks:
+  tor_network:
+    driver: bridge  # Use bridge mode to control IP address assignments
