@@ -2,7 +2,7 @@
 
 
 #define MAX_NODES_TO_OPEN 5
-#define MIN_NODES_TO_OPEN 0
+#define MIN_NODES_TO_OPEN 1
 static const unsigned short PORT = 9787;
 
 Client::Client()
@@ -54,7 +54,7 @@ void Client::startConversation()
 		std::cin >> nodes_to_open;
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nodes_to_use;
-	}while(nodes_to_open > MAX_NODES_TO_OPEN || nodes_to_open < MIN_NODES_TO_OPEN || nodes_to_use <= MIN_NODES_TO_OPEN);
+	}while(nodes_to_open > MAX_NODES_TO_OPEN || nodes_to_open < MIN_NODES_TO_OPEN || nodes_to_use < MIN_NODES_TO_OPEN);
 	msg = std::to_string(nodes_to_open) + " " + std::to_string(nodes_to_use);
 	send(_clientSocket, msg.c_str(), msg.size(), 0);  // last parameter: flag. for us will be 0.
 	std::cout << "Message send to server..." << std::endl;
