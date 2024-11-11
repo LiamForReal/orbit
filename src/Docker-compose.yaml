@@ -1,18 +1,29 @@
 version: '3.8'
 
-services:
-  tor_network_service:  # Define a custom service name for your Tor network
-    build:
-      context: .  # Use the current directory for the build context
-      dockerfile: Dockerfile  # Use your custom Dockerfile to configure the Tor network
-    ports:
-      - "9050:9050"  # Expose a port for SOCKS5 proxy (default for Tor routing)
-      - "9051:9051"  # Optionally expose the control port for Tor, if needed
-    environment:
-      - TOR_PORT=9050  # Environment variable to make the port configurable
-    networks:
-      - tor_network  # Attach to a custom network for IP management
-
 networks:
-  tor_network:
-    driver: bridge  # Use bridge mode to control IP address assignments
+  TOR_NETWORK:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.0.0.0/8 
+
+services:
+  node1:
+    image: eclipse/cpp_gcc
+    container_name: node1
+    networks:
+      - TOR_NETWORK
+    ports:
+      - "9050:9050"
+      - "9051:9051"
+
+  node2:
+    image: eclipse/cpp_gcc
+    container_name: node2
+    networks:
+      - TOR_NETWORK
+    ports:
+      - "9052:9050"
+      - "9053:9051"
+
+  # Additional nodes (node3, node4, etc.) can be added here
