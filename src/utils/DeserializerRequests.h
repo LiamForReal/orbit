@@ -17,6 +17,7 @@ class DeserializerRequests
         static HttpGetRequest deserializeHttpGetRequest(const std::vector<unsigned char>& buffer);
         static CloseConnectionRequest deserializeCloseConnectionRequest(const std::vector<unsigned char>& buffer);
         static DeleteCircuitRequest deserializeDeleteCircuitRequest(const std::vector<unsigned char>& buffer);
+        static GetDomainRequest deserializeGetDomainRequest(const std::vector<unsigned char>& buffer);
 };
 
 

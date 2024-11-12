@@ -57,3 +57,8 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const DeleteCirc
 std::vector<unsigned char> SerializerRequests::serializeRequest(const AliveMsgRequest& aliveMsgRequest)
 {
 }
+
+std::vector<unsigned char> SerializerRequests::serializeRequest(const GetDomainRequest& getDomainRequest)
+{
+    
+}

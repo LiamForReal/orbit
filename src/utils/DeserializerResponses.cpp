@@ -28,3 +28,8 @@
     {
         
     }
+    
+    GetDomainResponse DeserializerResponses::deserializeGetDomainResponse(const std::vector<unsigned char>& buffer)
+    {
+
+    }

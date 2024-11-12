@@ -19,7 +19,7 @@ typedef enum Status
 	CLOSE_CONNECTION_STATUS = 81,
 	ALIVE_MSG_STATUS = 91,
 	DELETE_CIRCUIT_STATUS = 101,
-
+	GET_DOMAIN_STATUS = 111,
 } Status;
 
 
@@ -35,6 +35,7 @@ typedef enum Errors
 	CLOSE_CONNECTION_ERROR = 85,
 	ALIVE_MSG_ERROR = 95,
 	DELETE_CIRCUIT_ERROR = 105,
+	GET_DOMAIN_ERROR = 115,
 } Errors;
 
 typedef struct RsaKeyExchangeResponse
@@ -85,3 +86,7 @@ typedef struct DeleteCircuitResponse
 	unsigned int status; 
 }  DeleteCircuitResponse;
 
+typedef struct GetDomainResponse
+{
+	unsigned int status; 
+}  GetDomainResponse;

@@ -17,4 +17,6 @@ class DeserializerResponses
         static HttpGetResponse deserializeHttpGetResponse(const std::vector<unsigned char>& buffer);
         static CloseConnectionResponse deserializeCloseConnectionResponse(const std::vector<unsigned char>& buffer);
         static DeleteCircuitResponse deserializeDeleteCircuitResponse(const std::vector<unsigned char>& buffer);
+        static GetDomainResponse deserializeGetDomainResponse(const std::vector<unsigned char>& buffer);
+        
 };
