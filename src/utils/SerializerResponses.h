@@ -4,6 +4,10 @@
 #include "Responses.hpp"
 #include "json.hpp"
 using json = nlohmann::json;
+
+#define INIT_VEC_SIZE 5
+#define BYTES_TO_COPY 4
+#define INC 1
 //server
 
 class SerializerResponses
@@ -18,6 +22,6 @@ class SerializerResponses
         static std::vector<unsigned char> serializeResponse(const CloseConnectionResponse& closeConnectionResponse);
         static std::vector<unsigned char> serializeResponse(const DeleteCircuitResponse& deleteCircuitResponse);
         static std::vector<unsigned char> serializeResponse(const AliveMsgResponse& aliveMsgResponse);
+        static std::vector<unsigned char> serializeResponse(const GetDomainResponse& getDomainResponse);
 
 };
-
