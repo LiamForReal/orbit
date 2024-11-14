@@ -78,36 +78,97 @@ void Server::acceptClient()
 
 }
 
+void Server::runCmdCommend(const std::string command)
+{
+    int result;
+    result = system(command.c_str());
+    if (result == 0) 
+        std::cout << "Docker Compose process started successfully." << std::endl;
+    else std::cerr << "Failed to start Docker Compose process. Error code: " << result << std::endl;
+}
+
 void Server::clientHandler(const SOCKET client_socket)
 {
-    std::string msg = "";
-	int nodes_to_open = 0, nodes_to_use = 0, space_pos = 0;
-    char recvMsg[100]; 
-    std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
-    int res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES , 0);
-	if (res == INVALID_SOCKET)
-	{
-		std::string s = "Error while recieving from socket: ";
-		s += std::to_string(client_socket);
-		throw std::runtime_error(s.c_str());
-	}
-    std::cout << "client sent: " << recvMsg << std::endl; 
+    try
+    {
+        std::string msg = "";
+	    std::list<std::string> nodesIp;
+        int nodes_to_open = 0, nodes_to_use = 0, space_pos = 0;
+        std::string contanerName = "node";
+        char recvMsg[100]; 
+        char buffer[128];
+        std::string containerID;
 
-	msg = recvMsg;
-	space_pos = msg.find(' ');
-	if(space_pos == -1 || space_pos == 0)
-	{
-		throw std::runtime_error("msg is illigal");
-	}
+        std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
+        int res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES, 0);
+        if (res == INVALID_SOCKET)
+        {
+            std::string s = "Error while receiving from socket: ";
+            s += std::to_string(client_socket);
+            throw std::runtime_error(s.c_str());
+        }
+        std::cout << "client sent: " << recvMsg << std::endl; 
 
-	nodes_to_open = std::stoi(msg.substr(0, space_pos)); 
-	nodes_to_use = std::stoi(msg.substr(space_pos + 1)); 
+        msg = recvMsg;
+        space_pos = msg.find(' ');
+        if(space_pos == -1 || space_pos == 0)
+        {
+            throw std::runtime_error("msg is illegal");
+        }
 
-    msg = std::to_string(nodes_to_open) + " opened successfully and only " + std::to_string(nodes_to_use) + " of them will be used";
-	std::cout << "sending msg...\n";
-    int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);
+        nodes_to_open = std::stoi(msg.substr(0, space_pos)); 
+        nodes_to_use = std::stoi(msg.substr(space_pos + 1)); 
 
+        std::string command = "docker-compose up --build -d";  // -d flag runs it in detached mode
+        runCmdCommend("python docker_ip_inishializer.py"); //pip install pyyaml - to run it
+        runCmdCommend(command);
+        for (int i = 0; i < nodes_to_open; i++)
+        {
+            std::string containerIDCommand = "docker-compose ps -q";
+            FILE* pipe = _popen(containerIDCommand.c_str(), "r");
+            if (!pipe) throw std::runtime_error("Failed to run command");
+
+            while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+            {
+                containerID += buffer;
+            }
+            _pclose(pipe);
+
+            containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
+
+            std::string inspectCommand = "docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + contanerName + char(i + 49);
+            std::cout << inspectCommand << std::endl; 
+            pipe = _popen(inspectCommand.c_str(), "r");
+            if (!pipe) throw std::runtime_error("Failed to run inspect command");
+
+            std::string containerIP;
+            while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+            {
+                containerIP += buffer;
+            }
+            _pclose(pipe);
+		    containerIP = containerIP.substr(0, containerIP.find("\n"));
+		    nodesIp.push_back(containerIP);
+        }
+
+	    msg = "[";
+	    for(auto it = nodesIp.begin(); it != nodesIp.end(); it ++)
+	    {
+		    msg += " " + *it + ",";
+	    }
+	    msg = msg.substr(0,msg.length() - 1);
+	    msg += " ]";
+        std::cout << "sending msg...\n";
+        int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);
+        if(bytesSent == -1)
+            throw std::runtime_error("Failed to send");
+    }
+    catch(const std::runtime_error& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
+
 
 int main()
 {

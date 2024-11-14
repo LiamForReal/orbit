@@ -1,0 +1,26 @@
+networks:
+  TOR_NETWORK:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 192.0.0.0/8
+services:
+  node1:
+    container_name: node1
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.154.238.239
+    ports:
+    - 9050:9050
+    - 9051:9051
+  node2:
+    container_name: node2
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.163.107.253
+    ports:
+    - 9052:9050
+    - 9053:9051
+version: '3.8'

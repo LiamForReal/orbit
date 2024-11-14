@@ -53,7 +53,7 @@ void Client::startConversation()
 		std::cin >> nodes_to_open;
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nodes_to_use;
-	}while(nodes_to_open > MAX_NODES_TO_OPEN || nodes_to_open < MIN_NODES_TO_OPEN || nodes_to_use <= MIN_NODES_TO_OPEN);
+	}while(nodes_to_open > MAX_NODES_TO_OPEN || nodes_to_open < MIN_NODES_TO_OPEN || nodes_to_use < MIN_NODES_TO_OPEN);
 	msg = std::to_string(nodes_to_open) + " " + std::to_string(nodes_to_use);
 	send(_clientSocket, msg.c_str(), msg.size(), 0);  // last parameter: flag. for us will be 0.
 	std::cout << "Message send to server..." << std::endl;
@@ -74,7 +74,7 @@ int main()
     {
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client(); 
-        client.connectToServer("127.0.0.1", PORT);
+        client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
         client.startConversation();
     }
     catch(const std::runtime_error e)
