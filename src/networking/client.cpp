@@ -1,9 +1,6 @@
 #include "client.h"
 
 
-#define MAX_NODES_TO_OPEN 5
-#define MIN_NODES_TO_OPEN 1
-static const unsigned short PORT = 9787;
 
 Client::Client()
 {
@@ -71,7 +68,7 @@ int main()
     {
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client(); 
-        client.connectToServer("127.0.0.1", PORT);
+        client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
         client.startConversation();
     }
     catch(const std::runtime_error e)

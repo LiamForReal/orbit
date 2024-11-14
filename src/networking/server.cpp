@@ -78,6 +78,15 @@ void Server::acceptClient()
 
 }
 
+void Server::runCmdCommend(const std::string command)
+{
+    int result;
+    result = system(command.c_str());
+    if (result == 0) 
+        std::cout << "Docker Compose process started successfully." << std::endl;
+    else std::cerr << "Failed to start Docker Compose process. Error code: " << result << std::endl;
+}
+
 void Server::clientHandler(const SOCKET client_socket)
 {
     try
@@ -87,6 +96,9 @@ void Server::clientHandler(const SOCKET client_socket)
         int nodes_to_open = 0, nodes_to_use = 0, space_pos = 0;
         std::string contanerName = "node";
         char recvMsg[100]; 
+        char buffer[128];
+        std::string containerID;
+
         std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
         int res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES, 0);
         if (res == INVALID_SOCKET)
@@ -108,21 +120,14 @@ void Server::clientHandler(const SOCKET client_socket)
         nodes_to_use = std::stoi(msg.substr(space_pos + 1)); 
 
         std::string command = "docker-compose up --build -d";  // -d flag runs it in detached mode
+        runCmdCommend("python docker_ip_inishializer.py"); //pip install pyyaml - to run it
+        runCmdCommend(command);
         for (int i = 0; i < nodes_to_open; i++)
         {
-            int result = std::system(command.c_str());
-            if (result == 0) 
-                std::cout << "Docker Compose process started successfully." << std::endl;
-            else 
-                std::cerr << "Failed to start Docker Compose process. Error code: " << result << std::endl;
-
-            // Retrieve container ID and IP address
             std::string containerIDCommand = "docker-compose ps -q";
             FILE* pipe = _popen(containerIDCommand.c_str(), "r");
             if (!pipe) throw std::runtime_error("Failed to run command");
 
-            char buffer[128];
-            std::string containerID;
             while (fgets(buffer, sizeof(buffer), pipe) != NULL)
             {
                 containerID += buffer;
