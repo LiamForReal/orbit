@@ -13,11 +13,18 @@ endif()
 find_package(Boost 1.70 REQUIRED COMPONENTS system filesystem)
 
 set(CLIENT_SOURCE_FILES
+	./utils/SerializerRequests.cpp
+	./utils/DeserializerResponses.cpp
+	./utils/utils.cpp
 	./networking/client.cpp
 	./networking/WSAInitializer.cpp
 )
 
 set(CLIENT_HEADER_FILES
+	./utils/json.hpp
+	./utils/utils.hpp
+	./utils/SerializerRequests.h
+	./utils/DeserializerResponses.h
 	./networking/client.h
 	./networking/WSAInitializer.h
 )
@@ -25,21 +32,31 @@ set(CLIENT_HEADER_FILES
 set(SERVER_SOURCE_FILES
     ./networking/server.cpp
 	./networking/WSAInitializer.cpp
+	./utils/SerializerResponses.cpp
+	./utils/DeserializerRequests.cpp
+	./utils/utils.cpp
 )
 
 set(SERVER_HEADER_FILES
 	./networking/server.h
 	./networking/WSAInitializer.h
+	./utils/SerializerResponses.h
+	./utils/DeserializerRequests.h
+	./utils/json.hpp
+	./utils/utils.hpp
 )
 
 set(NODE_SOURCE_FILES
 	./networking/node.cpp
 	./networking/WSAInitializer.cpp
+	./utils/utils.cpp
 )
 
 set(NODE_HEADER_FILES
 	./networking/node.h
 	./networking/WSAInitializer.h
+	./utils/json.hpp
+	./utils/utils.hpp
 )
 
 add_executable(client ${CLIENT_SOURCE_FILES} ${CLIENT_HEADER_FILES})

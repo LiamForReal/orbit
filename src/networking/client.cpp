@@ -1,6 +1,8 @@
 #include "client.h"
 
-
+#define MAX_NODES_TO_OPEN 5
+#define MIN_NODES_TO_OPEN 0
+static const unsigned short PORT = 9787;
 
 Client::Client()
 {
@@ -63,7 +65,11 @@ void Client::startConversation()
 
 int main()
 {
-   
+	RsaKeyExchangeRequest r = {.public_key = uint1024_t("3829328329382392382398232983293823982392832329328392328329323982328932932828")};
+	SerializerRequests::serializeRequest(r);
+
+	return 0;
+
     try
     {
 		WSAInitializer wsa = WSAInitializer();
