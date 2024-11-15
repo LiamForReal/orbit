@@ -38,10 +38,15 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyEx
 
     unsigned int len = 0;
 
-    //json public_key = ecdheKeyExchangeRequest.
-    //std::cout << public_key << std::endl;
+    json base = ecdheKeyExchangeRequest.b.str();
+    json modular = ecdheKeyExchangeRequest.m.str();
+    json calcResult = ecdheKeyExchangeRequest.calculationResult.str();
 
+    std::cout << "base: " << base << "\nmodular: " << modular << "\ncalcResult: " << calcResult;
     json requestJson = {
+        {"base", base},
+        {"modular", modular},
+        {"calc_result", calcResult},
     };
     
     std::string requestJsonStr = requestJson.dump();
@@ -96,7 +101,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
 
     json requestJson = {
         {"circuit_id", linkRequest.circuit_id},
-        {"nextNode", linkRequest.nextNode},
+        {"nextNode", linkRequest.nextNodeIp},
     };
     
     std::string requestJsonStr = requestJson.dump();

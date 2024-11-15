@@ -22,14 +22,14 @@ typedef enum RequestCode
 
 typedef struct RsaKeyExchangeRequest
 {
-    uint1024_t public_key;
+    uint2048_t public_key;
 } RsaKeyExchangeRequest;
 
 typedef struct EcdheKeyExchangeRequest
 {
-	//base 
-    //moduler
-    //calc_result 
+    uint256_t b; 
+    uint256_t m; 
+    uint256_t calculationResult; 
 } EcdheKeyExchangeRequest;
 
 typedef struct NodeOpenRequest
@@ -41,7 +41,7 @@ typedef struct NodeOpenRequest
 
 typedef struct LinkRequest
 {
-    pair<string, unsigned int> nextNode;
+    string nextNodeIp;
     unsigned int circuit_id; 
 } LinkRequest;
 

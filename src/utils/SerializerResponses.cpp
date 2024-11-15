@@ -7,9 +7,12 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const RsaKeyEx
     vec[0] = ((unsigned char)(rsaKeyExchangeResponse.status));
 
     unsigned int len = 0;
-
+    json publicKey = rsaKeyExchangeResponse.public_key.str(); 
+    std::cout << "public key: " << publicKey << std::endl;
+    
     json requestJson = {
         {"status", rsaKeyExchangeResponse.status},
+        {"public_key", publicKey},
     };
     
     std::string requestJsonStr = requestJson.dump();
@@ -34,8 +37,10 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const EcdheKey
 
     unsigned int len = 0;
 
+    json calcResult = ecdheKeyExchangeResponse.calculationResult.str();
     json requestJson = {
         {"status", ecdheKeyExchangeResponse.status},
+        {"calcResult", calcResult},
     };
     
     std::string requestJsonStr = requestJson.dump();
