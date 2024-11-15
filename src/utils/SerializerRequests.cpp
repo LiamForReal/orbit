@@ -5,27 +5,24 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
     std::vector<unsigned char> vec(INIT_VEC_SIZE);
     vec[0] = ((unsigned char)(RSA_KEY_EXCHANGE_RC));
 
-    unsigned int len = 0;
-
-    json public_key = rsaKeyExchangeRequest.public_key.str();
-
-    std::cout << public_key << std::endl;
+    std::cout << "Public Key: " << rsaKeyExchangeRequest.public_key.str() << std::endl;
 
     json requestJson = {
-        {"public_key", public_key},
+        {"public_key", rsaKeyExchangeRequest.public_key.str()},
     };
-    
+
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+    std::cout << "Serialized JSON: " << requestJsonStr << std::endl;
 
-	// Insert Message Length Into Vector
-	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
+    // Insert the length of the JSON message into the vector (4 bytes for length)
+    unsigned int len = (unsigned int)requestJsonStr.size();
+    std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
 
-	vec.resize(INIT_VEC_SIZE + len);
+    // Resize the vector to hold the message
+    vec.resize(INIT_VEC_SIZE + len);
 
-	// Insert Message Into Vector
-	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
+    // Insert the serialized JSON string into the vector
+    std::copy(requestJsonStr.begin(), requestJsonStr.end(), vec.begin() + INIT_VEC_SIZE);
 
     return vec;
 }
@@ -33,30 +30,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
 // TODO
 std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyExchangeRequest& ecdheKeyExchangeRequest)
 {
-    std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(ECDHE_KEY_EXCHANGE_RC));
-
-    unsigned int len = 0;
-
-    //json public_key = ecdheKeyExchangeRequest.
-    //std::cout << public_key << std::endl;
-
-    json requestJson = {
-    };
-    
-    std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
-
-	// Insert Message Length Into Vector
-	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
-
-	vec.resize(INIT_VEC_SIZE + len);
-
-	// Insert Message Into Vector
-	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
-
-    return vec;
 }
 
 std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRequest& nodeOpenRequest)
@@ -69,6 +42,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
     json requestJson = {
         {"amount_to_open", nodeOpenRequest.amount_to_open},
         {"amount_to_use", nodeOpenRequest.amount_to_use},
+
         {"circuit_id", nodeOpenRequest.circuit_id},
     };
     

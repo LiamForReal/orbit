@@ -1,11 +1,63 @@
 #include "DeserializerResponses.h"
 
+// TODO: fix
 RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(const std::vector<unsigned char>& buffer)
 {
+    RsaKeyExchangeResponse response;
+	std::string jsonDataStr = "";
+	unsigned int len = 0, i = 0;
+
+	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+	std::cout << len << std::endl;
+    
+    for (i = 0; i < len; i++)
+	{
+		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
+	}
+    
+	std::cout << jsonDataStr;
+	json jsonData = json::parse(jsonDataStr);
+
+	try
+	{
+		response.status = jsonData["status"];
+	}
+	catch (...)
+	{
+		throw std::runtime_error("Invalid json structure passed");
+	}
+	
+	return response;
 }
 
+// TODO: add more stuff maybe
 EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeResponse(const std::vector<unsigned char>& buffer)
 {
+    EcdheKeyExchangeResponse response;
+	std::string jsonDataStr = "";
+	unsigned int len = 0, i = 0;
+
+	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+	std::cout << len << std::endl;
+    
+    for (i = 0; i < len; i++)
+	{
+		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
+	}
+    
+	std::cout << jsonDataStr;
+	json jsonData = json::parse(jsonDataStr);
+
+	try
+	{
+		response.status = jsonData["status"];
+	}
+	catch (...)
+	{
+		throw std::runtime_error("Invalid json structure passed");
+	}
+	
+	return response;
 }
 
 NodeOpenResponse DeserializerResponses::deserializeNodeOpeningResponse(const std::vector<unsigned char>& buffer)

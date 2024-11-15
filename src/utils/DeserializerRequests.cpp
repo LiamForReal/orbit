@@ -1,9 +1,33 @@
 #include "DeserializerRequests.h"
-//TODO: RSA & ECDHE deserialization
+
 RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(const std::vector<unsigned char>& buffer)
 {
+    RsaKeyExchangeRequest request;
 
+    unsigned int len = 0;
+    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::cout << "Deserialized length: " << len << std::endl;
+
+    // Convert the serialized JSON string from the buffer
+    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
+    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+
+    // Parse the JSON string
+    json jsonData = json::parse(jsonDataStr);
+
+    try 
+	{
+        // Deserialize the public_key from the JSON string
+        request.public_key = uint1024_t{ std::string(jsonData["public_key"]) };
+    }
+    catch (...) 
+	{
+        throw std::runtime_error("Invalid JSON structure passed");
+    }
+
+    return request;
 }
+
 EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest(const std::vector<unsigned char>& buffer)
 {
 
