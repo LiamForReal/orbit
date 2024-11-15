@@ -41,13 +41,13 @@ typedef enum Errors
 typedef struct RsaKeyExchangeResponse
 {
 	unsigned int status; 
-	uint1024_t public_key;
+	uint2048_t public_key;
 } RsaKeyExchangeResponse;
 
 typedef struct EcdheKeyExchangeResponse
 {
 	unsigned int status; 
-	//calc result
+	uint256_t calculationResult;
 } EcdheKeyExchangeResponse;
 
 typedef struct NodeOpenResponse
@@ -69,7 +69,7 @@ typedef struct LinkResponse
 typedef struct HttpGetResponse
 {
 	unsigned int status;
-	string content;  //html
+	string content;  //html index.html file
 } HttpGetResponse;
 
 typedef struct CloseConnectionResponse
