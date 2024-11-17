@@ -78,15 +78,6 @@ void Server::acceptClient()
 
 }
 
-void Server::runCmdCommend(const std::string command)
-{
-    int result;
-    result = system(command.c_str());
-    if (result == 0) 
-        std::cout << "Docker Compose process started successfully." << std::endl;
-    else std::cerr << "Failed to start Docker Compose process. Error code: " << result << std::endl;
-}
-
 void Server::clientHandler(const SOCKET client_socket)
 {
     try
@@ -94,8 +85,7 @@ void Server::clientHandler(const SOCKET client_socket)
         std::string msg = "";
 	    std::list<std::string> nodesIp;
         int nodes_to_open = 0, nodes_to_use = 0, space_pos = 0;
-        std::string contanerName = "node";
-        char recvMsg[100]; 
+        char recvMsg[100];
         char buffer[128];
         std::string containerID;
 
@@ -119,37 +109,8 @@ void Server::clientHandler(const SOCKET client_socket)
         nodes_to_open = std::stoi(msg.substr(0, space_pos)); 
         nodes_to_use = std::stoi(msg.substr(space_pos + 1)); 
 
-        std::string command = "docker-compose up --build -d";  // -d flag runs it in detached mode
-        runCmdCommend("python docker_ip_inishializer.py"); //pip install pyyaml - to run it
-        runCmdCommend(command);
-        for (int i = 0; i < nodes_to_open; i++)
-        {
-            std::string containerIDCommand = "docker-compose ps -q";
-            FILE* pipe = _popen(containerIDCommand.c_str(), "r");
-            if (!pipe) throw std::runtime_error("Failed to run command");
-
-            while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-            {
-                containerID += buffer;
-            }
-            _pclose(pipe);
-
-            containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
-
-            std::string inspectCommand = "docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + contanerName + char(i + 49);
-            std::cout << inspectCommand << std::endl; 
-            pipe = _popen(inspectCommand.c_str(), "r");
-            if (!pipe) throw std::runtime_error("Failed to run inspect command");
-
-            std::string containerIP;
-            while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-            {
-                containerIP += buffer;
-            }
-            _pclose(pipe);
-		    containerIP = containerIP.substr(0, containerIP.find("\n"));
-		    nodesIp.push_back(containerIP);
-        }
+        // here open and get ips from docker.
+        nodesIp = DockerManager::openAndGetIPs(nodes_to_use, nodes_to_open);
 
 	    msg = "[";
 	    for(auto it = nodesIp.begin(); it != nodesIp.end(); it ++)

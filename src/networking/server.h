@@ -10,6 +10,8 @@
 #include <vector>
 #include <List>
 #include "WSAInitializer.h"
+#include "docker_manager.h"
+
 #define COMMUNICATE_CONTROL_PORT 9051
 class Server
 {
@@ -22,6 +24,6 @@ class Server
         void bindAndListen(); 
         void acceptClient(); 
         void clientHandler(const SOCKET client_socket);
-        void runCmdCommend(const std::string command);
+        void runCmdCommand(const std::string command);
         SOCKET _socket;
 };

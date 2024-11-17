@@ -30,7 +30,8 @@ set(CLIENT_HEADER_FILES
 )
 
 set(SERVER_SOURCE_FILES
-    ./networking/server.cpp
+    	./networking/docker_manager.cpp
+    	./networking/server.cpp
 	./networking/WSAInitializer.cpp
 	./utils/SerializerResponses.cpp
 	./utils/DeserializerRequests.cpp
@@ -38,6 +39,7 @@ set(SERVER_SOURCE_FILES
 )
 
 set(SERVER_HEADER_FILES
+    	./networking/docker_manager.h
 	./networking/server.h
 	./networking/WSAInitializer.h
 	./utils/SerializerResponses.h
