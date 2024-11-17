@@ -70,9 +70,9 @@ NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const std::v
 
 	try
 	{
-		request.circuit_id = unsigned int (jsonData["circuit_id"]);
-		request.amount_to_open = unsigned int (jsonData["amount_to_open"]);
-		request.amount_to_use = unsigned int (jsonData["amount_to_use"]);
+		request.circuit_id = jsonData["circuit_id"];
+		request.amount_to_open = jsonData["amount_to_open"];
+		request.amount_to_use = jsonData["amount_to_use"];
 	}
 	catch (...)
 	{
@@ -101,7 +101,7 @@ LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsig
 
 	try
 	{
-		request.circuit_id = unsigned int(jsonData["circuit_id"]);
+		request.circuit_id = jsonData["circuit_id"];
 		request.nextNodeIp = jsonData["nextNode"];
 	}
 	catch (...)
@@ -130,7 +130,7 @@ HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector
 
 	try
 	{
-		request.circuit_id = unsigned int (jsonData["circuit_id"]);
+		request.circuit_id = jsonData["circuit_id"];
 		request.msg = jsonData["msg"];
 	}
 	catch (...)
@@ -160,7 +160,7 @@ CloseConnectionRequest DeserializerRequests::deserializeCloseConnectionRequest(c
 
 	try
 	{
-		request.circuit_id = unsigned int (jsonData["circuit_id"]);
+		request.circuit_id = jsonData["circuit_id"];
 	}
 	catch (...)
 	{
@@ -188,7 +188,7 @@ DeleteCircuitRequest DeserializerRequests::deserializeDeleteCircuitRequest(const
 
 	try
 	{
-		request.circuit_id = unsigned int (jsonData["circuit_id"]);
+		request.circuit_id = jsonData["circuit_id"];
 	}
 	catch (...)
 	{

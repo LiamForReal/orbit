@@ -15,7 +15,7 @@ RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
     try {
-		response.status = unsigned int(jsonData["status"]);
+		response.status = jsonData["status"];
         response.public_key = uint2048_t{ std::string(jsonData["public_key"]) };
     }
     catch (...) {
@@ -41,7 +41,7 @@ EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeRespo
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);
+        response.status = jsonData["status"];
         response.calculationResult = uint256_t{ std::string(jsonData["public_key"]) };   
     }
     catch (...) {
@@ -67,7 +67,7 @@ NodeOpenResponse DeserializerResponses::deserializeNodeOpeningResponse(const std
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);
+        response.status = jsonData["status"];
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
@@ -92,7 +92,7 @@ LinkResponse DeserializerResponses::deserializeLinkResponse(const std::vector<un
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);   
+        response.status = jsonData["status"];   
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
@@ -117,7 +117,7 @@ HttpGetResponse DeserializerResponses::deserializeHttpGetResponse(const std::vec
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);
+        response.status = jsonData["status"];
         response.content = jsonData["content"];
     }
     catch (...) {
@@ -143,7 +143,7 @@ CloseConnectionResponse DeserializerResponses::deserializeCloseConnectionRespons
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);
+        response.status = jsonData["status"];
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
@@ -168,7 +168,7 @@ DeleteCircuitResponse DeserializerResponses::deserializeDeleteCircuitResponse(co
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);
+        response.status = jsonData["status"];
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
@@ -193,7 +193,7 @@ GetDomainResponse DeserializerResponses::deserializeGetDomainResponse(const std:
     json jsonData = json::parse(jsonDataStr);
     try {
 		
-        response.status = unsigned int(jsonData["status"]);
+        response.status = jsonData["status"];
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
