@@ -90,15 +90,8 @@ void Server::clientHandler(const SOCKET client_socket)
         std::string containerID;
 
         std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
-        int res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES, 0);
-        if (res == INVALID_SOCKET)
-        {
-            std::string s = "Error while receiving from socket: ";
-            s += std::to_string(client_socket);
-            throw std::runtime_error(s.c_str());
-        }
 
-		ri = waitForClientResponse(client_socket);
+		ri = Helper::waitForResponse(client_socket);
 
         std::cout << "client sent: " << ri.id << " , buffer: " << ri.buffer.data() << std::endl;  
 
@@ -107,28 +100,17 @@ void Server::clientHandler(const SOCKET client_socket)
         // here open and get ips from docker.
         nodesIp = DockerManager::openAndGetIPs(nor.amount_to_use, nor.amount_to_open);
 
-	    msg = "[";
-	    for(auto it = nodesIp.begin(); it != nodesIp.end(); it ++)
-	    {
-		    msg += " " + *it + ",";
-	    }
-	    msg = msg.substr(0,msg.length() - 1);
-	    msg += " ]";
-        std::cout << "sending msg...\n";
-        int bytesSent = send(client_socket, msg.c_str(), msg.length(), 0);
-        if(bytesSent == -1)
-            throw std::runtime_error("Failed to send");
+        CircuitConfirmationResponse ccr;        
+        ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
-		res = recv(client_socket, recvMsg, AMOUNT_OF_BYTES, 0);
-        if (res == INVALID_SOCKET)
+        for (auto it = nodesIp.begin(); it != nodesIp.end(); it++)
         {
-            std::string s = "Error while receiving from socket: ";
-            s += std::to_string(client_socket);
-            throw std::runtime_error(s.c_str());
+            ccr.nodesPath.emplace_back(pair<std::string, unsigned int>(*it, 9050));
         }
+        Helper::sendVector(client_socket, SerializerResponses::serializeResponse(ccr));
+        std::cout << "sending msg...\n";
 
 
-		
     }
     catch(const std::runtime_error& e)
     {
@@ -136,64 +118,6 @@ void Server::clientHandler(const SOCKET client_socket)
     }
 }
 
-RequestInfo Server::buildRI(SOCKET clientSocket, unsigned int statusCode)
-{
-    RequestInfo ri = RequestInfo();
-    ri.buffer = std::vector<unsigned char>();
-    std::string clientMsg = "";
-    unsigned int clientMsgLength = 0;
-	unsigned int circuitId = 0;
-    size_t i = 0;
-    int j = 0;
-
-    ri.id = statusCode;
-
-    std::cout << "DEBUG: Status code: " << statusCode << std::endl;
-    ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
-
-    if (false) //request how has no data
-        return ri;
-
-	//ri.circuit_id = Helper::getCircuitIdFromSocket(clientSocket);
-
-    //std::cout << "DEBUG: Circuit id: " << ri.circuit_id << std::endl;
-    //ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.circuit_id));
-
-    clientMsgLength = Helper::getLengthPartFromSocket(clientSocket);
-
-    std::cout << "DEBUG: Length: " << clientMsgLength << std::endl;
-    // Insert message length in little-endian format
-    for (j = 0; j < BYTES_TO_COPY; ++j) {
-        ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((clientMsgLength >> (8 * j)) & 0xFF));
-    }
-
-    clientMsg = Helper::getStringPartFromSocket(clientSocket, clientMsgLength);
-    clientMsg[clientMsgLength] = '\0';
-
-    for (i = 0; i < clientMsgLength; i++)
-    {
-        ri.buffer.push_back(static_cast<unsigned char>(clientMsg[i]));
-    }
-
-    std::cout << "DEBUG: The message is: " << clientMsg << std::endl;
-
-    ri.id = statusCode;
-
-    return ri;
-}
-
-RequestInfo Server::waitForClientResponse(SOCKET socket)
-{
-	unsigned int statusCode; 
-	while(true)
-	{
-		statusCode = Helper::socketHasData(socket);
-		if(statusCode != 0 && statusCode != -1)
-		{
-			return buildRI(socket, statusCode);
-		}
-	}
-}
 
 int main()
 {

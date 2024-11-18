@@ -100,7 +100,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
 
     json requestJson = {
         {"circuit_id", linkRequest.circuit_id},
-        {"nextNode", linkRequest.nextNodeIp},
+        {"nextNode", linkRequest.nextNode},
     };
     
     std::string requestJsonStr = requestJson.dump();

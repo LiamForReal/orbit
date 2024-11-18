@@ -174,3 +174,62 @@ unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int 
 
 	return data;
 }
+
+RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
+{
+    RequestInfo ri = RequestInfo();
+    ri.buffer = std::vector<unsigned char>();
+    std::string msg = "";
+    unsigned int msgLength = 0;
+	unsigned int circuitId = 0;
+    size_t i = 0;
+    int j = 0;
+
+    ri.id = statusCode;
+
+    std::cout << "DEBUG: Status code: " << statusCode << std::endl;
+    ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
+
+    if (false) //request how has no data
+        return ri;
+
+	//ri.circuit_id = Helper::getCircuitIdFromSocket(clientSocket);
+
+    //std::cout << "DEBUG: Circuit id: " << ri.circuit_id << std::endl;
+    //ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.circuit_id));
+
+    msgLength = Helper::getLengthPartFromSocket(socket);
+
+    std::cout << "DEBUG: Length: " << msgLength << std::endl;
+    // Insert message length in little-endian format
+    for (j = 0; j < BYTES_TO_COPY; ++j) {
+        ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
+    }
+
+    msg = Helper::getStringPartFromSocket(socket, msgLength);
+    msg[msgLength] = '\0';
+
+    for (i = 0; i < msgLength; i++)
+    {
+        ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
+    }
+
+    std::cout << "DEBUG: The message is: " << msg << std::endl;
+
+    ri.id = statusCode;
+
+    return ri;
+}
+
+RequestInfo Helper::waitForResponse(SOCKET socket)
+{
+	unsigned int statusCode; 
+	while(true)
+	{
+		statusCode = Helper::socketHasData(socket);
+		if(statusCode != 0 && statusCode != -1)
+		{
+			return Helper::buildRI(socket, statusCode);
+		}
+	}
+}

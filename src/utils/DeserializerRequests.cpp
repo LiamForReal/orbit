@@ -101,7 +101,7 @@ LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsig
 	try
 	{
 		request.circuit_id = jsonData["circuit_id"];
-		request.nextNodeIp = jsonData["nextNode"];
+		request.nextNode = jsonData["nextNode"];
 	}
 	catch (...)
 	{

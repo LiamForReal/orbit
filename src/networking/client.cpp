@@ -22,7 +22,6 @@ Client::~Client()
 	catch (...) {}
 }
 
-
 void Client::connectToServer(std::string serverIP, int port)
 {
 
@@ -49,12 +48,12 @@ void Client::nodeOpening()
 		std::cin >> nor.amount_to_open;
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
-	}while(nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
+	} while(nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
 	std::vector<byte> data = SerializerRequests::serializeRequest(nor);
 	Helper::sendVector(_clientSocketWithDS, data); 
 	std::cout << "Message send to server..." << std::endl;
-	recv(_clientSocketWithDS, m, 99, 0);
-    std::cout << "Message from server: " << m << std::endl;
+
+	//CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse();
 }
 
 bool Client::domainValidationCheck(std::string domain)
@@ -73,14 +72,18 @@ void Client::startConversation()
 	if(!domainValidationCheck(domainRequest.domain))
 		throw std::runtime_error("domain is ileagal");
 
-	vector<byte> data = SerializerRequests::serializeRequest(domainRequest); 
-	Helper::sendVector(_clientSocketWithDS, data); 
-	std::cout << "Message send to server..." << std::endl;
-	byte status_code = Helper::getStatusCodeFromSocket(_clientSocketWithDS);
-    std::cout << "Message from server: " << m << std::endl;
-	//while(true)
-   
+	RequestInfo ri;
+	ri = Helper::waitForResponse(this->_clientSocketWithDS);
 	
+	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
+	
+	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
+	{
+		std::cout << "Node: " << it->first << " " << it->second << std::endl;
+	}
+
+
+	//while(true)...
 	
 }
 

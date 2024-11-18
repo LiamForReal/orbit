@@ -47,7 +47,7 @@ typedef struct NodeOpenRequest
 
 typedef struct LinkRequest
 {
-    string nextNodeIp;
+    pair<std::string, unsigned int> nextNode;
     unsigned int circuit_id; 
 } LinkRequest;
 
@@ -75,6 +75,6 @@ typedef struct AliveMsgRequest
 
 typedef struct GetDomainRequest 
 {
-    std::string domain; 
+    std::string domain;
 } GetDomainRequest;
 

@@ -3,6 +3,10 @@
 #include <vector>
 #include <string>
 #include <WinSock2.h>
+#include "Requestes.hpp"
+
+#define INC 1
+#define BYTES_TO_COPY 4
 
 
 class Helper
@@ -18,6 +22,8 @@ public:
     static unsigned int getCircuitIdFromSocket(const SOCKET sc); //
 	static unsigned int getLengthPartFromSocket(const SOCKET sc); //
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
+	static RequestInfo buildRI(SOCKET socket, unsigned int& statusCode);
+	static RequestInfo waitForResponse(SOCKET socket);
 
 private:
 	static std::string getPartFromSocket(const SOCKET sc, const int bytesNum);

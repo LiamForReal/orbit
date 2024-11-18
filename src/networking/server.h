@@ -30,7 +30,5 @@ class Server
         void acceptClient(); 
         void clientHandler(const SOCKET client_socket);
         void runCmdCommand(const std::string command);
-        RequestInfo buildRI(SOCKET clientSocket, unsigned int statusCode);
-        RequestInfo waitForClientResponse(SOCKET socket);
         SOCKET _socket;
 };
