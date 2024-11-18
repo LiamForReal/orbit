@@ -1,7 +1,7 @@
 #pragma once 
 #include <iostream> 
 #include "utils.hpp"
-
+#include <vector>
 using std::pair; 
 using std::string;
 
@@ -20,6 +20,13 @@ typedef enum RequestCode
     GET_DOMAIN_RC = 110,
 } RequestCode;
 
+typedef struct RequestInfo 
+{
+    unsigned char id; 
+    unsigned char circuit_id;
+    std::vector<unsigned char> buffer;
+} RequestInfo;
+
 typedef struct RsaKeyExchangeRequest
 {
     uint2048_t public_key;
@@ -36,7 +43,6 @@ typedef struct NodeOpenRequest
 {
     unsigned int amount_to_open; 
     unsigned int amount_to_use; 
-    unsigned int circuit_id; 
 } NodeOpenRequest;
 
 typedef struct LinkRequest
@@ -71,3 +77,4 @@ typedef struct GetDomainRequest
 {
     std::string domain; 
 } GetDomainRequest;
+

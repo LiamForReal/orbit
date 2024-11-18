@@ -11,6 +11,11 @@
 #include <List>
 #include "WSAInitializer.h"
 #include "docker_manager.h"
+#include "../utils/Requestes.hpp"
+#include "../utils/Responses.hpp"
+#include "../utils/DeserializerRequests.h"
+#include "../utils/SerializerResponses.h"
+#include "../utils/Helper.h"
 
 #define COMMUNICATE_CONTROL_PORT 9051
 class Server
@@ -25,5 +30,7 @@ class Server
         void acceptClient(); 
         void clientHandler(const SOCKET client_socket);
         void runCmdCommand(const std::string command);
+        RequestInfo buildRI(SOCKET clientSocket, unsigned int statusCode);
+        RequestInfo waitForClientResponse(SOCKET socket);
         SOCKET _socket;
 };

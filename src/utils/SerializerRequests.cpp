@@ -74,7 +74,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
     json requestJson = {
         {"amount_to_open", nodeOpenRequest.amount_to_open},
         {"amount_to_use", nodeOpenRequest.amount_to_use},
-        {"circuit_id", nodeOpenRequest.circuit_id},
     };
     
     std::string requestJsonStr = requestJson.dump();

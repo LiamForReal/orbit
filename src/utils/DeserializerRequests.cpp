@@ -70,7 +70,6 @@ NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const std::v
 
 	try
 	{
-		request.circuit_id = jsonData["circuit_id"];
 		request.amount_to_open = jsonData["amount_to_open"];
 		request.amount_to_use = jsonData["amount_to_use"];
 	}

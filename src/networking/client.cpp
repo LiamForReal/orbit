@@ -1,11 +1,12 @@
 #include "client.h"
+using std::vector;
 
 Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
-	_clientSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-	if (_clientSocket == INVALID_SOCKET)
+	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 
 }
@@ -16,7 +17,7 @@ Client::~Client()
 	{
 		// the only use of the destructor should be for freeing 
 		// resources that was allocated in the constructor
-		closesocket(_clientSocket);
+		closesocket(_clientSocketWithDS);
 	}
 	catch (...) {}
 }
@@ -32,31 +33,55 @@ void Client::connectToServer(std::string serverIP, int port)
 	sa.sin_addr.s_addr =  inet_addr(serverIP.c_str());    // the IP of the server
 
 	// the process will not continue until the server accepts the client
-	int status = connect(_clientSocket, (struct sockaddr*)&sa, sizeof(sa));
+	int status = connect(_clientSocketWithDS, (struct sockaddr*)&sa, sizeof(sa));
 
 	if (status == INVALID_SOCKET)
 		throw std::runtime_error("Cant connect to server");
 }
 
-void Client::startConversation()
+void Client::nodeOpening()
 {
-	int nodes_to_use = 0, nodes_to_open = 0; 
-    char m[100];
-    std::string msg = "";
+	NodeOpenRequest nor;
+	char m[100];
 	do
 	{
 		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) +  "): ";
-		std::cin >> nodes_to_open;
+		std::cin >> nor.amount_to_open;
 		std::cout << "enter amount of nodes to use: ";
-		std::cin >> nodes_to_use;
-	}while(nodes_to_open > MAX_NODES_TO_OPEN || nodes_to_open < MIN_NODES_TO_OPEN || nodes_to_use < MIN_NODES_TO_OPEN);
-	msg = std::to_string(nodes_to_open) + " " + std::to_string(nodes_to_use);
-	send(_clientSocket, msg.c_str(), msg.size(), 0);  // last parameter: flag. for us will be 0.
+		std::cin >> nor.amount_to_use;
+	}while(nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
+	std::vector<byte> data = SerializerRequests::serializeRequest(nor);
+	Helper::sendVector(_clientSocketWithDS, data); 
 	std::cout << "Message send to server..." << std::endl;
-
-	
-	recv(_clientSocket, m, 99, 0);
+	recv(_clientSocketWithDS, m, 99, 0);
     std::cout << "Message from server: " << m << std::endl;
+}
+
+bool Client::domainValidationCheck(std::string domain)
+{
+	//acomplish it
+	return true;
+}
+
+void Client::startConversation()
+{
+	char m[100];
+	GetDomainRequest domainRequest;
+	nodeOpening();
+	std::cout << "please enter the domain you want to get: ";
+	std::cin >> domainRequest.domain;
+	if(!domainValidationCheck(domainRequest.domain))
+		throw std::runtime_error("domain is ileagal");
+
+	vector<byte> data = SerializerRequests::serializeRequest(domainRequest); 
+	Helper::sendVector(_clientSocketWithDS, data); 
+	std::cout << "Message send to server..." << std::endl;
+	byte status_code = Helper::getStatusCodeFromSocket(_clientSocketWithDS);
+    std::cout << "Message from server: " << m << std::endl;
+	//while(true)
+   
+	
+	
 }
 
 int main()
