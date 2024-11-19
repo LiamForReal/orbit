@@ -87,7 +87,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
 
 	// Insert Message Into Vector
 	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
-
+    
     return vec;
 }
 

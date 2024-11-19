@@ -49,7 +49,8 @@ void Client::nodeOpening()
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while(nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
-	std::vector<byte> data = SerializerRequests::serializeRequest(nor);
+	std::vector<unsigned char> data = SerializerRequests::serializeRequest(nor);
+	std::cout << data.data() << "\n";
 	Helper::sendVector(_clientSocketWithDS, data); 
 	std::cout << "Message send to server..." << std::endl;
 

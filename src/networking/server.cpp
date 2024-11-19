@@ -93,10 +93,10 @@ void Server::clientHandler(const SOCKET client_socket)
 
 		ri = Helper::waitForResponse(client_socket);
 
-        std::cout << "client sent: " << ri.id << " , buffer: " << ri.buffer.data() << std::endl;  
-
 		NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(ri.buffer);
 
+        std::cout << "client sent: " << ri.id << " , buffer(open): " << nor.amount_to_open  << " ,buffer(open): "  << nor.amount_to_use << std::endl;  
+		
         // here open and get ips from docker.
         nodesIp = DockerManager::openAndGetIPs(nor.amount_to_use, nor.amount_to_open);
 

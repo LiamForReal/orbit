@@ -20,10 +20,10 @@ typedef enum RequestCode
     GET_DOMAIN_RC = 110,
 } RequestCode;
 
-typedef struct RequestInfo 
+typedef struct RequestInfo
 {
-    unsigned char id; 
-    unsigned char circuit_id;
+    unsigned int id;
+    unsigned int circuit_id;
     std::vector<unsigned char> buffer;
 } RequestInfo;
 

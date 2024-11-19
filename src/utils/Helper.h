@@ -14,7 +14,6 @@ class Helper
 public:
 
 	static unsigned int socketHasData(SOCKET socket);
-	static int getMessageTypeCode(const SOCKET sc);
 	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
 	static void sendVector(const SOCKET sc, const std::vector<unsigned char>& vec);
 	//static void sendData(const SOCKET sc, const std::string message);

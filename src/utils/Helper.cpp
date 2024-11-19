@@ -8,16 +8,6 @@ using std::string;
 
 // recieves the type code of the message from socket (3 bytes)
 // and returns the code. if no message found in the socket returns 0 (which means the client disconnected)
-int Helper::getMessageTypeCode(const SOCKET sc)
-{
-	std::string msg = getPartFromSocket(sc, 3, 0);
-
-	if (msg == "")
-		return 0;
-
-	int res = std::atoi(msg.c_str());
-	return  res;
-}
 
 unsigned int Helper::socketHasData(SOCKET socket) 
 {
@@ -37,6 +27,8 @@ void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 {
 	std::cout << "Sending...\n";
 	const char* dataPtr = reinterpret_cast<const char*>(vec.data());
+	std::string str = dataPtr; 
+	std::cout << str;
 	int dataSize = static_cast<int>(vec.size());
 	int totalBytesSent = 0;
 
@@ -199,14 +191,14 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
     //ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.circuit_id));
 
     msgLength = Helper::getLengthPartFromSocket(socket);
-
+	j = static_cast<int>(msgLength);
     std::cout << "DEBUG: Length: " << msgLength << std::endl;
     // Insert message length in little-endian format
     for (j = 0; j < BYTES_TO_COPY; ++j) {
         ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
     }
 
-    msg = Helper::getStringPartFromSocket(socket, msgLength);
+    msg = Helper::getStringPartFromSocket(socket, j);
     msg[msgLength] = '\0';
 
     for (i = 0; i < msgLength; i++)
