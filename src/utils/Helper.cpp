@@ -20,7 +20,7 @@ unsigned int Helper::socketHasData(SOCKET socket)
 // returns the data as string
 string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
 {
-	return getPartFromSocket(sc, bytesNum, 0);
+	return getPartFromSocket(sc, bytesNum*sizeof(unsigned char), 0);
 }
 
 void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
