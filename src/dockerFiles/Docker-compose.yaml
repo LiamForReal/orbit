@@ -10,16 +10,25 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.18.201.70
+        ipv4_address: 192.128.170.58
     ports:
     - 9050:9050
     - 9051:9051
+  node10:
+    container_name: node10
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.114.63.8
+    ports:
+    - 9068:9050
+    - 9069:9051
   node2:
     container_name: node2
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.182.183.208
+        ipv4_address: 192.237.211.196
     ports:
     - 9052:9050
     - 9053:9051
@@ -28,7 +37,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.35.141.106
+        ipv4_address: 192.14.214.88
     ports:
     - 9054:9050
     - 9055:9051
@@ -37,7 +46,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.104.208.203
+        ipv4_address: 192.8.251.138
     ports:
     - 9056:9050
     - 9057:9051
@@ -46,7 +55,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.232.231.207
+        ipv4_address: 192.71.236.148
     ports:
     - 9058:9050
     - 9059:9051
@@ -55,7 +64,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.106.187.105
+        ipv4_address: 192.167.109.116
     ports:
     - 9060:9050
     - 9061:9051
@@ -64,7 +73,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.109.103.212
+        ipv4_address: 192.254.121.102
     ports:
     - 9062:9050
     - 9063:9051
@@ -73,7 +82,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.225.255.121
+        ipv4_address: 192.36.11.193
     ports:
     - 9064:9050
     - 9065:9051
@@ -82,17 +91,8 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.57.142.251
+        ipv4_address: 192.40.73.250
     ports:
     - 9066:9050
     - 9067:9051
-  node10:
-    container_name: node10
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.58.142.251
-    ports:
-    - 9068:9050
-    - 9069:9051
 version: '3.8'

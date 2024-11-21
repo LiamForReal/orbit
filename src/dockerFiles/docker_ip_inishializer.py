@@ -20,7 +20,7 @@ def generate_random_ip(subnet, count):
     return ips
 
 def main():
-    with open("Docker-compose.yaml", "r") as file:
+    with open("../dockerFiles/Docker-compose.yaml", "r") as file:
         compose_data = yaml.safe_load(file)
 
     num_services = len(compose_data["services"])
@@ -30,7 +30,7 @@ def main():
     for i, (service, ip) in enumerate(zip(compose_data["services"], random_ips)):
         compose_data["services"][service]["networks"]["TOR_NETWORK"]["ipv4_address"] = ip
 
-    with open("docker-compose.yaml", "w") as file:
+    with open("../dockerFiles/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)
 
     print("Assigned random IPs:", random_ips)

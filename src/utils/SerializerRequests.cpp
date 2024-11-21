@@ -73,17 +73,12 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << "status code: " << NODE_OPEN_RC << "length: " << requestJsonStr.length() << "Data: " << requestJsonStr << std::endl;
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
 	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
    
     vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
-	
-    for (unsigned char c : vec) {
-        printf("%02x ", c); // Print each byte as a two-digit hexadecimal
-    }   
 
     return vec;
 }

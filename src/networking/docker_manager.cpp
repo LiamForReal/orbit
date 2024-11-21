@@ -24,7 +24,7 @@ void DockerManager::openDocker(const int& amount)
         command += " " + std::string(CONTAINER_NAME) + std::to_string(i); 
     }
 
-    runCmdCommand("python docker_ip_inishializer.py"); //pip install pyyaml - to run it
+    runCmdCommand("python ../dockerFiles/docker_ip_inishializer.py"); //pip install pyyaml - to run it
     runCmdCommand(command);
 }
 
