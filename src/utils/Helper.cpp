@@ -191,15 +191,14 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
     //ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.circuit_id));
 
     msgLength = Helper::getLengthPartFromSocket(socket);
-	j = static_cast<int>(msgLength);
     std::cout << "DEBUG: Length: " << msgLength << std::endl;
     // Insert message length in little-endian format
     for (j = 0; j < BYTES_TO_COPY; ++j) {
         ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
     }
 
-    msg = Helper::getStringPartFromSocket(socket, j);
-    // msg[msgLength + BYTES_TO_COPY] = '\0';
+    msg = Helper::getStringPartFromSocket(socket, msgLength);
+    msg[msgLength] = '\0';
 
     for (i = 0; i < msgLength; i++)
     {
