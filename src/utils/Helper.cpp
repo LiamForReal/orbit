@@ -199,7 +199,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
     }
 
     msg = Helper::getStringPartFromSocket(socket, j);
-    msg[msgLength] = '\0';
+    // msg[msgLength + BYTES_TO_COPY] = '\0';
 
     for (i = 0; i < msgLength; i++)
     {

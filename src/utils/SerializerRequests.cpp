@@ -83,10 +83,9 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
 	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
    
+    vec.resize(INIT_VEC_SIZE + len);
 
-    vec.resize(INIT_VEC_SIZE + len*sizeof(unsigned char));
-
-    vec.insert(vec.begin() + INIT_VEC_SIZE, requestJsonStr.begin(), requestJsonStr.end());
+    vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
 	
     for (unsigned char c : vec) {
         printf("%02x ", c); // Print each byte as a two-digit hexadecimal
