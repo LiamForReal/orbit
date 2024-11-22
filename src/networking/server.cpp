@@ -1,4 +1,5 @@
 #include "server.h"
+#include "handlers/TorRequestHandler.h"
 
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
@@ -83,9 +84,10 @@ void Server::clientHandler(const SOCKET client_socket)
     try
     {
 		RequestInfo ri;
-        std::string msg = "";
+        std::string msg = ""; 
 		DockerManager dm = DockerManager();
-	    std::list<std::pair<std::string, std::string>> nodesInfo;
+		RequestResult rr = RequestResult();
+		TorRequestHandler torRequestHandler = TorRequestHandler(dm);
         char recvMsg[100];
         char buffer[128];
         std::string containerID;
@@ -93,25 +95,9 @@ void Server::clientHandler(const SOCKET client_socket)
         std::cout << "get msg from client " + std::to_string(client_socket) << std::endl; 
 
 		ri = Helper::waitForResponse(client_socket);
-
-		NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(ri.buffer);
-
-        std::cout << "client sent: " << ri.id << " , buffer(open): " << nor.amount_to_open  << " ,buffer(open): "  << nor.amount_to_use << std::endl;  
-		
-        // here open and get ips from docker.
-		nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
-
-        CircuitConfirmationResponse ccr;        
-        ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
-
-        for (auto it = nodesInfo.begin(); it != nodesInfo.end(); it++)
-        {
-            ccr.nodesPath.emplace_back(*it);
-        }
-        Helper::sendVector(client_socket, SerializerResponses::serializeResponse(ccr));
+		rr = torRequestHandler.directRequest(ri);
+        Helper::sendVector(client_socket, rr.buffer);
         std::cout << "sending msg...\n";
-
-
     }
     catch(const std::runtime_error& e)
     {

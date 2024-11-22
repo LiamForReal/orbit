@@ -1,6 +1,11 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include "../../utils/Requestes.hpp"
+#include "../docker_manager.h"
+#include "../../utils/DeserializerRequests.h"
+#include "../../utils/Responses.hpp"
+#include "../../utils/SerializerResponses.h"
 
 typedef struct RequestInfo
 {
@@ -19,5 +24,5 @@ class IRequestHandler
 {
     public:
         virtual bool isRequestRelevant(const RequestInfo& requestInfo) = 0;
-        virtual RequestResult handleRequest(const RequestInfo& requestInfo) = 0;
+        virtual RequestResult handleRequest(const RequestInfo& requestInfo, DockerManager& dm) = 0;
 };

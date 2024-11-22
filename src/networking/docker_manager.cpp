@@ -156,3 +156,19 @@ std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(con
     this->amountCreated = this->amountCreated + create;
     return nodesInfo;
 }
+
+std::list<std::pair<std::string, std::string>> DockerManager::GetControlInfo(const int amount) //for server
+{
+    std::list<std::pair<std::string, std::string>> nodesInfo;
+    std::list<std::string> ips = findIPs(amount);
+    std::list<std::string> ports = findControlPorts(amount);
+    auto itIp = ips.begin();
+    auto itPort = ports.begin();
+    for (int i = 0; i < ips.size(); i++)
+    {
+        std::advance(itPort, i);
+        std::advance(itIp, i);
+        nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+    }
+    return nodesInfo;
+}
