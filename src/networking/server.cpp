@@ -84,7 +84,8 @@ void Server::clientHandler(const SOCKET client_socket)
     {
 		RequestInfo ri;
         std::string msg = "";
-	    std::list<std::string> nodesIp;
+		DockerManager dm = DockerManager();
+	    std::list<std::pair<std::string, std::string>> nodesInfo;
         char recvMsg[100];
         char buffer[128];
         std::string containerID;
@@ -98,14 +99,14 @@ void Server::clientHandler(const SOCKET client_socket)
         std::cout << "client sent: " << ri.id << " , buffer(open): " << nor.amount_to_open  << " ,buffer(open): "  << nor.amount_to_use << std::endl;  
 		
         // here open and get ips from docker.
-        nodesIp = DockerManager::openAndGetIPs(nor.amount_to_use, nor.amount_to_open);
+		nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
 
         CircuitConfirmationResponse ccr;        
         ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
-        for (auto it = nodesIp.begin(); it != nodesIp.end(); it++)
+        for (auto it = nodesInfo.begin(); it != nodesInfo.end(); it++)
         {
-            ccr.nodesPath.emplace_back(pair<std::string, unsigned int>(*it, 9050));
+            ccr.nodesPath.emplace_back(*it);
         }
         Helper::sendVector(client_socket, SerializerResponses::serializeResponse(ccr));
         std::cout << "sending msg...\n";

@@ -18,12 +18,6 @@
     <ClInclude Include="..\networking\client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\networking\docker_manager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\networking\server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\networking\WSAInitializer.h">
       <Filter>Header Files</Filter>
     </ClInclude>

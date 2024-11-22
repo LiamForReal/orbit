@@ -20,8 +20,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\networking\client.h" />
-    <ClInclude Include="..\networking\docker_manager.h" />
-    <ClInclude Include="..\networking\server.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
     <ClInclude Include="..\utils\DeserializerResponses.h" />
     <ClInclude Include="..\utils\Helper.h" />
