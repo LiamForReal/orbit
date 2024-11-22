@@ -1,7 +1,7 @@
 #pragma once 
-#include <iostream> 
+#include "../networking/handlers/IRequestHandler.h"
 #include "utils.hpp"
-#include <vector>
+
 using std::pair; 
 using std::string;
 
@@ -19,13 +19,6 @@ typedef enum RequestCode
 	DELETE_CIRCUIT_RC = 100,
     GET_DOMAIN_RC = 110,
 } RequestCode;
-
-typedef struct RequestInfo
-{
-    unsigned int id;
-    unsigned int circuit_id;
-    std::vector<unsigned char> buffer;
-} RequestInfo;
 
 typedef struct RsaKeyExchangeRequest
 {
