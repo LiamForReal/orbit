@@ -80,11 +80,6 @@ void Client::startConversation()
 	if(!domainValidationCheck(domainRequest.domain))
 		throw std::runtime_error("domain is ileagal");
 
-	
-	
-	
-
-
 	//while(true)...
 	
 }

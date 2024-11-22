@@ -42,6 +42,9 @@
     <ClInclude Include="..\utils\utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils\RequestInfo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\networking\client.cpp">

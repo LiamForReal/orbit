@@ -6,7 +6,7 @@
 #include "../../utils/SerializerResponses.h"
 #include "../../utils/DeserializerRequests.h"
 #include "../../utils/Responses.hpp"
-
+#include "../../utils/RequestInfo.hpp"
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {

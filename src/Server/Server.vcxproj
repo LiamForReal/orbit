@@ -137,6 +137,7 @@
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
     <ClInclude Include="..\utils\Requestes.hpp" />
+    <ClInclude Include="..\utils\RequestInfo.hpp" />
     <ClInclude Include="..\utils\Responses.hpp" />
     <ClInclude Include="..\utils\SerializerResponses.h" />
     <ClInclude Include="..\utils\utils.hpp" />

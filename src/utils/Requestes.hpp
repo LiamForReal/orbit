@@ -19,13 +19,6 @@ typedef enum RequestCode
     GET_DOMAIN_RC = 110,
 } RequestCode;
 
-typedef struct RequestInfo
-{
-    unsigned int id;
-    unsigned int circuit_id;
-    std::vector<unsigned char> buffer;
-} RequestInfo;
-
 typedef struct RsaKeyExchangeRequest
 {
     uint2048_t public_key;

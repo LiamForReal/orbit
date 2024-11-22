@@ -4,6 +4,7 @@
 #include <string>
 #include <WinSock2.h>
 #include "Requestes.hpp"
+#include "RequestInfo.hpp"
 
 #define INC 1
 #define BYTES_TO_COPY 4
