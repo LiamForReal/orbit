@@ -7,6 +7,6 @@ public:
 	TorRequestHandler(DockerManager& newDm);
 	RequestResult directRequest(const RequestInfo& requestInfo);
 private:
-	NodeOpeningHandler noh;//more...
+	NodeOpeningHandler* noh;//more...
 	DockerManager& dm;
 };

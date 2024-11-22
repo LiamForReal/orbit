@@ -10,7 +10,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.133.10.20
+        ipv4_address: 192.160.118.67
     ports:
     - 9050:9050
     - 9051:9051
@@ -19,7 +19,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.70.86.231
+        ipv4_address: 192.140.41.69
     ports:
     - 9068:9050
     - 9069:9051
@@ -28,7 +28,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.43.254.54
+        ipv4_address: 192.164.243.143
     ports:
     - 9052:9050
     - 9053:9051
@@ -37,7 +37,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.113.222.42
+        ipv4_address: 192.69.127.80
     ports:
     - 9054:9050
     - 9055:9051
@@ -46,7 +46,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.87.121.217
+        ipv4_address: 192.151.10.77
     ports:
     - 9056:9050
     - 9057:9051
@@ -55,7 +55,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.134.180.67
+        ipv4_address: 192.45.49.102
     ports:
     - 9058:9050
     - 9059:9051
@@ -64,7 +64,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.109.53.195
+        ipv4_address: 192.114.189.59
     ports:
     - 9060:9050
     - 9061:9051
@@ -73,7 +73,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.25.2.206
+        ipv4_address: 192.131.69.241
     ports:
     - 9062:9050
     - 9063:9051
@@ -82,7 +82,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.186.91.56
+        ipv4_address: 192.30.140.86
     ports:
     - 9064:9050
     - 9065:9051
@@ -91,7 +91,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.96.152.152
+        ipv4_address: 192.106.138.193
     ports:
     - 9066:9050
     - 9067:9051

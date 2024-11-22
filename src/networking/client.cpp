@@ -41,7 +41,6 @@ void Client::connectToServer(std::string serverIP, int port)
 void Client::nodeOpening()
 {
 	NodeOpenRequest nor;
-	char m[100];
 	do
 	{
 		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) +  "): ";
@@ -64,23 +63,26 @@ bool Client::domainValidationCheck(std::string domain)
 
 void Client::startConversation()
 {
-	char m[100];
+	char buffer[100];
+	RequestInfo ri;
 	GetDomainRequest domainRequest;
 	nodeOpening();
+	ri = Helper::waitForResponse(this->_clientSocketWithDS);
+	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
+
+	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
+	{
+		std::cout << "Node: " << it->first << " " << it->second << std::endl;
+	}
+
 	std::cout << "please enter the domain you want to get: ";
 	std::cin >> domainRequest.domain;
 	if(!domainValidationCheck(domainRequest.domain))
 		throw std::runtime_error("domain is ileagal");
 
-	RequestInfo ri;
-	ri = Helper::waitForResponse(this->_clientSocketWithDS);
 	
-	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
 	
-	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
-	{
-		std::cout << "Node: " << it->first << " " << it->second << std::endl;
-	}
+	
 
 
 	//while(true)...

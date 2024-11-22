@@ -3,16 +3,10 @@
 #include <vector>
 #include "../../utils/Requestes.hpp"
 #include "../docker_manager.h"
+#include "../../utils/SerializerResponses.h"
 #include "../../utils/DeserializerRequests.h"
 #include "../../utils/Responses.hpp"
-#include "../../utils/SerializerResponses.h"
 
-typedef struct RequestInfo
-{
-    unsigned int id;
-    unsigned int circuit_id;
-    std::vector<unsigned char> buffer;
-} RequestInfo;
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
@@ -24,5 +18,5 @@ class IRequestHandler
 {
     public:
         virtual bool isRequestRelevant(const RequestInfo& requestInfo) = 0;
-        virtual RequestResult handleRequest(const RequestInfo& requestInfo, DockerManager& dm) = 0;
+        virtual RequestResult handleRequest(const RequestInfo& requestInfo, DockerManager dm) = 0;
 };

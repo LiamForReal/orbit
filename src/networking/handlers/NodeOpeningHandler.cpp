@@ -7,7 +7,7 @@ bool NodeOpeningHandler::isRequestRelevant(const RequestInfo& requestInfo)
 	return requestInfo.id == NODE_OPEN_RC;
 }
 
-RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo, DockerManager& dm)
+RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo, DockerManager dm)
 {
     std::list<std::pair<std::string, std::string>> nodesInfo;
     CircuitConfirmationResponse ccr;

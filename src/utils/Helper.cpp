@@ -28,7 +28,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 	std::cout << "Sending...\n";
 	const char* dataPtr = reinterpret_cast<const char*>(vec.data());
 	std::string str = dataPtr; 
-	std::cout << str;
 	int dataSize = static_cast<int>(vec.size());
 	int totalBytesSent = 0;
 
