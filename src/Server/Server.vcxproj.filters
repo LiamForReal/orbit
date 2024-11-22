@@ -45,6 +45,12 @@
     <ClInclude Include="..\utils\SerializerResponses.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\networking\handlers\IRequestHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\networking\handlers\NodeOpeningHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\utils\DeserializerRequests.cpp">
@@ -66,6 +72,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\networking\WSAInitializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\networking\handlers\NodeOpeningHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

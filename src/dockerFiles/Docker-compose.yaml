@@ -10,7 +10,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.186.243.104
+        ipv4_address: 192.16.102.233
     ports:
     - 9050:9050
     - 9051:9051
@@ -19,7 +19,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.91.143.159
+        ipv4_address: 192.69.118.113
     ports:
     - 9068:9050
     - 9069:9051
@@ -28,7 +28,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.125.40.252
+        ipv4_address: 192.182.139.32
     ports:
     - 9052:9050
     - 9053:9051
@@ -37,7 +37,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.190.10.105
+        ipv4_address: 192.139.59.189
     ports:
     - 9054:9050
     - 9055:9051
@@ -46,7 +46,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.254.34.110
+        ipv4_address: 192.171.8.123
     ports:
     - 9056:9050
     - 9057:9051
@@ -55,7 +55,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.157.74.84
+        ipv4_address: 192.98.156.3
     ports:
     - 9058:9050
     - 9059:9051
@@ -64,7 +64,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.216.62.51
+        ipv4_address: 192.135.11.134
     ports:
     - 9060:9050
     - 9061:9051
@@ -73,7 +73,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.236.9.211
+        ipv4_address: 192.141.149.215
     ports:
     - 9062:9050
     - 9063:9051
@@ -82,7 +82,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.187.79.203
+        ipv4_address: 192.54.114.181
     ports:
     - 9064:9050
     - 9065:9051
@@ -91,7 +91,7 @@ services:
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.34.125.120
+        ipv4_address: 192.150.242.146
     ports:
     - 9066:9050
     - 9067:9051

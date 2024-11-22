@@ -1,6 +1,5 @@
 #include "SerializerResponses.h"
 
-//TODO: add the uint1024_t pubkey
 std::vector<unsigned char> SerializerResponses::serializeResponse(const RsaKeyExchangeResponse& rsaKeyExchangeResponse)
 {
     std::vector<unsigned char> vec(INIT_VEC_SIZE);

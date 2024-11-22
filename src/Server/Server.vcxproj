@@ -128,6 +128,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\networking\docker_manager.h" />
+    <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
+    <ClInclude Include="..\networking\handlers\NodeOpeningHandler.h" />
     <ClInclude Include="..\networking\server.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
@@ -140,6 +142,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\networking\docker_manager.cpp" />
+    <ClCompile Include="..\networking\handlers\NodeOpeningHandler.cpp" />
     <ClCompile Include="..\networking\server.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />

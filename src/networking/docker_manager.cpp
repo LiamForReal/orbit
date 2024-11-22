@@ -17,7 +17,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string command = "docker-compose up --build -d";  // -d flag runs it in detached mode
+    std::string command = "cd ../dockerFiles/ && docker-compose up --build -d";  // -d flag runs it in detached mode
 
     for (int i = 1; i <= amount; i++)
     {
@@ -36,7 +36,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
     
     for (int i = 0; i < amount; i++)
     {
-        std::string containerIDCommand = "docker-compose ps -q";
+        std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";
         FILE* pipe = _popen(containerIDCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run command");
         while (fgets(buffer, sizeof(buffer), pipe) != NULL)
@@ -45,7 +45,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
         }
         _pclose(pipe);
         containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
-        std::string inspectCommand = "docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + std::string(CONTAINER_NAME) + char(i + 49);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + std::string(CONTAINER_NAME) + char(i + 49);
         std::cout << inspectCommand << std::endl; 
         pipe = _popen(inspectCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run inspect command");
