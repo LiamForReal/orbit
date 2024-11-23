@@ -14,7 +14,6 @@
 #include "docker_manager.h"
 #include "../utils/Helper.h"
 
-#define COMMUNICATE_CONTROL_PORT 9051
 class Server
 {
     public: 

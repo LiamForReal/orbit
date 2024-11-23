@@ -9,7 +9,7 @@ using json = nlohmann::json;
 #define BYTES_TO_COPY 4
 #define INC 1
 
-//server 
+//Node 
 
 class DeserializerRequests
 {

@@ -89,7 +89,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
     vec[0] = ((unsigned char)(LINK_RC));
 
     unsigned int len = 0;
-
     json requestJson = {
         {"circuit_id", linkRequest.circuit_id},
         {"nextNode", linkRequest.nextNode},
