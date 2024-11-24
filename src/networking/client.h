@@ -15,6 +15,7 @@
 #define COMMUNICATE_SERVER_PORT 9787
 #define MAX_NODES_TO_OPEN 5
 #define MIN_NODES_TO_OPEN 1
+
 class Client
 {
 public:

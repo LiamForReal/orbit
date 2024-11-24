@@ -57,6 +57,16 @@ void Client::nodeOpening()
 	//CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse();
 }
 
+std::string Client::generateHttpGetRequest(const std::string& domain) 
+{
+	std::ostringstream request;
+	request << "GET / HTTP/1.1\r\n";
+	request << "Host: " << domain << "\r\n";
+	request << "Connection: close\r\n";
+	request << "\r\n";
+	return request.str();
+}
+
 bool Client::domainValidationCheck(std::string domain)
 {
 	//acomplish it
@@ -77,24 +87,27 @@ void Client::startConversation()
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
 	}
 
+	//headers of client sock begin
 	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
+	//
 	if (_clientSocketWithFirstNode == INVALID_SOCKET)
 		throw std::runtime_error("Could not connect to first node");
-
+	//
 	struct sockaddr_in sa = { 0 };
-
+	//
 	sa.sin_port = htons(stoi(ccr.nodesPath.begin()->second));
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
-
+	//
 	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
-
+	//
 	if (status == INVALID_SOCKET)
 		throw std::runtime_error("Could not open socket with first node");
-
-	for (auto it = ccr.nodesPath.begin().operator++(); it != ccr.nodesPath.end(); it++)
+    //headers of client sock end
+	auto it = ccr.nodesPath.begin();
+	for (int i = 0; i < ccr.nodesPath.size() - 1; i++)
 	{
+		std::advance(it, i);
 		LinkRequest linkRequest;
 		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 		linkRequest.circuit_id = ccr.circuit_id;
@@ -108,33 +121,30 @@ void Client::startConversation()
 		}
 	}
 
-	while (true)
+	std::cout << "Enter domain: ";
+	std::cin >> domain;
+	if (!domainValidationCheck(domain))
+		throw std::runtime_error("domain is illegal");
+
+	HttpGetRequest httpGetRequest;
+	httpGetRequest.circuit_id = ccr.circuit_id;
+	httpGetRequest.msg = generateHttpGetRequest(domain);
+
+	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
+
+	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+
+	HttpGetResponse httpGetResponse;
+	httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
+
+	if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
 	{
-		std::cout << "Enter domain: ";
-		std::cin >> domain;
-		if (!domainValidationCheck(domain))
-			throw std::runtime_error("domain is illegal");
-		
-		HttpGetRequest httpGetRequest;
-		httpGetRequest.circuit_id = ccr.circuit_id;
-		httpGetRequest.msg = "GET " + domain;
-
-		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
-
-		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-
-		HttpGetResponse httpGetResponse;
-		httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
-
-		if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
-		{
-			std::cerr << "Could not get HTML of " << domain << std::endl;
-		}
-		else
-		{
-			std::cout << "HTML of " << domain << std::endl;
-			std::cout << httpGetResponse.content << std::endl;
-		}
+		std::cerr << "Could not get HTML of " << domain << std::endl;
+	}
+	else
+	{
+		std::cout << "HTML of " << domain << ": " << std::endl;
+		std::cout << httpGetResponse.content << std::endl;
 	}
 }
 
