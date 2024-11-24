@@ -56,6 +56,8 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			cd[lr.circuit_id].first = _socket;
 		}
 
+		rr.circuit_id = lr.circuit_id;
+
 		lre.status = LINK_STATUS;
 
 		if (cd[lr.circuit_id].first == _socket)

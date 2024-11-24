@@ -1,5 +1,4 @@
 #include "node.h"
-
 // add request handler that muches 
 
 #define AMOUNT_OF_BYTES 1250
@@ -105,8 +104,10 @@ void Node::clientHandler(const SOCKET client_socket)
 
 int main()
 {
+
 	try
 	{
+		//change you have ct version go get it
 		const char* ip_env = getenv("NODE_IP"); // Get the IP from the environment variable
 		const char* port_env = getenv("NODE_PORT"); // Get the port from the environment variable
 
@@ -114,9 +115,9 @@ int main()
 		int port = port_env ? std::atoi(port_env) : 9050; // Default to 9050 if not set
 		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
-		string ip = ip_env;
-		uint16_t port = (uint16_t)(port_env);
-		node.serveProxy(ip, port);
+		string ipStr = ip_env;
+		uint16_t portUint = (uint16_t)(port_env);
+		node.serveProxy(ipStr, portUint);
 	}
 	catch (const std::runtime_error& e)
 	{

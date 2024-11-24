@@ -14,6 +14,7 @@ bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 
 std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpRequest) 
 {
+    /*
     const int PORT = 80; // HTTP port
     const int BUFFER_SIZE = 4096;
 
@@ -87,6 +88,8 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
     WSACleanup();
 
     return response;
+    */
+    return "";
 }
 
 
@@ -103,6 +106,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 	{
 		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
 		
+        rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
 		if (this->circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET)
 		{

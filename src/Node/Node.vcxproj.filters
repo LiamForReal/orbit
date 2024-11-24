@@ -89,9 +89,6 @@
     <ClCompile Include="..\utils\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\networking\handlers\GetDomainRequestHanler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
