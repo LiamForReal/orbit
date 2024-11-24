@@ -31,7 +31,7 @@ void Client::connectToServer(std::string serverIP, int port)
 
 	sa.sin_port = htons(port); // port that server will listen to
 	sa.sin_family = AF_INET;   // must be AF_INET
-	sa.sin_addr.s_addr =  inet_addr(serverIP.c_str());    // the IP of the server
+	sa.sin_addr.s_addr = inet_addr(serverIP.c_str());    // the IP of the server
 
 	// the process will not continue until the server accepts the client
 	int status = connect(_clientSocketWithDS, (struct sockaddr*)&sa, sizeof(sa));
@@ -45,13 +45,13 @@ void Client::nodeOpening()
 	NodeOpenRequest nor;
 	do
 	{
-		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) +  "): ";
+		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) + "): ";
 		std::cin >> nor.amount_to_open;
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
-	} while(nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
+	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
 	std::vector<unsigned char> data = SerializerRequests::serializeRequest(nor);
-	Helper::sendVector(_clientSocketWithDS, data); 
+	Helper::sendVector(_clientSocketWithDS, data);
 	std::cout << "Message send to server..." << std::endl;
 
 	//CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse();
@@ -140,17 +140,17 @@ void Client::startConversation()
 
 int main()
 {
-    try
-    {
+	try
+	{
 		WSAInitializer wsa = WSAInitializer();
-		Client client = Client(); 
-        client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
-        client.startConversation();
-    }
-    catch(const std::runtime_error e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    system("pause");
-    return 0; 
+		Client client = Client();
+		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
+		client.startConversation();
+	}
+	catch (const std::runtime_error e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	system("pause");
+	return 0;
 }
