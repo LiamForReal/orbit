@@ -14,7 +14,7 @@ Server::Server()
 {
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
-	_socket= socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
+	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
 	if (_socket == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 }

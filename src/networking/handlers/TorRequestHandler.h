@@ -4,6 +4,7 @@
 class TorRequestHandler
 {
 public: 
+	~TorRequestHandler();
 	TorRequestHandler(DockerManager& newDm);
 	RequestResult directRequest(const RequestInfo& requestInfo);
 private:
