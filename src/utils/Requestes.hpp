@@ -16,7 +16,6 @@ typedef enum RequestCode
 	CLOSE_CONNECTION_RC = 80, 
 	ALIVE_MSG_RC = 90,
 	DELETE_CIRCUIT_RC = 100,
-    GET_DOMAIN_RC = 110,
 } RequestCode;
 
 typedef struct RsaKeyExchangeRequest
@@ -64,9 +63,3 @@ typedef struct AliveMsgRequest
 {
     unsigned char data;
 } AliveMsgRequest;
-
-typedef struct GetDomainRequest 
-{
-    std::string domain;
-} GetDomainRequest;
-

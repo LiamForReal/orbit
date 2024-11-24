@@ -1,6 +1,11 @@
 #pragma once
+#pragma comment (lib, "ws2_32.lib")
+#include <WinSock2.h>
+#include <Windows.h>
 #include <iostream>
 #include <vector>
+#include <map>
+#include <utility>
 #include "../../utils/Requestes.hpp"
 #include "../docker_manager.h"
 #include "../../utils/SerializerResponses.h"
@@ -9,6 +14,7 @@
 #include "../../utils/DeserializerResponses.h"
 #include "../../utils/Responses.hpp"
 #include "../../utils/RequestInfo.hpp"
+#include "../../utils/Helper.h"
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {

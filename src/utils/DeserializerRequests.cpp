@@ -196,32 +196,3 @@ DeleteCircuitRequest DeserializerRequests::deserializeDeleteCircuitRequest(const
 
 	return request;
 }
-
-GetDomainRequest DeserializerRequests::deserializeGetDomainRequest(const std::vector<unsigned char>& buffer)
-{
-	GetDomainRequest request;
-	std::string jsonDataStr = "";
-	unsigned int len = 0, i = 0;
-
-	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-	std::cout << len << std::endl;
-    
-    for (i = 0; i < len; i++)
-	{
-		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
-	}
-    
-	std::cout << jsonDataStr;
-	json jsonData = json::parse(jsonDataStr);
-
-	try
-	{
-		request.domain = jsonData["domain"];
-	}
-	catch (...)
-	{
-		throw std::runtime_error("Invalid json structure passed");
-	}
-
-	return request;
-}

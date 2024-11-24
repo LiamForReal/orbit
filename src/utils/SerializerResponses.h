@@ -21,6 +21,4 @@ class SerializerResponses
         static std::vector<unsigned char> serializeResponse(const CloseConnectionResponse& closeConnectionResponse);
         static std::vector<unsigned char> serializeResponse(const DeleteCircuitResponse& deleteCircuitResponse);
         static std::vector<unsigned char> serializeResponse(const AliveMsgResponse& aliveMsgResponse);
-        static std::vector<unsigned char> serializeResponse(const GetDomainResponse& getDomainResponse);
-
 };

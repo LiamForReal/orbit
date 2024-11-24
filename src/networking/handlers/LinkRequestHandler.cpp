@@ -19,4 +19,6 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	{
 		
 	}
+
+	return this->rr;
 }
