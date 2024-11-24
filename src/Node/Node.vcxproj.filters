@@ -15,10 +15,17 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <ClInclude Include="..\networking\node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\networking\WSAInitializer.h">
+=======
+    <ClInclude Include="..\networking\handlers\IRequestHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\networking\handlers\TorRequestHandler.h">
+>>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\utils\DeserializerRequests.h">
@@ -51,17 +58,27 @@
     <ClInclude Include="..\utils\utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+<<<<<<< HEAD
     <ClInclude Include="..\networking\handlers\IRequestHandler.h">
+=======
+    <ClInclude Include="..\networking\node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\networking\WSAInitializer.h">
+>>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
     <ClCompile Include="..\networking\node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\networking\WSAInitializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+=======
+>>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
     <ClCompile Include="..\utils\DeserializerRequests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -80,5 +97,17 @@
     <ClCompile Include="..\utils\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="..\networking\node.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\networking\WSAInitializer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\networking\handlers\TorRequestHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+>>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
   </ItemGroup>
 </Project>

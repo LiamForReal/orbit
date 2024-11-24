@@ -128,6 +128,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
+<<<<<<< HEAD
+=======
+    <ClInclude Include="..\networking\handlers\TorRequestHandler.h" />
+>>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
     <ClInclude Include="..\networking\node.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
@@ -142,6 +146,10 @@
     <ClInclude Include="..\utils\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+<<<<<<< HEAD
+=======
+    <ClCompile Include="..\networking\handlers\TorRequestHandler.cpp" />
+>>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
     <ClCompile Include="..\networking\node.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />
