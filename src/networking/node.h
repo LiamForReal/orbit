@@ -9,13 +9,15 @@
 #include <string>
 #include <thread>  
 #include <vector>
-#include <List>
-#include <utility>
 #include <map>
 #include <cstdlib> // for getenv
 #include "WSAInitializer.h"
 #include "../utils/Helper.h"
-
+#include "../utils/SerializerResponses.h"
+#include "../utils/DeserializerRequests.h"
+#include "../utils/SerializerRequests.h"
+#include "../utils/DeserializerResponses.h"
+#include "handlers/NodeRequestHandler.h"
 #define COMMUNICATE_NODE_PORT 9050 //inside network
 #define CONTROL_NODE_PORT 9051 //inside network
 #define COMMUNICATE_Node_PORT 9787
@@ -26,11 +28,11 @@ class Node
 public:
     Node();
     ~Node();
-    void serveProxy();
+    void serveProxy(const std::string& ip, uint16_t port);
     void serveControl();
 
 private:
-    void bindAndListen();
+    void bindAndListen(const std::string& ip, uint16_t port);
     void acceptClient();
     void clientHandler(const SOCKET client_socket);
     //void runCmdCommand(const std::string command);
