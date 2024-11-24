@@ -15,17 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ClInclude Include="..\networking\node.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\networking\WSAInitializer.h">
-=======
-    <ClInclude Include="..\networking\handlers\IRequestHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\networking\handlers\TorRequestHandler.h">
->>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\utils\DeserializerRequests.h">
@@ -58,27 +51,29 @@
     <ClInclude Include="..\utils\utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-<<<<<<< HEAD
-    <ClInclude Include="..\networking\handlers\IRequestHandler.h">
-=======
-    <ClInclude Include="..\networking\node.h">
+    <ClInclude Include="..\networking\handlers\GetDomainRequestHanler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\networking\WSAInitializer.h">
->>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
+    <ClInclude Include="..\networking\handlers\HttpGetRequestHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\networking\handlers\IRequestHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\networking\handlers\LinkRequestHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\networking\handlers\NodeRequestHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-<<<<<<< HEAD
     <ClCompile Include="..\networking\node.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\networking\WSAInitializer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-=======
->>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
     <ClCompile Include="..\utils\DeserializerRequests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -97,17 +92,17 @@
     <ClCompile Include="..\utils\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-<<<<<<< HEAD
-=======
-    <ClCompile Include="..\networking\node.cpp">
+    <ClCompile Include="..\networking\handlers\GetDomainRequestHanler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\networking\WSAInitializer.cpp">
+    <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\networking\handlers\TorRequestHandler.cpp">
+    <ClCompile Include="..\networking\handlers\LinkRequestHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
->>>>>>> 46a3d7c327fc19ab693b079ee0d17adae8531c0c
+    <ClCompile Include="..\networking\handlers\NodeRequestHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
