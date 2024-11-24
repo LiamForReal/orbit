@@ -18,6 +18,7 @@
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
+    unsigned int circuit_id;
     std::vector<unsigned char> buffer;
 } RequestResult;
 

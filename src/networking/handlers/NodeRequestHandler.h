@@ -1,13 +1,16 @@
 #pragma once 
 #include "LinkRequestHandler.h"
+#include "HttpGetRequestHandler.h"
 
-class NodeRequestHandler
+class NodeRequestHandler 
 {
 public: 
 	~NodeRequestHandler();
-	NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits);
+	NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, SOCKET cs);
 	RequestResult directMsg(const RequestInfo& requestInfo);
 private:
 	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData;
 	LinkRequestHandler* lrh;
+	HttpGetRequestHandler* hgrh;
+	SOCKET client_socket;
 };

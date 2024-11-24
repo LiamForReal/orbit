@@ -1,6 +1,6 @@
 #include "LinkRequestHandler.h"
 
-LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData) : cd(circuitData)
+LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : cd(circuitData), _socket(s)
 {
 	this->rr = RequestResult(); 
 }
@@ -49,19 +49,35 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	try
 	{
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
+		if (this->cd.find(lr.circuit_id) == cd.end())
+		{
+			cd[lr.circuit_id].first = _socket;
+		}
+
 		lre.status = LINK_STATUS;
-		if (cd[lr.circuit_id].second != INVALID_SOCKET)
+
+		if (cd[lr.circuit_id].first == _socket)
 		{
-			Helper::sendVector(cd[lr.circuit_id].second, requestInfo.buffer);
-			std::cout << "sends to the next node!\n";
+			if (cd[lr.circuit_id].second != INVALID_SOCKET)
+			{
+				Helper::sendVector(cd[lr.circuit_id].second, requestInfo.buffer);
+				std::cout << "sends to the next node!\n";
+			}
+			else
+			{
+				cd[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
+				if (cd[lr.circuit_id].second == INVALID_SOCKET)
+					throw std::runtime_error("socket creation failed");
+				std::cout << "next created";
+			}
 		}
-		else
+		else if (cd[lr.circuit_id].second == _socket)
 		{
-			cd[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
-			if (cd[lr.circuit_id].second == INVALID_SOCKET)
-				throw std::runtime_error("socket creation failed");
-			std::cout << "next created";
+			Helper::sendVector(cd[lr.circuit_id].first, requestInfo.buffer);
+			std::cout << "sends to the prev node!\n";
 		}
+		else throw std::runtime_error("the socket given is corrapt");
+		
 	}
 	catch (std::runtime_error& e)
 	{

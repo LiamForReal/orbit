@@ -32,9 +32,9 @@ Node::~Node()
 	catch (...) {}
 }
 
-void Node::serveProxy()
+void Node::serveProxy(const std::string& ip, uint16_t port)
 {
-	bindAndListen();
+	bindAndListen(ip, port);
 	std::string input_string;
 	while (true)
 	{
@@ -49,7 +49,7 @@ void Node::serveProxy()
 
 // listen to connecting requests from clients
 // accept them, and create thread for each client
-void Node::bindAndListen()
+void Node::bindAndListen(const std::string& ip, uint16_t port)
 {
 	struct sockaddr_in sa = { 0 };
 	sa.sin_port = htons(0); //to change!!! pass as a ev
@@ -84,7 +84,17 @@ void Node::clientHandler(const SOCKET client_socket)
 	try
 	{
 		RequestInfo ri;
+		LinkRequest lr;
+		RequestResult rr;
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), client_socket);
 		std::string msg = "";
+		while (true)
+		{
+			ri = Helper::waitForResponse(client_socket);
+			rr = nodeRequestHandler.directMsg(ri);
+			Helper::sendVector(this->circuits[rr.circuit_id].first, rr.buffer);
+		}
+	
 		
 	}
 	catch (const std::runtime_error& e)
@@ -103,10 +113,11 @@ int main()
 
 		const char* ip = ip_env ? ip_env : "0.0.0.0"; // Default to 0.0.0.0 if not set
 		int port = port_env ? std::atoi(port_env) : 9050; // Default to 9050 if not set
-
 		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
-		node.serveProxy();
+		string ip = ip_env;
+		uint16_t port = (uint16_t)(port_env);
+		node.serveProxy(ip, port);
 	}
 	catch (const std::runtime_error& e)
 	{
