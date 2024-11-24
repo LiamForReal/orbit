@@ -56,6 +56,7 @@ typedef struct NodeOpenResponse
 typedef struct CircuitConfirmationResponse
 {
 	unsigned int status; 
+	unsigned circuit_id;
     list<pair<string, string>> nodesPath; 
 } CircuitConfirmationResponse;
 

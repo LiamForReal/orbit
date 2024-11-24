@@ -1,5 +1,5 @@
 #include "docker_manager.h"
-
+#include <random>
 DockerManager::DockerManager() { this->amountCreated = 0; }
 
 void DockerManager::runCmdCommand(const std::string& command)
@@ -30,7 +30,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
     std::list<std::string> nodesIp;
     char buffer[128];
     std::string containerID;
-    
+    //int random_number = min + std::rand() % (max - min + 1); TODO: access the nodes for all the clients!!!
     for (int i = this->amountCreated; i < this->amountCreated + amount; i++)
     {
         std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";

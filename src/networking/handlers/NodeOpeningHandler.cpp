@@ -1,4 +1,5 @@
 #include "NodeOpeningHandler.h"
+unsigned int NodeOpeningHandler::circuit_id = 1;
 
 NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager) : dm(dockerManager) 
 { 
@@ -24,13 +25,15 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
 
-        
         ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
         for (auto it = nodesInfo.begin(); it != nodesInfo.end(); it++)
         {
             ccr.nodesPath.emplace_back(*it);
         }
+
+        ccr.circuit_id = this->circuit_id;
+        this->circuit_id++;
     }
     catch(std::runtime_error e)
     {

@@ -98,6 +98,12 @@ int main()
 {
 	try
 	{
+		const char* ip_env = getenv("NODE_IP"); // Get the IP from the environment variable
+		const char* port_env = getenv("NODE_PORT"); // Get the port from the environment variable
+
+		const char* ip = ip_env ? ip_env : "0.0.0.0"; // Default to 0.0.0.0 if not set
+		int port = port_env ? std::atoi(port_env) : 9050; // Default to 9050 if not set
+
 		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
 		node.serveProxy();

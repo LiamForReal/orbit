@@ -86,6 +86,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const CircuitC
 
     json requestJson = {
         {"status", circuitConfirmationResponse.status},
+        {"circuit_id", circuitConfirmationResponse.circuit_id},
         {"nodesPath", circuitConfirmationResponse.nodesPath},
     };
     

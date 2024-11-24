@@ -9,6 +9,7 @@ class NodeOpeningHandler : virtual public IRequestHandler
 		RequestResult handleRequest(const RequestInfo& requestInfo) override;
 
 	private:
+		static unsigned int circuit_id;
 		RequestResult rr;
 		DockerManager& dm;
 };

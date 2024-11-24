@@ -93,6 +93,7 @@ CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmatio
     try {
 		
         response.status = jsonData["status"];
+        response.circuit_id = jsonData["circuit_id"];
         response.nodesPath = jsonData["nodesPath"];
     }
     catch (...) {

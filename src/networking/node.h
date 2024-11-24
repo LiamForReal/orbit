@@ -12,6 +12,7 @@
 #include <List>
 #include <utility>
 #include <map>
+#include <cstdlib> // for getenv
 #include "WSAInitializer.h"
 #include "../utils/Helper.h"
 
