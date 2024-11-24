@@ -5,6 +5,7 @@ Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	_clientSocketWithFirstNode = NULL;
 
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
@@ -75,10 +76,33 @@ void Client::startConversation()
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
 	}
 
+	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	if (_clientSocketWithFirstNode == INVALID_SOCKET)
+		throw std::runtime_error("Could not connect to first node");
+
+	struct sockaddr_in sa = { 0 };
+
+	sa.sin_port = htons(stoi(ccr.nodesPath.begin()->second));
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
+
+	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
+
+	if (status == INVALID_SOCKET)
+		throw std::runtime_error("Could not open socket with first node");
+
+	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
+	{
+		LinkRequest lr;
+		// lr.circuit_id = ccr.ciruit_id;
+
+	}
+
 	std::cout << "please enter the domain you want to get: ";
 	std::cin >> domain;
 	if(!domainValidationCheck(domain))
-		throw std::runtime_error("domain is ileagal");
+		throw std::runtime_error("domain is illegal");
 
 	//while(true)...
 	

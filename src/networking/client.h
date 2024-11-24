@@ -26,4 +26,5 @@ public:
 	bool domainValidationCheck(std::string domain);
 private:
 	SOCKET _clientSocketWithDS;
+	SOCKET _clientSocketWithFirstNode;
 };
