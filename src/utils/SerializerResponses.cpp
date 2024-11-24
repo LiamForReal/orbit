@@ -222,27 +222,3 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const AliveMsg
 
     return vec;
 }
-
-std::vector<unsigned char> SerializerResponses::serializeResponse(const GetDomainResponse& getDomainResponse)
-{
-    std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(getDomainResponse.status));
-
-    unsigned int len = 0;
-
-    json requestJson = {
-        {"status", getDomainResponse.status},
-    };
-    
-    std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
-
-	// Insert Message Length Into Vector
-	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
-
-	// Insert Message Into Vector
-	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
-
-    return vec;
-}

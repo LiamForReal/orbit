@@ -31,14 +31,13 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         {
             ccr.nodesPath.emplace_back(*it);
         }
-
-        rr.buffer = SerializerResponses::serializeResponse(ccr);
     }
     catch(std::runtime_error e)
     {
         ccr.status = Errors::CIRCUIT_CONFIRMATION_ERROR;
-        rr.buffer = {'\0'};
     }
+
+    rr.buffer = SerializerResponses::serializeResponse(ccr);
 
 	return rr;
 }

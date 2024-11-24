@@ -67,6 +67,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	{
 		lre.status = LINK_ERROR;
 	}
+
 	rr.buffer = SerializerResponses::serializeResponse(lre);
 	return rr;
 }

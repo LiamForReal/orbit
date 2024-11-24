@@ -64,8 +64,8 @@ bool Client::domainValidationCheck(std::string domain)
 void Client::startConversation()
 {
 	char buffer[100];
+	std::string domain;
 	RequestInfo ri;
-	GetDomainRequest domainRequest;
 	nodeOpening();
 	ri = Helper::waitForResponse(this->_clientSocketWithDS);
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
@@ -76,8 +76,8 @@ void Client::startConversation()
 	}
 
 	std::cout << "please enter the domain you want to get: ";
-	std::cin >> domainRequest.domain;
-	if(!domainValidationCheck(domainRequest.domain))
+	std::cin >> domain;
+	if(!domainValidationCheck(domain))
 		throw std::runtime_error("domain is ileagal");
 
 	//while(true)...
