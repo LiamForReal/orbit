@@ -9,7 +9,7 @@ NodeRequestHandler::~NodeRequestHandler()
 NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, SOCKET cs) : circuitData(circuits), client_socket(cs)
 {
 	this->lrh = new LinkRequestHandler(circuitData, client_socket);
-	this->hgrh = new HttpGetRequestHandler(circuitData);
+	this->hgrh = new HttpGetRequestHandler(circuitData, client_socket);
 }
 
 RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)

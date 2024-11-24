@@ -41,6 +41,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     }
 
     rr.buffer = SerializerResponses::serializeResponse(ccr);
+    rr.circuit_id = ccr.circuit_id;
 
 	return rr;
 }

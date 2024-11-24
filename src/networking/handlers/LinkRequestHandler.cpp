@@ -76,7 +76,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			Helper::sendVector(cd[lr.circuit_id].first, requestInfo.buffer);
 			std::cout << "sends to the prev node!\n";
 		}
-		else throw std::runtime_error("the socket given is corrapt");
+		else throw std::runtime_error("the socket given is corrupted");
 		
 	}
 	catch (std::runtime_error& e)
@@ -85,5 +85,6 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	}
 
 	rr.buffer = SerializerResponses::serializeResponse(lre);
+	rr.circuit_id = lr.circuit_id;
 	return rr;
 }

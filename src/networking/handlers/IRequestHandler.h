@@ -16,7 +16,7 @@
 #include "../../utils/RequestInfo.hpp"
 #include "../../utils/Helper.h"
 
-typedef struct RequestResult // Changed from typedef to struct definition
+typedef struct RequestResult
 {
     unsigned int circuit_id;
     std::vector<unsigned char> buffer;
