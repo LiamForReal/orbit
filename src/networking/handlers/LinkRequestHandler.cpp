@@ -2,7 +2,7 @@
 
 LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : cd(circuitData), _socket(s)
 {
-	this->rr = RequestResult(); 
+	this->rr = RequestResult();
 }
 
 SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port)
@@ -52,6 +52,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
 		if (this->cd.find(lr.circuit_id) == cd.end())
 		{
+			cd[lr.circuit_id] = std::pair<SOCKET, SOCKET>();
 			cd[lr.circuit_id].first = _socket;
 		}
 
@@ -83,7 +84,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 
 		}
 		else throw std::runtime_error("the socket given is corrapt");
-		
+
 	}
 	catch (std::runtime_error& e)
 	{
