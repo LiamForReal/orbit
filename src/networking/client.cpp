@@ -18,6 +18,7 @@ Client::~Client()
 	{
 		// the only use of the destructor should be for freeing 
 		// resources that was allocated in the constructor
+		closesocket(_clientSocketWithFirstNode);
 		closesocket(_clientSocketWithDS);
 	}
 	catch (...) {}
@@ -92,20 +93,49 @@ void Client::startConversation()
 	if (status == INVALID_SOCKET)
 		throw std::runtime_error("Could not open socket with first node");
 
-	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
+	for (auto it = ccr.nodesPath.begin().operator++(); it != ccr.nodesPath.end(); it++)
 	{
-		LinkRequest lr;
-		// lr.circuit_id = ccr.ciruit_id;
+		LinkRequest linkRequest;
+		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
+		linkRequest.circuit_id = ccr.circuit_id;
 
+		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
+
+		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+		if (Errors::LINK_ERROR == ri.id)
+		{
+			throw std::runtime_error("Could not build circuit.");
+		}
 	}
 
-	std::cout << "please enter the domain you want to get: ";
-	std::cin >> domain;
-	if(!domainValidationCheck(domain))
-		throw std::runtime_error("domain is illegal");
+	while (true)
+	{
+		std::cout << "Enter domain: ";
+		std::cin >> domain;
+		if (!domainValidationCheck(domain))
+			throw std::runtime_error("domain is illegal");
+		
+		HttpGetRequest httpGetRequest;
+		httpGetRequest.circuit_id = ccr.circuit_id;
+		httpGetRequest.msg = "GET " + domain;
 
-	//while(true)...
-	
+		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
+
+		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+
+		HttpGetResponse httpGetResponse;
+		httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
+
+		if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
+		{
+			std::cerr << "Could not get HTML of " << domain << std::endl;
+		}
+		else
+		{
+			std::cout << "HTML of " << domain << std::endl;
+			std::cout << httpGetResponse.content << std::endl;
+		}
+	}
 }
 
 int main()
