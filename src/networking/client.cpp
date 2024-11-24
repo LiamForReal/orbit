@@ -5,6 +5,7 @@ Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	_clientSocketWithFirstNode = NULL;
 
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
@@ -17,6 +18,7 @@ Client::~Client()
 	{
 		// the only use of the destructor should be for freeing 
 		// resources that was allocated in the constructor
+		closesocket(_clientSocketWithFirstNode);
 		closesocket(_clientSocketWithDS);
 	}
 	catch (...) {}
@@ -75,24 +77,65 @@ void Client::startConversation()
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
 	}
 
-	std::cout << "please enter the domain you want to get: ";
-	std::cin >> domain;
-	if (!domainValidationCheck(domain))
-		throw std::runtime_error("domain is ileagal");
+	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
-	//while(true)...
+	if (_clientSocketWithFirstNode == INVALID_SOCKET)
+		throw std::runtime_error("Could not connect to first node");
 
-}
+	struct sockaddr_in sa = { 0 };
 
-std::string Client::generateHttpGetRequest(const std::string& domain)
-{
-	std::ostringstream request;
-	request << "HTTP GET Request:\n";
-	request << "GET / HTTP/1.1\r\n";
-	request << "Host: " << domain << "\r\n";
-	request << "Connection: close\r\n";
-	request << "\r\n";
-	return request.str();
+	sa.sin_port = htons(stoi(ccr.nodesPath.begin()->second));
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
+
+	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
+
+	if (status == INVALID_SOCKET)
+		throw std::runtime_error("Could not open socket with first node");
+
+	for (auto it = ccr.nodesPath.begin().operator++(); it != ccr.nodesPath.end(); it++)
+	{
+		LinkRequest linkRequest;
+		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
+		linkRequest.circuit_id = ccr.circuit_id;
+
+		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
+
+		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+		if (Errors::LINK_ERROR == ri.id)
+		{
+			throw std::runtime_error("Could not build circuit.");
+		}
+	}
+
+	while (true)
+	{
+		std::cout << "Enter domain: ";
+		std::cin >> domain;
+		if (!domainValidationCheck(domain))
+			throw std::runtime_error("domain is illegal");
+		
+		HttpGetRequest httpGetRequest;
+		httpGetRequest.circuit_id = ccr.circuit_id;
+		httpGetRequest.msg = "GET " + domain;
+
+		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
+
+		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+
+		HttpGetResponse httpGetResponse;
+		httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
+
+		if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
+		{
+			std::cerr << "Could not get HTML of " << domain << std::endl;
+		}
+		else
+		{
+			std::cout << "HTML of " << domain << std::endl;
+			std::cout << httpGetResponse.content << std::endl;
+		}
+	}
 }
 
 int main()

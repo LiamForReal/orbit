@@ -27,4 +27,5 @@ public:
 private:
 	std::string generateHttpGetRequest(const std::string& domain);
 	SOCKET _clientSocketWithDS;
+	SOCKET _clientSocketWithFirstNode;
 };

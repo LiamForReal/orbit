@@ -1,17 +1,14 @@
-FROM rhub/ubuntu-gcc:latest
+# Use a Windows Server Core image as the base
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
 
-RUN apt-get update -y && apt-get upgrade -y
+# Set the working directory inside the container
+WORKDIR /app
 
-RUN apt-get install libboost-all-dev -y
+# Copy the built executable (you can use other COPY commands for other dependencies)
+COPY ../Node/x64/Debug/Node.exe /app/
 
-RUN mkdir /usr/src/node
+# Expose the required ports (example: port 8080)
+EXPOSE 8080
 
-COPY ./networking/node.cpp /usr/src/node
-
-COPY ./networking/node.h /usr/src/node
-
-WORKDIR /usr/src/node
-
-RUN g++ -o Node node.cpp node.h
-
-CMD ["./Node"]
+# Command to run your app (replace with your actual app's executable name)
+ENTRYPOINT ["Node.exe"]

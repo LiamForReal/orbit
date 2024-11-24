@@ -51,9 +51,6 @@
     <ClInclude Include="..\utils\utils.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\networking\handlers\GetDomainRequestHanler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\networking\handlers\HttpGetRequestHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -90,9 +87,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\utils\utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\networking\handlers\GetDomainRequestHanler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp">
