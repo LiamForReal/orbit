@@ -11,6 +11,7 @@
 #include <vector>
 #include <List>
 #include <utility>
+#include <map>
 #include "WSAInitializer.h"
 #include "../utils/Helper.h"
 
@@ -32,5 +33,6 @@ private:
     void acceptClient();
     void clientHandler(const SOCKET client_socket);
     //void runCmdCommand(const std::string command);
+    std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits; 
     SOCKET _socket;
 };

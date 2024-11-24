@@ -32,7 +32,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
             ccr.nodesPath.emplace_back(*it);
         }
 
-        rr.buffer == SerializerResponses::serializeResponse(ccr);
+        rr.buffer = SerializerResponses::serializeResponse(ccr);
     }
     catch(std::runtime_error e)
     {

@@ -1,5 +1,11 @@
 #include "TorRequestHandler.h"
 
+
+TorRequestHandler::~TorRequestHandler()
+{
+	delete noh;
+}
+
 TorRequestHandler::TorRequestHandler(DockerManager& newDm) : dm(newDm)
 {
 	noh = new NodeOpeningHandler(dm);
@@ -14,6 +20,7 @@ RequestResult TorRequestHandler::directRequest(const RequestInfo& requestInfo)
 	}//more...
 	else
 	{
-		throw std::runtime_error("no request much this code");
+		throw std::runtime_error("no request much this code Tor request handler");
 	}
+	return RequestResult();
 }
