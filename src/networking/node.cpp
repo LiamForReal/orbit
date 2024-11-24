@@ -86,16 +86,15 @@ void Node::clientHandler(const SOCKET client_socket)
 		RequestInfo ri;
 		LinkRequest lr;
 		RequestResult rr;
+		rr.circuit_id = 0;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), client_socket);
-		std::string msg = "";
 		while (true)
 		{
 			ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.directMsg(ri);
-			Helper::sendVector(this->circuits[rr.circuit_id].first, rr.buffer);
+			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
+				Helper::sendVector(this->circuits[rr.circuit_id].first, rr.buffer);
 		}
-	
-		
 	}
 	catch (const std::runtime_error& e)
 	{

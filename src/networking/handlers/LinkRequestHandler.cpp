@@ -46,6 +46,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	this->rr.buffer.clear();
 	LinkRequest lr;
 	LinkResponse lre;
+	RequestInfo ri;
 	try
 	{
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
@@ -61,6 +62,10 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			if (cd[lr.circuit_id].second != INVALID_SOCKET)
 			{
 				Helper::sendVector(cd[lr.circuit_id].second, requestInfo.buffer);
+				ri = Helper::waitForResponse(cd[lr.circuit_id].second);//sends rr but I put that on ri
+				if (ri.id == LINK_STATUS)
+					lre.status = LINK_STATUS;
+				else throw std::runtime_error("problom linkink the next node");
 				std::cout << "sends to the next node!\n";
 			}
 			else
@@ -75,6 +80,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		{
 			Helper::sendVector(cd[lr.circuit_id].first, requestInfo.buffer);
 			std::cout << "sends to the prev node!\n";
+
 		}
 		else throw std::runtime_error("the socket given is corrapt");
 		
