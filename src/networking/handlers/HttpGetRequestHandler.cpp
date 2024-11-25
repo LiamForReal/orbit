@@ -1,5 +1,4 @@
 #include "HttpGetRequestHandler.h"
-#include <ws2tcpip.h>
 
 HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData) : circuitsData(circuitsData)
 {
