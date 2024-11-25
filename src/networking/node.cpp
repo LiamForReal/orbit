@@ -1,6 +1,7 @@
 #include "node.h"
 // add request handler that muches 
 
+#define ENVE_MAX_LIMIT  32,766
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
 static const unsigned int IFACE = 0;
@@ -45,7 +46,6 @@ void Node::serveProxy(const std::string& ip, uint16_t port)
 	}
 }
 
-
 // listen to connecting requests from clients
 // accept them, and create thread for each client
 void Node::bindAndListen(const std::string& ip, uint16_t port)
@@ -78,6 +78,21 @@ void Node::acceptClient()
 
 }
 
+std::string Node::getEnvVar(const LPCTSTR& key)
+{ 
+	char* container = new char[ENVE_MAX_LIMIT]; // Maximum size for environment variables on Windows
+	LPTSTR buffer = (LPTSTR)(container);
+	DWORD length = GetEnvironmentVariable(key, buffer, sizeof(buffer));
+	if (length > 0 && length < sizeof(buffer)) 
+	{
+		string bufferStr = (char*)(buffer);
+		delete container;
+		return bufferStr;
+	}
+	throw std::runtime_error("ip not founded");
+}
+
+
 void Node::clientHandler(const SOCKET client_socket)
 {
 	try
@@ -108,16 +123,14 @@ int main()
 	try
 	{
 		//change you have ct version go get it
-		const char* ip_env = getenv("NODE_IP"); // Get the IP from the environment variable
-		const char* port_env = getenv("NODE_PORT"); // Get the port from the environment variable
-
-		const char* ip = ip_env ? ip_env : "0.0.0.0"; // Default to 0.0.0.0 if not set
-		int port = port_env ? std::atoi(port_env) : 9050; // Default to 9050 if not set
-		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
-		string ipStr = ip_env;
-		uint16_t portUint = (uint16_t)(port_env);
-		node.serveProxy(ipStr, portUint);
+		WSAInitializer wsa = WSAInitializer();
+		string ip_env = node.getEnvVar((LPCTSTR)("NODE_IP")); // Get the IP from the environment variable
+		string port_env = node.getEnvVar((LPCTSTR)("NODE_PORT")); // Get the port from the environment variable
+
+		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
+
+		node.serveProxy(ip_env, port);
 	}
 	catch (const std::runtime_error& e)
 	{

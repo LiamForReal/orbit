@@ -7,8 +7,8 @@ WORKDIR /app
 # Copy the built executable (you can use other COPY commands for other dependencies)
 COPY ../Node/x64/Debug/Node.exe /app/
 
-# Expose the required ports (example: port 8080)
-EXPOSE 8080
+# Expose the required ports to the inside docker network 9050 
+EXPOSE 9050
 
 # Command to run your app (replace with your actual app's executable name)
 ENTRYPOINT ["Node.exe"]

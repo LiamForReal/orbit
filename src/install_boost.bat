@@ -13,7 +13,7 @@ del /f /q "b2-5.2.1.zip"
 
 REM Setup B2
 cd "./b2-5.2.1"
-bootstrap.bat
+call bootstrap.bat gcc
 b2 install --prefix=.
 copy "./b2.exe" "../boost_1_86_0/tools/build/src/engine"
 

@@ -1,5 +1,5 @@
 #include "HttpGetRequestHandler.h"
-#include <fstream>
+#include <ws2tcpip.h>
 
 HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData) : circuitsData(circuitsData)
 {
@@ -12,13 +12,12 @@ bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 	return requestInfo.id == HTTP_MSG_RC;
 }
 
-std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpRequest) 
+std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpRequest)
 {
-    /*
     const int PORT = 80; // HTTP port
     const int BUFFER_SIZE = 4096;
 
-    // Step 1: Extract Host from the HTTP request
+    // Step 1: Extract Host from the HTTP requestx
     size_t hostStart = httpRequest.find("Host: ");
     if (hostStart == std::string::npos) {
         throw std::runtime_error("Host header not found in HTTP request");
@@ -33,41 +32,46 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
         throw std::runtime_error("WSAStartup failed");
     }
 
-    // Step 3: Resolve the domain name to an IP address
-    struct hostent* hostEntry = gethostbyname(host.c_str());
-    if (hostEntry == nullptr) {
+    // Step 3: Resolve the domain name to an IP address using GetAddrInfoW
+    struct addrinfoW* result = nullptr;
+    struct addrinfoW hints {};
+    hints.ai_family = AF_INET; // IPv4
+    hints.ai_socktype = SOCK_STREAM; // TCP
+    hints.ai_protocol = IPPROTO_TCP; // TCP protocol
+
+    std::wstring hostW(host.begin(), host.end()); // Convert host to wide string
+    if (GetAddrInfoW(hostW.c_str(), L"80", &hints, &result) != 0) {
         WSACleanup();
         throw std::runtime_error("Failed to resolve domain: " + host);
     }
 
     // Step 4: Create a socket
-    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET sock = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
     if (sock == INVALID_SOCKET) {
+        FreeAddrInfoW(result);
         WSACleanup();
         throw std::runtime_error("Socket creation failed");
     }
 
-    // Step 5: Set up the server address
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
-    memcpy(&serverAddr.sin_addr, hostEntry->h_addr, hostEntry->h_length);
-
-    // Step 6: Connect to the server
-    if (connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+    // Step 5: Connect to the server
+    if (connect(sock, result->ai_addr, (int)result->ai_addrlen) == SOCKET_ERROR) {
         closesocket(sock);
+        FreeAddrInfoW(result);
         WSACleanup();
         throw std::runtime_error("Failed to connect to server");
     }
 
-    // Step 7: Send the HTTP request
+    // Free the address info after the connection
+    FreeAddrInfoW(result);
+
+    // Step 6: Send the HTTP request
     if (send(sock, httpRequest.c_str(), httpRequest.length(), 0) == SOCKET_ERROR) {
         closesocket(sock);
         WSACleanup();
         throw std::runtime_error("Failed to send request");
     }
 
-    // Step 8: Receive the response
+    // Step 7: Receive the response
     char buffer[BUFFER_SIZE];
     std::string response;
     int bytesReceived;
@@ -83,13 +87,11 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
         throw std::runtime_error("Failed to receive response");
     }
 
-    // Step 9: Clean up
+    // Step 8: Clean up
     closesocket(sock);
     WSACleanup();
 
     return response;
-    */
-    return "";
 }
 
 
