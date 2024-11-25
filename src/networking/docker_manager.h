@@ -6,6 +6,8 @@
 #include <utility>
 #include "../utils/json.hpp"
 #define CONTAINER_NAME "node"
+#define INTERNAL_PORT "9050"
+
 using json = nlohmann::json;
 
 class DockerManager
