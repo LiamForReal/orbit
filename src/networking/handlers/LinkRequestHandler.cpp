@@ -68,7 +68,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 				ri = Helper::waitForResponse(cd[lr.circuit_id].second);//sends rr but I put that on ri
 				if (ri.id == LINK_STATUS)
 					lre.status = LINK_STATUS;
-				else throw std::runtime_error("problom linkink the next node");
+				else throw std::runtime_error("problem occurred while linking the next node");
 				std::cout << "sends to the next node!\n";
 			}
 			else
@@ -85,7 +85,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			std::cout << "sends to the prev node!\n";
 
 		}
-		else throw std::runtime_error("the socket given is corrapt");
+		else throw std::runtime_error("the socket given is corrupted");
 
 	}
 	catch (std::runtime_error& e)
