@@ -78,18 +78,24 @@ void Node::acceptClient()
 
 }
 
-std::string Node::getEnvVar(const LPCTSTR& key)
-{ 
-	char* container = new char[ENVE_MAX_LIMIT]; // Maximum size for environment variables on Windows
-	LPTSTR buffer = (LPTSTR)(container);
-	DWORD length = GetEnvironmentVariable(key, buffer, sizeof(buffer));
-	if (length > 0 && length < sizeof(buffer)) 
-	{
-		string bufferStr = (char*)(buffer);
-		delete container;
-		return bufferStr;
+std::string Node::getEnvVar(const LPCSTR& key) 
+{
+	// Buffer to hold the environment variable valu
+	char buffer[(int)(ENVE_MAX_LIMIT)];
+
+	// Get the environment variable
+	DWORD length = GetEnvironmentVariableA(key, buffer, (DWORD)(ENVE_MAX_LIMIT));
+
+	// Check the result
+	if (length > 0 && length < ENVE_MAX_LIMIT) {
+		return std::string(buffer); // Return the value as a string
 	}
-	throw std::runtime_error("ip not founded");
+	else if (length == 0) {
+		throw std::runtime_error("Environment variable not found: ");
+	}
+	else {
+		throw std::runtime_error("Environment variable value is too large: ");
+	}
 }
 
 
@@ -123,12 +129,12 @@ int main()
 	try
 	{
 		//change you have ct version go get it
-		Node node = Node();
 		WSAInitializer wsa = WSAInitializer();
-		string ip_env = node.getEnvVar((LPCTSTR)("NODE_IP")); // Get the IP from the environment variable
-		string port_env = node.getEnvVar((LPCTSTR)("NODE_PORT")); // Get the port from the environment variable
-
-		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
+		Node node = Node();
+		string ip_env = node.getEnvVar((LPCSTR)("NODE_IP")); // Get the IP from the environment variable
+		string port_env = node.getEnvVar((LPCSTR)("NODE_PORT")); // Get the port from the environment variable
+		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
+ 		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
 
 		node.serveProxy(ip_env, port);
 	}

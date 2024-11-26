@@ -30,7 +30,7 @@ public:
     ~Node();
     void serveProxy(const std::string& ip, uint16_t port);
     void serveControl();
-    std::string getEnvVar(const LPCTSTR& key);
+    std::string getEnvVar(const LPCSTR& key);
 private:
     void bindAndListen(const std::string& ip, uint16_t port);
     void acceptClient();

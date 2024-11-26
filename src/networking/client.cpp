@@ -91,7 +91,7 @@ void Client::startConversation()
 	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	//
 	if (_clientSocketWithFirstNode == INVALID_SOCKET)
-		throw std::runtime_error("Could not connect to first node");
+		throw std::runtime_error("Client run error socket");
 	//
 	struct sockaddr_in sa = { 0 };
 	//
@@ -103,6 +103,7 @@ void Client::startConversation()
 	//
 	if (status == INVALID_SOCKET)
 		throw std::runtime_error("Could not open socket with first node");
+	else std::cout << "connected successfully to the first node\n";
     //headers of client sock end
 	auto it = ccr.nodesPath.begin();
 	for (int i = 0; i < ccr.nodesPath.size() - 1; i++)
@@ -112,6 +113,7 @@ void Client::startConversation()
 		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 		linkRequest.circuit_id = ccr.circuit_id;
 
+		std::cout << "sended " + std::to_string(i + 1) + " link msg\n";
 		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
 
 		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
@@ -130,6 +132,7 @@ void Client::startConversation()
 	httpGetRequest.circuit_id = ccr.circuit_id;
 	httpGetRequest.msg = generateHttpGetRequest(domain);
 
+	std::cout << "sends httpGet Request:\n";
 	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
 
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);

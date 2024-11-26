@@ -45,13 +45,13 @@ def main():
     # Assign IPs
     for i, (service, ip) in enumerate(zip(compose_data["services"], random_ips)):
         compose_data["services"][service]["networks"]["TOR_NETWORK"]["ipv4_address"] = ip
-        compose_data["services"][service]["environment"] = {"NODE_IP": ip}
+        compose_data["services"][service]["environment"]["NODE_IP"] = ip
 
     # Assign Ports
     port_index = 0
     for service in compose_data["services"]:
         updated_ports = []
-        compose_data["services"][service]["environment"] += {"NODE_PORT": random_ports[port_index]}
+        compose_data["services"][service]["environment"]["NODE_PORT"] = random_ports[port_index]
         for port_mapping in compose_data["services"][service]["ports"]:
             container_port = port_mapping.split(":")[1]  # Extract container port
             host_port = random_ports[port_index]  # Assign a random host port

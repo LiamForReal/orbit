@@ -53,7 +53,7 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
 	curlResponse.size = 0;
 
 	curl_easy_setopt(curl, CURLOPT_URL, httpRequest.c_str());
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeChunk);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &HttpGetRequestHandler::writeChunk);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)(&curlResponse));
 
 	result = curl_easy_perform(curl);
