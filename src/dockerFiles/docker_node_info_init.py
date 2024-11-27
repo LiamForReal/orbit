@@ -1,9 +1,10 @@
 import random
 import ipaddress
 import yaml
+import socket
 
 # Define the network range
-subnet = ipaddress.IPv4Network("192.0.0.0/8")
+subnet = ipaddress.IPv4Network("192.168.1.0/24")
 
 # Generate unique random IPs
 def generate_random_ip(subnet, count):
@@ -62,6 +63,15 @@ def main():
     # Write back to the Docker-compose file
     with open("../dockerFiles/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)
+    
+    content = ""
+    # with open("../dockerFiles/Docker-compose.yaml", "r") as file:
+    #     content = file.read()
+    # with open("../dockerFiles/Docker-compose.yaml", "w") as file:
+    #     hostname = socket.gethostname()
+    #     ip_address = '"' + socket.gethostbyname(hostname) + '"'
+    #     content = content.replace('command:', f"command: -server -advertise {ip_address} -bootstrap")
+    #     file.write(content)
 
     print("Assigned random IPs:", random_ips)
 
