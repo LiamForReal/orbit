@@ -8,121 +8,121 @@ services:
   node1:
     container_name: node1
     environment:
-      NODE_IP: 192.177.196.29
-      NODE_PORT: 9074
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.177.196.29
-    ports:
-    - 9074:9050
-    - 9088:9051
-  node10:
-    container_name: node10
-    environment:
-      NODE_IP: 192.172.118.2
-      NODE_PORT: 9085
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.172.118.2
-    ports:
-    - 9085:9050
-    - 9077:9051
-  node2:
-    container_name: node2
-    environment:
-      NODE_IP: 192.103.247.128
-      NODE_PORT: 9095
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.103.247.128
-    ports:
-    - 9095:9050
-    - 9099:9051
-  node3:
-    container_name: node3
-    environment:
-      NODE_IP: 192.153.198.129
-      NODE_PORT: 9056
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.153.198.129
-    ports:
-    - 9056:9050
-    - 9057:9051
-  node4:
-    container_name: node4
-    environment:
-      NODE_IP: 192.130.9.112
-      NODE_PORT: 9094
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.130.9.112
-    ports:
-    - 9094:9050
-    - 9065:9051
-  node5:
-    container_name: node5
-    environment:
-      NODE_IP: 192.157.219.186
-      NODE_PORT: 9050
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.157.219.186
-    ports:
-    - 9050:9050
-    - 9086:9051
-  node6:
-    container_name: node6
-    environment:
-      NODE_IP: 192.218.233.132
-      NODE_PORT: 9097
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.218.233.132
-    ports:
-    - 9097:9050
-    - 9084:9051
-  node7:
-    container_name: node7
-    environment:
-      NODE_IP: 192.130.210.0
+      NODE_IP: 192.135.4.68
       NODE_PORT: 9051
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.130.210.0
+        ipv4_address: 192.135.4.68
     ports:
     - 9051:9050
-    - 9073:9051
-  node8:
-    container_name: node8
+    - 9072:9051
+  node10:
+    container_name: node10
     environment:
-      NODE_IP: 192.241.56.39
+      NODE_IP: 192.242.248.51
+      NODE_PORT: 9061
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.242.248.51
+    ports:
+    - 9061:9050
+    - 9056:9051
+  node2:
+    container_name: node2
+    environment:
+      NODE_IP: 192.148.252.188
       NODE_PORT: 9066
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.241.56.39
+        ipv4_address: 192.148.252.188
     ports:
     - 9066:9050
-    - 9071:9051
-  node9:
-    container_name: node9
+    - 9067:9051
+  node3:
+    container_name: node3
     environment:
-      NODE_IP: 192.64.128.213
-      NODE_PORT: 9072
+      NODE_IP: 192.162.135.214
+      NODE_PORT: 9069
     image: eclipse/cpp_gcc
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.64.128.213
+        ipv4_address: 192.162.135.214
     ports:
-    - 9072:9050
-    - 9061:9051
+    - 9069:9050
+    - 9086:9051
+  node4:
+    container_name: node4
+    environment:
+      NODE_IP: 192.67.160.71
+      NODE_PORT: 9068
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.67.160.71
+    ports:
+    - 9068:9050
+    - 9099:9051
+  node5:
+    container_name: node5
+    environment:
+      NODE_IP: 192.126.129.56
+      NODE_PORT: 9058
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.126.129.56
+    ports:
+    - 9058:9050
+    - 9091:9051
+  node6:
+    container_name: node6
+    environment:
+      NODE_IP: 192.123.11.233
+      NODE_PORT: 9092
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.123.11.233
+    ports:
+    - 9092:9050
+    - 9054:9051
+  node7:
+    container_name: node7
+    environment:
+      NODE_IP: 192.101.77.235
+      NODE_PORT: 9080
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.101.77.235
+    ports:
+    - 9080:9050
+    - 9081:9051
+  node8:
+    container_name: node8
+    environment:
+      NODE_IP: 192.108.178.196
+      NODE_PORT: 9097
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.108.178.196
+    ports:
+    - 9097:9050
+    - 9060:9051
+  node9:
+    container_name: node9
+    environment:
+      NODE_IP: 192.55.244.37
+      NODE_PORT: 9073
+    image: eclipse/cpp_gcc
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.55.244.37
+    ports:
+    - 9073:9050
+    - 9057:9051
 version: '3.8'
