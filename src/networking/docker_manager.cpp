@@ -14,7 +14,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string command = "cd ../dockerFiles/ && docker-compose up --build -d";  // -d flag runs it in detached mode
+    std::string command = "cd ../dockerFiles/ && docker-compose up --build";  // -d flag runs it in detached mode
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
@@ -42,7 +42,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
         }
         _pclose(pipe);
         containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + std::string(CONTAINER_NAME) + char(i + 49);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + std::string(CONTAINER_NAME) + char(i + 49);
         std::cout << inspectCommand << std::endl; 
         pipe = _popen(inspectCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run inspect command");
@@ -69,7 +69,7 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
     for (int i = this->amountCreated; i < this->amountCreated + amount; i++)
     {
         // Build the docker inspect command with necessary `cd`
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{json .NetworkSettings.Ports}}\" " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
 
         // Execute the command
         FILE* pipe = _popen(inspectCommand.c_str(), "r");
@@ -86,7 +86,7 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
         try
         {
             json portsJson = json::parse(portsStr);
-            hostPort = portsJson["9051/tcp"][0]["HostPort"];
+            // hostPort = portsJson["9051/tcp"][0]["HostPort"];
             std::cout << "container " + std::to_string(i + 1) + " id is " + hostPort + "\n";
             controlNodesPorts.push_back(hostPort);
         }
@@ -103,10 +103,10 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     std::list<std::string> proxyNodesPorts;
     char buffer[128];
     int j;
-    std::string portsStr, hostPort = "";
+    std::string portsStr = "", hostPort = "";
 
     // Build the docker inspect command with necessary `cd`
-    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{json .NetworkSettings.Ports}}\" " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + 1);
+    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + 1);
 
     // Execute the command
     FILE* pipe = _popen(inspectCommand.c_str(), "r");
@@ -116,6 +116,7 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     portsStr.clear();
     while (fgets(buffer, sizeof(buffer), pipe) != NULL)
     {
+        printf("BUFFER: %s |ENDED|\n", buffer);
         portsStr += buffer; // Collect JSON output
     }
     _pclose(pipe);
@@ -124,9 +125,12 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     try
     {
         std::cout << "portsStr: " << portsStr << std::endl;
-        json portsJson = json::parse(portsStr);
+        //json portsJson = json::parse(portsStr);
         std::cout << "After parse\n";
-        hostPort = portsJson["9050/tcp"][0]["HostPort"];
+        //hostPort = portsJson["9050/tcp"][0]["HostPort"];
+
+        hostPort = std::to_string(std::stoi(portsStr));
+
         std::cout << "container " + std::to_string(this->amountCreated + 1) + " id is " + hostPort + "\n";
         proxyNodesPorts.push_back(hostPort);
         for (int i = this->amountCreated + 1; i < this->amountCreated + amount; i++)

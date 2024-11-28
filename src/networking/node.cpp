@@ -128,6 +128,8 @@ int main()
 
 	try
 	{
+		std::cout << "Nuuuuu maaaaa????111?!?!\n";
+
 		//change you have ct version go get it
 		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
