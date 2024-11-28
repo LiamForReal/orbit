@@ -14,15 +14,15 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string command = "cd ../dockerFiles/ && docker-compose up --build";  // -d flag runs it in detached mode
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose pull && docker-compose up--build";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
     {
-        command += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1); 
+        buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
     }
     runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
-    runCmdCommand(command);
+    runCmdCommand(buildCommand);
 }
 
 std::list<std::string> DockerManager::findIPs(const int& amount)
