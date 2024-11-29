@@ -10,14 +10,18 @@ RSA::RSA()
 	
 }
 
-vector<unsigned char> RSA::Encript()
+vector<unsigned char> RSA::Encrypt()
 {
+	vector<unsigned char> vec;
 
+	return vec;
 }
 
-vector<unsigned char> RSA::Decript()
+vector<unsigned char> RSA::Decrypt()
 {
+	vector<unsigned char> vec;
 
+	return vec;
 }
 
 uint2048_t RSA::getRandomPrimeNumber()

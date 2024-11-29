@@ -7,8 +7,8 @@ class RSA
 {
 public: 
 	RSA();
-	vector<unsigned char> Encript();
-	vector<unsigned char> Decript();
+	vector<unsigned char> Encrypt();
+	vector<unsigned char> Decrypt();
 
 
 private: 
