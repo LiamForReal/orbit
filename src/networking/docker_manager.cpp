@@ -14,7 +14,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build";
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
@@ -42,7 +42,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
         }
         _pclose(pipe);
         containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerFiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + std::string(CONTAINER_NAME) + char(i + 49);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + std::string(CONTAINER_NAME) + char(i + 49);
         std::cout << inspectCommand << std::endl; 
         pipe = _popen(inspectCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run inspect command");
