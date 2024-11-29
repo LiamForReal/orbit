@@ -8,130 +8,130 @@ services:
   node1:
     container_name: node1
     environment:
-      NODE_IP: 192.168.1.198
-      NODE_PORT: 9086
+      NODE_IP: 192.168.1.119
+      NODE_PORT: 9093
     image: mcr.microsoft.com/windows/servercore:ltsc2019
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.198
+        ipv4_address: 192.168.1.119
     platform: windows/amd64
     ports:
-    - 9086:9050
-    - 9054:9051
+    - 9093:9050
+    - 9052:9051
   node10:
     container_name: node10
     environment:
-      NODE_IP: 192.168.1.16
-      NODE_PORT: 9073
+      NODE_IP: 192.168.1.66
+      NODE_PORT: 9059
     image: mcr.microsoft.com/windows/servercore:ltsc2019
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.16
+        ipv4_address: 192.168.1.66
     platform: windows/amd64
     ports:
-    - 9073:9050
-    - 9082:9051
+    - 9059:9050
+    - 9076:9051
   node2:
     container_name: node2
     environment:
-      NODE_IP: 192.168.1.148
-      NODE_PORT: 9085
-    image: mcr.microsoft.com/windows/servercore:ltsc2019
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.148
-    platform: windows/amd64
-    ports:
-    - 9085:9050
-    - 9071:9051
-  node3:
-    container_name: node3
-    environment:
-      NODE_IP: 192.168.1.173
-      NODE_PORT: 9098
-    image: mcr.microsoft.com/windows/servercore:ltsc2019
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.173
-    platform: windows/amd64
-    ports:
-    - 9098:9050
-    - 9089:9051
-  node4:
-    container_name: node4
-    environment:
-      NODE_IP: 192.168.1.128
-      NODE_PORT: 9069
-    image: mcr.microsoft.com/windows/servercore:ltsc2019
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.128
-    platform: windows/amd64
-    ports:
-    - 9069:9050
-    - 9077:9051
-  node5:
-    container_name: node5
-    environment:
-      NODE_IP: 192.168.1.10
-      NODE_PORT: 9072
-    image: mcr.microsoft.com/windows/servercore:ltsc2019
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.10
-    platform: windows/amd64
-    ports:
-    - 9072:9050
-    - 9097:9051
-  node6:
-    container_name: node6
-    environment:
-      NODE_IP: 192.168.1.12
+      NODE_IP: 192.168.1.229
       NODE_PORT: 9080
     image: mcr.microsoft.com/windows/servercore:ltsc2019
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.12
+        ipv4_address: 192.168.1.229
     platform: windows/amd64
     ports:
     - 9080:9050
-    - 9052:9051
-  node7:
-    container_name: node7
+    - 9065:9051
+  node3:
+    container_name: node3
     environment:
-      NODE_IP: 192.168.1.205
-      NODE_PORT: 9074
+      NODE_IP: 192.168.1.91
+      NODE_PORT: 9053
     image: mcr.microsoft.com/windows/servercore:ltsc2019
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.205
+        ipv4_address: 192.168.1.91
     platform: windows/amd64
     ports:
-    - 9074:9050
-    - 9079:9051
-  node8:
-    container_name: node8
+    - 9053:9050
+    - 9054:9051
+  node4:
+    container_name: node4
     environment:
-      NODE_IP: 192.168.1.84
-      NODE_PORT: 9094
-    image: mcr.microsoft.com/windows/servercore:ltsc2019
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.84
-    platform: windows/amd64
-    ports:
-    - 9094:9050
-    - 9081:9051
-  node9:
-    container_name: node9
-    environment:
-      NODE_IP: 192.168.1.175
+      NODE_IP: 192.168.1.8
       NODE_PORT: 9091
     image: mcr.microsoft.com/windows/servercore:ltsc2019
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.175
+        ipv4_address: 192.168.1.8
     platform: windows/amd64
     ports:
     - 9091:9050
-    - 9063:9051
+    - 9064:9051
+  node5:
+    container_name: node5
+    environment:
+      NODE_IP: 192.168.1.126
+      NODE_PORT: 9089
+    image: mcr.microsoft.com/windows/servercore:ltsc2019
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.126
+    platform: windows/amd64
+    ports:
+    - 9089:9050
+    - 9100:9051
+  node6:
+    container_name: node6
+    environment:
+      NODE_IP: 192.168.1.151
+      NODE_PORT: 9058
+    image: mcr.microsoft.com/windows/servercore:ltsc2019
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.151
+    platform: windows/amd64
+    ports:
+    - 9058:9050
+    - 9078:9051
+  node7:
+    container_name: node7
+    environment:
+      NODE_IP: 192.168.1.41
+      NODE_PORT: 9094
+    image: mcr.microsoft.com/windows/servercore:ltsc2019
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.41
+    platform: windows/amd64
+    ports:
+    - 9094:9050
+    - 9092:9051
+  node8:
+    container_name: node8
+    environment:
+      NODE_IP: 192.168.1.59
+      NODE_PORT: 9099
+    image: mcr.microsoft.com/windows/servercore:ltsc2019
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.59
+    platform: windows/amd64
+    ports:
+    - 9099:9050
+    - 9060:9051
+  node9:
+    container_name: node9
+    environment:
+      NODE_IP: 192.168.1.71
+      NODE_PORT: 9085
+    image: mcr.microsoft.com/windows/servercore:ltsc2019
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.71
+    platform: windows/amd64
+    ports:
+    - 9085:9050
+    - 9098:9051
