@@ -14,7 +14,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose pull && docker-compose up--build";
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yml up --build";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
