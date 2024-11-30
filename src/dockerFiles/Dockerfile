@@ -14,11 +14,11 @@ EXPOSE 9050
 EXPOSE 9051
 
 # Add the application directory to the PATH
-ENV PATH="C:\\app;${PATH}"
+# ENV PATH="C:\\app;${PATH}"
 
 # Optional: Check environment variables (commented for production)
 #RUN echo %NODE_IP% && echo %NODE_PORT%
 
 # Set the default command to run the Node executable
-CMD ["echo", "hello world"]
-ENTRYPOINT ["C:\\app\\Node.exe"]
+RUN echo "hello world"
+CMD ["cmd", "/C", "C:\\app\\Node.exe"]

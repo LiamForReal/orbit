@@ -125,11 +125,10 @@ void Node::clientHandler(const SOCKET client_socket)
 
 int main()
 {
+	std::cout << "Nuuuuu maaaaa????111?!?!\n";
 
 	try
 	{
-		std::cout << "Nuuuuu maaaaa????111?!?!\n";
-
 		//change you have ct version go get it
 		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
@@ -144,6 +143,8 @@ int main()
 	{
 		std::cerr << e.what() << '\n';
 	}
+
 	system("pause");
+
 	return 0;
 }
