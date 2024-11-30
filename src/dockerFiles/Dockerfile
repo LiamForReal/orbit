@@ -17,8 +17,8 @@ EXPOSE 9051
 ENV PATH="C:\\app;${PATH}"
 
 # Optional: Check environment variables (commented for production)
-RUN echo %NODE_IP% && echo %NODE_PORT%
+#RUN echo %NODE_IP% && echo %NODE_PORT%
 
 # Set the default command to run the Node executable
 CMD ["echo", "hello world"]
-# CMD ["C:\\app\\Node.exe %NODE_IP% %NODE_PORT%"]
+ENTRYPOINT ["C:\\app\\Node.exe"]
