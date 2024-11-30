@@ -6,6 +6,7 @@ WORKDIR C:\\app
 
 # Copy the built executable and required DLLs into the container
 COPY Node.exe .
+COPY Node.pdb .
 COPY libcurl.dll .
 COPY zlib1.dll .
 
