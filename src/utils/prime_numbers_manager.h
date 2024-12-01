@@ -5,7 +5,8 @@
 class prime_numbers_manager
 {
 public:
-	static uint2048_t getRandomPrimeNumber();
+	static uint2048_t getRandomPrimeNumber2048();
+	static uint1024_t getRandomPrimeNumber1024();
 	
 private:
 	void buildPrimeFile();

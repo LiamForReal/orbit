@@ -2,12 +2,12 @@
 
 RSA::RSA()
 {
-	uint2048_t q = getRandomPrimeNumber() ,p = getRandomPrimeNumber();
+	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>(), p = this->getRandomPrimeNumber<uint1024_t>();
 	this->P = calcProduct(q, p);
 	this->T = calcTotient(q, p);
 	selectPublicKey();
 	selectPrivateKey();
-	
+	std::cout << "done making public and private keys!!!\n";
 }
 
 vector<unsigned char> RSA::Encrypt()
@@ -23,31 +23,25 @@ vector<unsigned char> RSA::Decrypt()
 
 	return vec;
 }
-
-uint2048_t RSA::getRandomPrimeNumber()
+	
+uint2048_t RSA::calcProduct(const uint1024_t q, const uint1024_t p)
 {
-	return prime_numbers_manager::getRandomPrimeNumber();
+	return static_cast<uint2048_t>(q * p);
 }
 	
-cpp_int RSA::calcProduct(const cpp_int q, const cpp_int p)
+uint2048_t RSA::calcTotient(const uint1024_t q, const uint1024_t p)
 {
-	return q * p;
-}
-	
-cpp_int RSA::calcTotient(const cpp_int q, const cpp_int p)
-{
-	return (q - 1) * (p - 1);
+	return static_cast<uint2048_t>((q - 1) * (p - 1));
 }
 	
 void RSA::selectPublicKey()
 {
-	this->public_key = uint2048_t();
 	while (true)
 	{
-		this->public_key = getRandomPrimeNumber();
-		if (this->public_key >= T)
+		E = getRandomPrimeNumber<uint2048_t>();
+		if (E >= T) 
 			continue;
-		if (!(T % this->public_key))
+		if (!(T % E))
 			continue;
 		break;
 	}
@@ -55,11 +49,12 @@ void RSA::selectPublicKey()
 	
 void RSA::selectPrivateKey()
 {
-	this->private_key = uint2048_t();
+	cpp_int mul_saver;
 	while (true)
 	{
-		this->private_key = getRandomPrimeNumber();
-		if ((private_key * public_key) % T == 1)
+		D = getRandomPrimeNumber<uint2048_t>(); 
+		mul_saver = D * E;
+		if (mul_saver % (cpp_int)(T) == 1)
 			break;
 	}
 }
