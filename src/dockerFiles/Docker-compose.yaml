@@ -8,130 +8,130 @@ services:
   node1:
     container_name: node1
     environment:
-      NODE_IP: 192.168.1.123
-      NODE_PORT: 9061
+      NODE_IP: 192.168.1.203
+      NODE_PORT: 9095
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.123
+        ipv4_address: 192.168.1.203
     platform: windows/amd64
     ports:
-    - 9061:9050
-    - 9066:9051
+    - 9095:9050
+    - 9082:9051
   node10:
     container_name: node10
     environment:
-      NODE_IP: 192.168.1.130
-      NODE_PORT: 9086
+      NODE_IP: 192.168.1.5
+      NODE_PORT: 9084
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.130
+        ipv4_address: 192.168.1.5
     platform: windows/amd64
     ports:
-    - 9086:9050
-    - 9080:9051
+    - 9084:9050
+    - 9078:9051
   node2:
     container_name: node2
     environment:
-      NODE_IP: 192.168.1.92
-      NODE_PORT: 9082
+      NODE_IP: 192.168.1.223
+      NODE_PORT: 9070
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.92
+        ipv4_address: 192.168.1.223
     platform: windows/amd64
     ports:
-    - 9082:9050
-    - 9087:9051
+    - 9070:9050
+    - 9076:9051
   node3:
     container_name: node3
     environment:
-      NODE_IP: 192.168.1.28
-      NODE_PORT: 9081
+      NODE_IP: 192.168.1.66
+      NODE_PORT: 9092
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.28
+        ipv4_address: 192.168.1.66
     platform: windows/amd64
     ports:
-    - 9081:9050
-    - 9063:9051
+    - 9092:9050
+    - 9080:9051
   node4:
     container_name: node4
     environment:
-      NODE_IP: 192.168.1.237
-      NODE_PORT: 9069
-    image: gavrielnotbenigoren/node:latest
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.237
-    platform: windows/amd64
-    ports:
-    - 9069:9050
-    - 9084:9051
-  node5:
-    container_name: node5
-    environment:
-      NODE_IP: 192.168.1.62
+      NODE_IP: 192.168.1.43
       NODE_PORT: 9051
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.62
+        ipv4_address: 192.168.1.43
     platform: windows/amd64
     ports:
     - 9051:9050
-    - 9076:9051
-  node6:
-    container_name: node6
+    - 9073:9051
+  node5:
+    container_name: node5
     environment:
-      NODE_IP: 192.168.1.58
-      NODE_PORT: 9099
-    image: gavrielnotbenigoren/node:latest
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.168.1.58
-    platform: windows/amd64
-    ports:
-    - 9099:9050
-    - 9077:9051
-  node7:
-    container_name: node7
-    environment:
-      NODE_IP: 192.168.1.88
+      NODE_IP: 192.168.1.90
       NODE_PORT: 9067
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.88
+        ipv4_address: 192.168.1.90
     platform: windows/amd64
     ports:
     - 9067:9050
-    - 9088:9051
+    - 9054:9051
+  node6:
+    container_name: node6
+    environment:
+      NODE_IP: 192.168.1.27
+      NODE_PORT: 9063
+    image: gavrielnotbenigoren/node:latest
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.27
+    platform: windows/amd64
+    ports:
+    - 9063:9050
+    - 9086:9051
+  node7:
+    container_name: node7
+    environment:
+      NODE_IP: 192.168.1.186
+      NODE_PORT: 9096
+    image: gavrielnotbenigoren/node:latest
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.1.186
+    platform: windows/amd64
+    ports:
+    - 9096:9050
+    - 9077:9051
   node8:
     container_name: node8
     environment:
-      NODE_IP: 192.168.1.133
-      NODE_PORT: 9093
+      NODE_IP: 192.168.1.105
+      NODE_PORT: 9052
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.133
+        ipv4_address: 192.168.1.105
     platform: windows/amd64
     ports:
-    - 9093:9050
-    - 9062:9051
+    - 9052:9050
+    - 9061:9051
   node9:
     container_name: node9
     environment:
-      NODE_IP: 192.168.1.230
-      NODE_PORT: 9089
+      NODE_IP: 192.168.1.209
+      NODE_PORT: 9072
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.1.230
+        ipv4_address: 192.168.1.209
     platform: windows/amd64
     ports:
-    - 9089:9050
-    - 9065:9051
+    - 9072:9050
+    - 9093:9051
