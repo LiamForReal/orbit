@@ -18,18 +18,24 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up";
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
     {
         buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
     }
+    
+    //*
+    // Every time we build the Node, the image should be updated. 
+    // */
+    //runCmdCommand("../Node/build.bat");
+
     runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
 
-    runCmdCommand(buildCommand);
+    //runCmdCommand("docker network create --driver nat dockerfiles_TOR_NETWORK");
 
-    runCmdCommand("docker network create --driver nat dockerfiles_TOR_NETWORK");
+    runCmdCommand(buildCommand);
 }
 
 std::list<std::string> DockerManager::findIPs(const int& amount)
