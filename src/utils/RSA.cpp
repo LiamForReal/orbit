@@ -3,33 +3,41 @@
 RSA::RSA()
 {
 	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>(), p = this->getRandomPrimeNumber<uint1024_t>();
-	this->P = calcProduct(q, p);
+	this->N = calcProduct(q, p);
 	this->T = calcTotient(q, p);
 	selectPublicKey();
 	selectPrivateKey();
 	std::cout << "done making public and private keys!!!\n";
 }
 
-vector<unsigned char> RSA::Encrypt()
+vector<unsigned char> RSA::Encrypt(vector<unsigned char>& text)
 {
-	vector<unsigned char> vec;
-
-	return vec;
+	// char ^ E MODE N
+	vector<unsigned char> cypher_text;
+	for (auto it = text.begin(); it != text.end(); it++)
+	{
+		cypher_text.emplace_back(mod_exp<uint2048_t, unsigned char>(*it, this->E, this->N));
+	}
+	return cypher_text;
 }
 
-vector<unsigned char> RSA::Decrypt()
+vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cypher_text)
 {
-	vector<unsigned char> vec;
-
-	return vec;
+	// char ^ D MODE N
+	vector<unsigned char> text;
+	for (auto it = cypher_text.begin(); it != cypher_text.end(); it++)
+	{
+		text.emplace_back(mod_exp<uint2048_t, unsigned char>(*it, this->D, this->N));
+	}
+	return text;
 }
 	
-uint2048_t RSA::calcProduct(const uint1024_t q, const uint1024_t p)
+uint2048_t RSA::calcProduct(const uint1024_t& q, const uint1024_t& p)
 {
 	return static_cast<uint2048_t>(q * p);
 }
 	
-uint2048_t RSA::calcTotient(const uint1024_t q, const uint1024_t p)
+uint2048_t RSA::calcTotient(const uint1024_t& q, const uint1024_t& p)
 {
 	return static_cast<uint2048_t>((q - 1) * (p - 1));
 }

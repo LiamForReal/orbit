@@ -1,5 +1,7 @@
 #pragma once
 #include <boost/multiprecision/cpp_int.hpp>
+#include <boost/random/mersenne_twister.hpp> // For the mt19937 engine
+#include <boost/random/uniform_int_distribution.hpp> // For uniform integer distribution
 #include "json.hpp"
 
 using uint2048_t = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<2048, 2048, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>, boost::multiprecision::et_off>;
@@ -7,15 +9,15 @@ using uint1024_t = boost::multiprecision::number<boost::multiprecision::cpp_int_
 using uint256_t = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>, boost::multiprecision::et_off>;
 using boost::multiprecision::cpp_int;
 
-template <typename T>
-T mod_exp(T inputBase, T inputPower, T inputMod)
+template <typename T, typename U>
+U mod_exp(U inputBase, T inputPower, T inputMod)
 {
 	cpp_int result = 1;
 	cpp_int base = inputBase;
 	cpp_int power = inputPower;
 	cpp_int mod = inputMod;
 
-	base = base % mod;
+	//base = base % mod;
 
 	if (base == 0) return 0;
 
@@ -30,5 +32,5 @@ T mod_exp(T inputBase, T inputPower, T inputMod)
 		base = (base * base) % mod;
 	}
 
-	return (T)(result);
+	return (U)(result);
 }

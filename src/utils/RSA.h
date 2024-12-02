@@ -2,32 +2,31 @@
 
 #include "prime_numbers_manager.h"
 #include <vector>
+#include "utils.hpp"
 #define _2048_BITS "0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF"
 using std::vector;
 class RSA
 {
 public: 
 	RSA();
-	vector<unsigned char> Encrypt();
-	vector<unsigned char> Decrypt();
+	vector<unsigned char> Encrypt(vector<unsigned char>& text);
+	vector<unsigned char> Decrypt(vector<unsigned char>& cipher_text);
 
 protected:
 	template <typename T>
 	T getRandomPrimeNumber()
 	{
-		if constexpr (std::is_same<T, uint2048_t>::value)
-			return prime_numbers_manager::getRandomPrimeNumber2048();
-		return prime_numbers_manager::getRandomPrimeNumber1024();
+		return prime_numbers_manager::getRandomPrimeNumber<T>();
 	}
 
 private: 
-	uint2048_t calcProduct(const uint1024_t q, const uint1024_t p);
-	uint2048_t calcTotient(const uint1024_t q, const uint1024_t p);
+	uint2048_t calcProduct(const uint1024_t& q, const uint1024_t& p);
+	uint2048_t calcTotient(const uint1024_t& q, const uint1024_t& p);
 	void selectPublicKey();
 	void selectPrivateKey(); 
 
 	uint2048_t E; //public_key;
 	uint2048_t D; //private_key;
 	uint2048_t T; //Totioent
-	uint2048_t P; //Product
+	uint2048_t N; //Product
 };
