@@ -14,9 +14,16 @@ vector<unsigned char> RSA::Encrypt(vector<unsigned char>& text)
 {
 	// char ^ E MODE N
 	vector<unsigned char> cypher_text;
+	cpp_int textValue;
 	for (auto it = text.begin(); it != text.end(); it++)
 	{
-		cypher_text.emplace_back(mod_exp<uint2048_t, unsigned char>(*it, this->E, this->N));
+		textValue += *it;
+	}
+	cpp_int cypherValue = mod_exp<uint2048_t>(textValue, this->E, this->N);
+	size_t byteCount = (msb(cypherValue) / 8) + 1;
+	for (size_t i = 0; i < byteCount; i++)
+	{
+		cypher_text.emplace_back(static_cast<unsigned char>((cypherValue >> (i * 8)) & 0xFF));
 	}
 	return cypher_text;
 }
@@ -25,9 +32,16 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cypher_text)
 {
 	// char ^ D MODE N
 	vector<unsigned char> text;
-	for (auto it = cypher_text.begin(); it != cypher_text.end(); it++)
+	cpp_int cypherValue;
+	for (auto it = text.begin(); it != text.end(); it++)
 	{
-		text.emplace_back(mod_exp<uint2048_t, unsigned char>(*it, this->D, this->N));
+		cypherValue += *it;
+	}
+	cpp_int textValue = mod_exp<uint2048_t>(cypherValue, this->D, this->N);
+	size_t byteCount = (msb(textValue) / 8) + 1;
+	for (size_t i = 0; i < byteCount; i++)
+	{
+		text.emplace_back(static_cast<unsigned char>((textValue >> (i * 8)) & 0xFF));
 	}
 	return text;
 }

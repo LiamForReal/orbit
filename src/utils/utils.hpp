@@ -9,8 +9,8 @@ using uint1024_t = boost::multiprecision::number<boost::multiprecision::cpp_int_
 using uint256_t = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>, boost::multiprecision::et_off>;
 using boost::multiprecision::cpp_int;
 
-template <typename T, typename U>
-U mod_exp(U inputBase, T inputPower, T inputMod)
+template <typename T>
+cpp_int mod_exp(cpp_int inputBase, T inputPower, T inputMod)
 {
 	cpp_int result = 1;
 	cpp_int base = inputBase;
@@ -32,5 +32,5 @@ U mod_exp(U inputBase, T inputPower, T inputMod)
 		base = (base * base) % mod;
 	}
 
-	return (U)(result);
+	return result;
 }
