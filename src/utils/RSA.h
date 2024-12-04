@@ -9,14 +9,14 @@ class RSA
 {
 public: 
 	RSA();
-	vector<unsigned char> Encrypt(vector<unsigned char>& text);
-	vector<unsigned char> Decrypt(vector<unsigned char>& cipher_text);
+	void Encrypt(vector<unsigned char>& text);
+	void Decrypt(vector<unsigned char>& cipher_text);
 
 protected:
 	template <typename T>
-	T getRandomPrimeNumber()
+	T getRandomPrimeNumber(T lowerBond = -1, T upperBond = -1)
 	{
-		return prime_numbers_manager::getRandomPrimeNumber<T>();
+		return prime_numbers_manager::getRandomPrimeNumber<T>(lowerBond, upperBond);
 	}
 
 private: 
