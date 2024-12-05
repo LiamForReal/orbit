@@ -9,6 +9,7 @@ COPY ucrtbase.dll ./app/
 
 # Copy Node files and DLLs
 COPY entrypoint.bat ./app/
+COPY entrypoint_first.bat ./app/
 COPY Node.exe ./app/
 COPY Node.pdb ./app/
 COPY libcurl.dll ./app/

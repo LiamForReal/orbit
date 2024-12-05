@@ -133,8 +133,6 @@ void Node::clientHandler(const SOCKET client_socket)
 
 int main()
 {
-	std::cout << "Nuuuuu maaaaa????111?!?!\n";
-
 	try
 	{
 		//change you have ct version go get it

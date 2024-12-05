@@ -32,9 +32,8 @@ void DockerManager::openDocker(const int& amount)
     // */
     //runCmdCommand("../Node/build.bat");
 
-    runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
-
-    //runCmdCommand("docker network create --driver nat dockerfiles_TOR_NETWORK");
+    //REMOVEEEEEE!!!
+    //runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
 
     runCmdCommand(buildCommand);
 }
@@ -118,44 +117,46 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     char buffer[128];
     int j;
     std::string portsStr = "", hostPort = "";
-    for (int i = 1; i <= amount; i++)
+    // Build the docker inspect command with necessary `cd`
+    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + 1);
+    std::cout << inspectCommand << std::endl;
+    // Execute the command
+    FILE* pipe = _popen(inspectCommand.c_str(), "r");
+    if (!pipe)
+        throw std::runtime_error("Failed to run inspect command");
+
+    portsStr.clear();
+    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
     {
-        // Build the docker inspect command with necessary `cd`
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(i);
-        std::cout << inspectCommand << std::endl;
-        // Execute the command
-        FILE* pipe = _popen(inspectCommand.c_str(), "r");
-        if (!pipe)
-            throw std::runtime_error("Failed to run inspect command");
+        printf("BUFFER: %s |ENDED|\n", buffer);
+        portsStr += buffer; // Collect JSON output
+    }
+    _pclose(pipe);
 
-        portsStr.clear();
-        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-        {
-            printf("BUFFER: %s |ENDED|\n", buffer);
-            portsStr += buffer; // Collect JSON output
-        }
-        _pclose(pipe);
+    // Parse the JSON to extract the ports
+    try
+    {
+        std::cout << "portsStr: " << portsStr << std::endl;
+        //json portsJson = json::parse(portsStr);
+        std::cout << "After parse\n";
+        //hostPort = portsJson["9050/tcp"][0]["HostPort"];
+        std::cout << "portsStr: " << portsStr << std::endl;
+        hostPort = std::to_string(std::stoi(portsStr));
 
-        // Parse the JSON to extract the ports
-        try
+        std::cout << "container " + std::to_string(this->amountCreated + 1) + " id is " + hostPort + "\n";
+        proxyNodesPorts.emplace_back(hostPort);
+        for (int i = this->amountCreated + 1; i < amount; i++)
         {
-            std::cout << "portsStr: " << portsStr << std::endl;
-            //json portsJson = json::parse(portsStr);
-            std::cout << "After parse\n";
-            //hostPort = portsJson["9050/tcp"][0]["HostPort"];
-            std::cout << "portsStr: " << portsStr << std::endl;
-            hostPort = std::to_string(std::stoi(portsStr));
-
-            std::cout << "container " + std::to_string(i + 1) + " id is " + hostPort + "\n";
-            proxyNodesPorts.push_back(hostPort);
-        }
-        catch (const std::exception& ex)
-        {
-            std::cout << "ERROR HERE\n";
-            std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+            proxyNodesPorts.emplace_back(INTERNAL_PORT);
         }
     }
+    catch (const std::exception& ex)
+    {
+        std::cout << "ERROR HERE\n";
+        std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+    }
 
+    
     return proxyNodesPorts;
 }
 

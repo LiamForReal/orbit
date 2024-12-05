@@ -52,7 +52,6 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
 		if (this->cd.find(lr.circuit_id) == cd.end())
 		{
-			cd[lr.circuit_id] = std::pair<SOCKET, SOCKET>();
 			cd[lr.circuit_id].first = _socket;
 		}
 
@@ -62,8 +61,9 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 
 		if (cd[lr.circuit_id].first == _socket)
 		{
-			if (cd[lr.circuit_id].second != INVALID_SOCKET)
+			if (cd[lr.circuit_id].second != INVALID_SOCKET && cd[lr.circuit_id].second != NULL)
 			{
+				std::cout << "seconed is exisist and trying to connenct" << std::endl;
 				Helper::sendVector(cd[lr.circuit_id].second, requestInfo.buffer);
 				ri = Helper::waitForResponse(cd[lr.circuit_id].second);//sends rr but I put that on ri
 				if (ri.id == LINK_STATUS)
@@ -73,6 +73,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			}
 			else
 			{
+				std::cout << "seconed is new and now generating\n";
 				cd[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
 				if (cd[lr.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("socket creation failed");
