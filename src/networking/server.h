@@ -25,6 +25,6 @@ class Server
         void bindAndListen(); 
         void acceptClient(); 
         void clientHandler(const SOCKET client_socket);
-        void runCmdCommand(const std::string command);
+        
         SOCKET _socket;
 };

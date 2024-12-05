@@ -1,5 +1,6 @@
 #include "docker_manager.h"
 #include <random>
+
 DockerManager::DockerManager() 
 { 
     this->amountCreated = 0; 
@@ -18,7 +19,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 void DockerManager::openDocker(const int& amount)
 {
     const std::string containerName = "node";
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build";
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
@@ -163,6 +164,9 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
 std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create)
 {
     openDocker(create);
+
+
+
     std::list<std::pair<std::string, std::string>> nodesInfo;
     std::list<std::string> ips = findIPs(use); 
     std::list<std::string> ports = findProxyPorts(use);

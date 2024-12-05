@@ -4,7 +4,7 @@ import yaml
 import socket
 
 # Define the network range
-subnet = ipaddress.IPv4Network("192.168.1.0/24")
+subnet = ipaddress.IPv4Network("192.168.2.0/24")
 
 # Generate unique random IPs
 def generate_random_ip(subnet, count):

@@ -36,6 +36,7 @@ private:
     void acceptClient();
     void clientHandler(const SOCKET client_socket);
     //void runCmdCommand(const std::string command);
+
     std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits; 
     SOCKET _socket;
 };

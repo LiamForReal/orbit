@@ -40,8 +40,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         ccr.status = Errors::CIRCUIT_CONFIRMATION_ERROR;
     }
 
-    rr.
-        = SerializerResponses::serializeResponse(ccr);
+    rr.buffer = SerializerResponses::serializeResponse(ccr);
 
 	return rr;
 }

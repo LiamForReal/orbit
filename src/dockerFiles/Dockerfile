@@ -1,10 +1,13 @@
-# Use a Windows Server Core image as the base
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+# Using Nanoserver image
+FROM mcr.microsoft.com/windows/nanoserver:ltsc2019
 
-# Copy the built executable and required DLLs into the container
-ADD https://aka.ms/vs/17/release/vc_redist.x64.exe vc_redist.x64.exe
-RUN vc_redist.x64.exe /quiet /install
+# Copy runtime DLLs of vctools
+COPY msvcp140.dll ./app/
+COPY vcruntime140.dll ./app/
+COPY vcruntime140_1.dll ./app/
+COPY ucrtbase.dll ./app/
 
+# Copy Node files and DLLs
 COPY entrypoint.bat ./app/
 COPY Node.exe ./app/
 COPY Node.pdb ./app/
@@ -18,9 +21,5 @@ WORKDIR /app
 EXPOSE 9050
 EXPOSE 9051
 
-# Add the application directory to the PATH
-# ENV PATH="C:\\app;${PATH}"
-
 # Set the default command to run the Node executable
 # ENTRYPOINT ["/app/Node.exe"]
-# CMD ["%NODE_IP%", "%NODE_PORT%"]

@@ -27,6 +27,7 @@ public:
 	bool domainValidationCheck(std::string domain);
 private:
 	std::string generateHttpGetRequest(const std::string& domain);
+
 	SOCKET _clientSocketWithDS;
 	SOCKET _clientSocketWithFirstNode;
 };

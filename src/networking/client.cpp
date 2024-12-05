@@ -5,7 +5,7 @@ Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	_clientSocketWithFirstNode = NULL;
+	_clientSocketWithFirstNode = INVALID_SOCKET;
 
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
@@ -60,10 +60,11 @@ void Client::nodeOpening()
 std::string Client::generateHttpGetRequest(const std::string& domain) 
 {
 	std::ostringstream request;
-	request << "GET / HTTP/1.1\r\n";
-	request << "Host: " << domain << "\r\n";
-	request << "Connection: close\r\n";
-	request << "\r\n";
+	//request << "GET / HTTP/1.1\r\n";
+	//request << "Host: " << domain << "\r\n";
+	//request << "Connection: close\r\n";
+	//request << "\r\n";
+	request << domain;
 	return request.str();
 }
 
@@ -89,20 +90,40 @@ void Client::startConversation()
 
 	//headers of client sock begin
 	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	//
+	
 	if (_clientSocketWithFirstNode == INVALID_SOCKET)
 		throw std::runtime_error("Client run error socket");
-	//
+
+	int optval = 1;
+	if (setsockopt(_clientSocketWithFirstNode, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) != 0) {
+		perror("Failed to set socket option SO_REUSEADDR");
+	}
+
+	std::cout << "Connecting to " << ccr.nodesPath.begin()->first << " " << ccr.nodesPath.begin()->second << std::endl;
+
 	struct sockaddr_in sa = { 0 };
-	//
 	sa.sin_port = htons(stoi(ccr.nodesPath.begin()->second));
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
-	//
 	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
-	//
+
 	if (status == INVALID_SOCKET)
+	{
+		int errCode = WSAGetLastError();  // Get the error code from Winsock
+		std::cerr << "Connect failed with error code: " << errCode << std::endl;
+
+		// Check for specific errors
+		if (errCode == WSAECONNREFUSED) {
+			std::cerr << "Connection refused. Check if the service is running and the port is open." << std::endl;
+		}
+		else if (errCode == WSAETIMEDOUT) {
+			std::cerr << "Connection timed out. Check network connectivity." << std::endl;
+		}
+		else {
+			std::cerr << "Error code: " << errCode << std::endl;
+		}
 		throw std::runtime_error("Could not open socket with first node");
+	}
 	else std::cout << "connected successfully to the first node\n";
     //headers of client sock end
 	auto it = ccr.nodesPath.begin();

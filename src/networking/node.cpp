@@ -50,10 +50,18 @@ void Node::serveProxy(const std::string& ip, uint16_t port)
 // accept them, and create thread for each client
 void Node::bindAndListen(const std::string& ip, uint16_t port)
 {
+	std::cout << "NODE IP: " << ip << " NODE PORT: " << port << std::endl;
+
+	int optval = 1;
+	if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval)) < 0) {
+		std::cerr << "Failed to set SO_REUSEADDR!" << std::endl;
+		throw std::runtime_error("Failed to set SO_REUSEADDR");
+	}
+
 	struct sockaddr_in sa = { 0 };
-	sa.sin_port = htons(0); //to change!!! pass as a ev
+	sa.sin_port = htons(port);
 	sa.sin_family = AF_INET;
-	sa.sin_addr.s_addr = IFACE;
+	sa.sin_addr.s_addr = INADDR_ANY;
 	// again stepping out to the global namespace
 	if (::bind(_socket, (struct sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
 		throw std::runtime_error("Node bind error");
