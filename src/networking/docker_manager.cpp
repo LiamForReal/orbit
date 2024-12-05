@@ -118,44 +118,42 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     char buffer[128];
     int j;
     std::string portsStr = "", hostPort = "";
-
-    // Build the docker inspect command with necessary `cd`
-    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + 1);
-
-    // Execute the command
-    FILE* pipe = _popen(inspectCommand.c_str(), "r");
-    if (!pipe)
-        throw std::runtime_error("Failed to run inspect command");
-
-    portsStr.clear();
-    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+    for (int i = 1; i <= amount; i++)
     {
-        printf("BUFFER: %s |ENDED|\n", buffer);
-        portsStr += buffer; // Collect JSON output
-    }
-    _pclose(pipe);
+        // Build the docker inspect command with necessary `cd`
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(i);
+        std::cout << inspectCommand << std::endl;
+        // Execute the command
+        FILE* pipe = _popen(inspectCommand.c_str(), "r");
+        if (!pipe)
+            throw std::runtime_error("Failed to run inspect command");
 
-    // Parse the JSON to extract the ports
-    try
-    {
-        std::cout << "portsStr: " << portsStr << std::endl;
-        //json portsJson = json::parse(portsStr);
-        std::cout << "After parse\n";
-        //hostPort = portsJson["9050/tcp"][0]["HostPort"];
-
-        hostPort = std::to_string(std::stoi(portsStr));
-
-        std::cout << "container " + std::to_string(this->amountCreated + 1) + " id is " + hostPort + "\n";
-        proxyNodesPorts.push_back(hostPort);
-        for (int i = this->amountCreated + 1; i < this->amountCreated + amount; i++)
+        portsStr.clear();
+        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
         {
-            proxyNodesPorts.emplace_back(INTERNAL_PORT);
+            printf("BUFFER: %s |ENDED|\n", buffer);
+            portsStr += buffer; // Collect JSON output
         }
-    }
-    catch (const std::exception& ex)
-    {
-        std::cout << "ERROR HERE\n";
-        std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+        _pclose(pipe);
+
+        // Parse the JSON to extract the ports
+        try
+        {
+            std::cout << "portsStr: " << portsStr << std::endl;
+            //json portsJson = json::parse(portsStr);
+            std::cout << "After parse\n";
+            //hostPort = portsJson["9050/tcp"][0]["HostPort"];
+            std::cout << "portsStr: " << portsStr << std::endl;
+            hostPort = std::to_string(std::stoi(portsStr));
+
+            std::cout << "container " + std::to_string(i + 1) + " id is " + hostPort + "\n";
+            proxyNodesPorts.push_back(hostPort);
+        }
+        catch (const std::exception& ex)
+        {
+            std::cout << "ERROR HERE\n";
+            std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+        }
     }
 
     return proxyNodesPorts;
@@ -164,9 +162,6 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
 std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create)
 {
     openDocker(create);
-
-
-
     std::list<std::pair<std::string, std::string>> nodesInfo;
     std::list<std::string> ips = findIPs(use); 
     std::list<std::string> ports = findProxyPorts(use);

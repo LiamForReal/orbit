@@ -14,15 +14,12 @@ NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, 
 
 RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 {
-	std::cout << "IN\n\n";
 	if (lrh->isRequestRelevant(requestInfo))
 	{
-		std::cout << "OUT link\n\n";
 		return lrh->handleRequest(requestInfo);
 	}
 	else if (hgrh->isRequestRelevant(requestInfo))
 	{
-		std::cout << "OUT httpget\n\n";
 		return hgrh->handleRequest(requestInfo);
 	}
 	else

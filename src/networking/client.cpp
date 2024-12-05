@@ -111,30 +111,20 @@ void Client::startConversation()
 	{
 		int errCode = WSAGetLastError();  // Get the error code from Winsock
 		std::cerr << "Connect failed with error code: " << errCode << std::endl;
-
-		// Check for specific errors
-		if (errCode == WSAECONNREFUSED) {
-			std::cerr << "Connection refused. Check if the service is running and the port is open." << std::endl;
-		}
-		else if (errCode == WSAETIMEDOUT) {
-			std::cerr << "Connection timed out. Check network connectivity." << std::endl;
-		}
-		else {
-			std::cerr << "Error code: " << errCode << std::endl;
-		}
 		throw std::runtime_error("Could not open socket with first node");
 	}
 	else std::cout << "connected successfully to the first node\n";
     //headers of client sock end
-	auto it = ccr.nodesPath.begin();
-	for (int i = 0; i < ccr.nodesPath.size() - 1; i++)
+	
+	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 	{
-		std::advance(it, i);
+		if(it == ccr.nodesPath.begin())
+			it++;
 		LinkRequest linkRequest;
 		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 		linkRequest.circuit_id = ccr.circuit_id;
 
-		std::cout << "sended " + std::to_string(i + 1) + " link msg\n";
+		std::cout << "sended link msg\n";
 		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
 
 		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
