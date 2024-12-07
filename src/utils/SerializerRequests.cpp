@@ -95,7 +95,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -116,11 +115,10 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const HttpGetReq
 
     json requestJson = {
         {"circuit_id", httpGetRequest.circuit_id},
-        {"msg", httpGetRequest.msg},
+        {"domain", httpGetRequest.domain},
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.

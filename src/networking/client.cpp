@@ -141,7 +141,7 @@ void Client::startConversation()
 
 	HttpGetRequest httpGetRequest;
 	httpGetRequest.circuit_id = ccr.circuit_id;
-	httpGetRequest.msg = generateHttpGetRequest(domain);
+	httpGetRequest.domain = domain;
 
 	std::cout << "sends httpGet Request:\n";
 	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));

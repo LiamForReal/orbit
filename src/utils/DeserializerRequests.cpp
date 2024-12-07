@@ -130,7 +130,7 @@ HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector
 	try
 	{
 		request.circuit_id = jsonData["circuit_id"];
-		request.msg = jsonData["msg"];
+		request.domain = jsonData["domain"];
 	}
 	catch (...)
 	{

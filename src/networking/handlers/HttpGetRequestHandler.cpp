@@ -16,61 +16,75 @@ bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 
 size_t HttpGetRequestHandler::writeChunk(void* data, size_t size, size_t nmemb, void* userData)
 {
-	size_t real_size = size * nmemb;
+    size_t real_size = size * nmemb;
 
-	CurlResponse* curlResponse = (CurlResponse*)(userData);
+    CurlResponse* curlResponse = static_cast<CurlResponse*>(userData);
 
-	// allocating additional memory for new chunk + 1 byte for NULL terminator 
-	char* pointer = (char*)(realloc(curlResponse->string, curlResponse->size + real_size + 1));
+    // Reallocate memory for the new data chunk + null terminator
+    char* pointer = static_cast<char*>(realloc(curlResponse->string, curlResponse->size + real_size + 1));
+    if (pointer == NULL)
+    {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        return 0; // Return 0 to indicate failure to libcurl
+    }
 
-	if (NULL == pointer)
-	{
-		return CURL_WRITEFUNC_ERROR;
-	}
+    curlResponse->string = pointer;
 
-	curlResponse->string = pointer;
+    // Copy the new data chunk to the reallocated memory
+    memcpy(&(curlResponse->string[curlResponse->size]), data, real_size);
+    curlResponse->size += real_size;
 
-	// appending chunk data to the end of the last chunk
-	memcpy(&(curlResponse->string[curlResponse->size]), data, real_size);
-	curlResponse->size += real_size;
-	curlResponse->string[curlResponse->size] = NULL;
+    // Null-terminate the string
+    curlResponse->string[curlResponse->size] = '\0';
 
-	return real_size;
+    return real_size;
 }
 
 std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpRequest)
 {
-	CURL* curl = curl_easy_init();
-	CURLcode result;
-	if (NULL == curl)
-	{
-		std::cout << "curl failed\n";
-		return "";
-	}
+    CURL* curl = curl_easy_init();
+    if (!curl)
+    {
+        std::cerr << "Failed to initialize CURL!" << std::endl;
+        return "";
+    }
 
-	CurlResponse curlResponse;
-	curlResponse.string = (char*)(malloc(1));
-	curlResponse.size = 0;
+    // Initialize CurlResponse
+    CurlResponse curlResponse;
+    curlResponse.string = static_cast<char*>(malloc(1)); // Allocate initial memory
+    if (!curlResponse.string)
+    {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        curl_easy_cleanup(curl);
+        return "";
+    }
+    curlResponse.size = 0;
 
-	curl_easy_setopt(curl, CURLOPT_URL, httpRequest.c_str());
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &HttpGetRequestHandler::writeChunk);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)(&curlResponse));
+    // Set CURL options
+    curl_easy_setopt(curl, CURLOPT_URL, httpRequest.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HttpGetRequestHandler::writeChunk);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlResponse);
 
-	result = curl_easy_perform(curl);
+    // Perform the HTTP request
+    CURLcode result = curl_easy_perform(curl);
+    if (result != CURLE_OK)
+    {
+        std::cerr << "CURL failed: " << curl_easy_strerror(result) << std::endl;
+        free(curlResponse.string);
+        curl_easy_cleanup(curl);
+        return "";
+    }
 
-	if (CURLE_OK != result)
-	{
-		std::cout << "curl failed: " << curl_easy_strerror(result) << std::endl;
-		return "";
-	}
+    // Cleanup CURL
+    curl_easy_cleanup(curl);
 
-	curl_easy_cleanup(curl);
+    // Convert the response to std::string
+    std::string htmlCode(curlResponse.string);
 
-	std::string htmlCode = std::string(curlResponse.string);
+    // Free allocated memory
+    free(curlResponse.string);
 
-	free(curlResponse.string);
-
-	return htmlCode;
+    return htmlCode;
 }
 
 RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInfo)
@@ -86,7 +100,8 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		
         rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
-		if (this->circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET)
+		std::cout << "socket: " << this->circuitsData[hgRequest.circuit_id].second << std::endl;
+		if (this->circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET && this->circuitsData[hgRequest.circuit_id].second != NULL)
 		{
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
@@ -96,7 +111,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		{
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
-			hgResponse.content = this->sendHttpRequest(hgRequest.msg);
+			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
 		}
 	}
 	catch (std::runtime_error e)
