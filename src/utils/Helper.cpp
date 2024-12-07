@@ -30,13 +30,15 @@ void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 	std::string str = dataPtr; 
 	int dataSize = static_cast<int>(vec.size());
 	int totalBytesSent = 0;
-
+	std::cout << "socket to send: " << sc << std::endl;
 	while (totalBytesSent < dataSize)
 	{
+		
 		int bytesSent = send(sc, dataPtr + totalBytesSent, dataSize - totalBytesSent, 0);
 
 		if (bytesSent == SOCKET_ERROR)
 		{
+			std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
 			throw std::runtime_error("Error while sending message to client");
 		}
 		else if (bytesSent == 0)

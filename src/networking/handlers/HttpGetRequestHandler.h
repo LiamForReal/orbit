@@ -10,7 +10,7 @@ typedef struct CurlResponse
 class HttpGetRequestHandler : virtual public IRequestHandler
 {
 	public:
-		HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData);
+		HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock);
 		bool isRequestRelevant(const RequestInfo& requestInfo) override;
 		
 		RequestResult handleRequest(const RequestInfo& requestInfo) override;
@@ -21,5 +21,6 @@ class HttpGetRequestHandler : virtual public IRequestHandler
 		RequestResult rr;
 		static size_t writeChunk(void* data, size_t size, size_t nmemb, void* userData);
 		std::string sendHttpRequest(const std::string& httpRequest);
-		std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData;
+		std::map<unsigned int, std::pair<SOCKET, SOCKET>>& cd;
+		SOCKET& _socket;
 };

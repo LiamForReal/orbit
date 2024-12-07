@@ -3,10 +3,9 @@
 #include <curl/curl.h>
 #include <string>
 
-HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData) : circuitsData(circuitsData)
+HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : cd(circuitsData), _socket(clientSock)
 {
 	this->rr = RequestResult();
-	this->circuitsData = circuitsData;
 }
 
 bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
@@ -100,15 +99,15 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		
         rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
-		std::cout << "socket: " << this->circuitsData[hgRequest.circuit_id].second << std::endl;
-		if (this->circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET && this->circuitsData[hgRequest.circuit_id].second != NULL)
+		if (this->cd[hgRequest.circuit_id].second != INVALID_SOCKET && cd[hgRequest.circuit_id].second != NULL)
 		{
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-			Helper::sendVector(this->circuitsData[hgRequest.circuit_id].second, buffer);
+			Helper::sendVector(this->cd[hgRequest.circuit_id].second, buffer);
 		}
 		else
 		{
+            this->cd[hgRequest.circuit_id].first = _socket;
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);

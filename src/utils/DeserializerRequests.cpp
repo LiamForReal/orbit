@@ -65,7 +65,7 @@ NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const std::v
 		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
 	}
     
-	std::cout << jsonDataStr;
+	
 	json jsonData = json::parse(jsonDataStr);
 
 	try
@@ -95,7 +95,7 @@ LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsig
 		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
 	}
     
-	std::cout << jsonDataStr;
+	
 	json jsonData = json::parse(jsonDataStr);
 
 	try
@@ -117,14 +117,13 @@ HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector
 	unsigned int len = 0, i = 0;
 
 	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-	std::cout << len << std::endl;
-    
+
     for (i = 0; i < len; i++)
 	{
 		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
 	}
     
-	std::cout << jsonDataStr;
+	
 	json jsonData = json::parse(jsonDataStr);
 
 	try
@@ -154,7 +153,7 @@ CloseConnectionRequest DeserializerRequests::deserializeCloseConnectionRequest(c
 		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
 	}
     
-	std::cout << jsonDataStr;
+	
 	json jsonData = json::parse(jsonDataStr);
 
 	try
@@ -182,7 +181,7 @@ DeleteCircuitRequest DeserializerRequests::deserializeDeleteCircuitRequest(const
 		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
 	}
     
-	std::cout << jsonDataStr;
+	
 	json jsonData = json::parse(jsonDataStr);
 
 	try

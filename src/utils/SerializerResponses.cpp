@@ -15,7 +15,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const RsaKeyEx
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -41,7 +41,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const EcdheKey
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -65,7 +65,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const NodeOpen
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -91,7 +91,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const CircuitC
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -115,7 +115,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const LinkResp
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -140,7 +140,6 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const HttpGetR
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -164,7 +163,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const CloseCon
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -188,7 +187,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const DeleteCi
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
@@ -212,7 +211,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const AliveMsg
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
+	
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
