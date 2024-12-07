@@ -122,13 +122,15 @@ void Node::clientHandler(const SOCKET client_socket)
 			rr = nodeRequestHandler.directMsg(ri);
 			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
 			{
-				Helper::sendVector(this->circuits[rr.circuit_id].first, rr.buffer);
+				std::cout << "sending beckward!\n";
+				Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);
 			}
-			if (this->circuits[rr.circuit_id].second != INVALID_SOCKET && this->circuits[rr.circuit_id].second != NULL)
+
+			if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
 			{
+				std::cout << "listening foward\n";
 				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
-				rr = nodeRequestHandler.directMsg(ri); //change sock first add this methods
-				//and change client_socket in node request handler to _socket
+				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
 			}
 		}
 	}

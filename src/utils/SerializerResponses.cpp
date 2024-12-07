@@ -140,7 +140,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const HttpGetR
     };
     
     std::string requestJsonStr = requestJson.dump();
-
+    std::cout << requestJsonStr << std::endl;
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
 	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);

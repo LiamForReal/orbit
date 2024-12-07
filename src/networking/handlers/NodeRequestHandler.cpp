@@ -6,10 +6,10 @@ NodeRequestHandler::~NodeRequestHandler()
 	delete hgrh;
 }
 
-NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, SOCKET cs) : circuitData(circuits), client_socket(cs)
+NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, SOCKET cs) : circuitData(circuits), _socket(cs)
 {
-	this->lrh = new LinkRequestHandler(circuitData, client_socket);
-	this->hgrh = new HttpGetRequestHandler(circuitData, client_socket);
+	this->lrh = new LinkRequestHandler(circuitData, _socket);
+	this->hgrh = new HttpGetRequestHandler(circuitData, _socket);
 }
 
 RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)

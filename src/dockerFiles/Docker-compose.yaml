@@ -7,7 +7,7 @@ networks:
 services:
   node1:
     command:
-    - entrypoint_first.bat
+    - entrypoint.bat
     container_name: node1
     environment:
       NODE_IP: 192.168.2.171
