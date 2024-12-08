@@ -115,25 +115,27 @@ void Client::startConversation()
 	}
 	else std::cout << "connected successfully to the first node\n";
     //headers of client sock end
-	
-	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
+	if (ccr.nodesPath.size() > 1)
 	{
-		if(it == ccr.nodesPath.begin())
-			it++;
-		LinkRequest linkRequest;
-		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
-		linkRequest.circuit_id = ccr.circuit_id;
-
-		std::cout << "sended link msg\n";
-		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
-
-		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-		if (Errors::LINK_ERROR == ri.id)
+		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 		{
-			throw std::runtime_error("Could not build circuit.");
+			if (it == ccr.nodesPath.begin())
+				it++;
+			LinkRequest linkRequest;
+			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
+			linkRequest.circuit_id = ccr.circuit_id;
+
+			std::cout << "sended link msg\n";
+			Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
+
+			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+			if (Errors::LINK_ERROR == ri.id)
+			{
+				throw std::runtime_error("Could not build circuit.");
+			}
 		}
 	}
-
+	
 	std::cout << "Enter domain: ";
 	std::cin >> domain;
 	if (!domainValidationCheck(domain))

@@ -5,6 +5,7 @@ DockerManager::DockerManager()
 { 
     this->amountCreated = 0; 
     runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");
+    runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
 }
 
 void DockerManager::runCmdCommand(const std::string& command)
@@ -18,22 +19,27 @@ void DockerManager::runCmdCommand(const std::string& command)
 
 void DockerManager::openDocker(const int& amount)
 {
-    const std::string containerName = "node";
+    string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
+    string firstNodeName = "";
+    std::vector<string> nodesNames;
     std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
     {
+        
         buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+        if (i != this->amountCreated)
+        {
+            portsCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+            nodesNames.emplace_back(std::string(CONTAINER_NAME) + std::to_string(i + 1));
+        }
+        else firstNodeName = std::string(CONTAINER_NAME) + std::to_string(i + 1);
     }
-    
-    //*
-    // Every time we build the Node, the image should be updated. 
-    // */
-    //runCmdCommand("../Node/build.bat");
 
-    //REMOVEEEEEE!!!
-    //runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
+    buildCircuits[firstNodeName] = nodesNames; //for next 
+
+    runCmdCommand(portsCommand);
 
     runCmdCommand(buildCommand);
 }
