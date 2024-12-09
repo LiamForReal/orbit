@@ -63,6 +63,8 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
     curl_easy_setopt(curl, CURLOPT_URL, httpRequest.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HttpGetRequestHandler::writeChunk);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlResponse);
+    curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+    curl_easy_setopt(curl, CURLOPT_CAINFO, "./cacert.pem");
 
     // Perform the HTTP request
     CURLcode result = curl_easy_perform(curl);

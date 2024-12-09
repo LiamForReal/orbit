@@ -136,31 +136,34 @@ void Client::startConversation()
 		}
 	}
 	
-	std::cout << "Enter domain: ";
-	std::cin >> domain;
-	if (!domainValidationCheck(domain))
-		throw std::runtime_error("domain is illegal");
-
-	HttpGetRequest httpGetRequest;
-	httpGetRequest.circuit_id = ccr.circuit_id;
-	httpGetRequest.domain = domain;
-
-	std::cout << "sends httpGet Request:\n";
-	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
-
-	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-
-	HttpGetResponse httpGetResponse;
-	httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
-
-	if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
+	while (true)
 	{
-		std::cerr << "Could not get HTML of " << domain << std::endl;
-	}
-	else
-	{
-		std::cout << "HTML of " << domain << ": " << std::endl;
-		std::cout << httpGetResponse.content << std::endl;
+		std::cout << "Enter domain: ";
+		std::cin >> domain;
+		if (!domainValidationCheck(domain))
+			throw std::runtime_error("domain is illegal");
+
+		HttpGetRequest httpGetRequest;
+		httpGetRequest.circuit_id = ccr.circuit_id;
+		httpGetRequest.domain = domain;
+
+		std::cout << "sends httpGet Request:\n";
+		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
+
+		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+
+		HttpGetResponse httpGetResponse;
+		httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
+
+		if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
+		{
+			std::cerr << "Could not get HTML of " << domain << std::endl;
+		}
+		else
+		{
+			std::cout << "HTML of " << domain << ": " << std::endl;
+			std::cout << httpGetResponse.content << std::endl;
+		}
 	}
 }
 

@@ -11,6 +11,7 @@ COPY ucrtbase.dll ./app/
 COPY entrypoint.bat ./app/
 COPY Node.exe ./app/
 COPY Node.pdb ./app/
+COPY cacert.pem ./app/
 COPY libcurl.dll ./app/
 COPY zlib1.dll ./app/
 
