@@ -14,6 +14,7 @@ bool NodeOpeningHandler::isRequestRelevant(const RequestInfo& requestInfo)
 RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
 {
     std::list<std::pair<std::string, std::string>> nodesInfo;
+    std::list<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
     this->rr.buffer.clear();
     try
@@ -24,7 +25,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
 
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
-
+        controlNodesInfo = dm.GetControlInfo(nor.amount_to_open);
         ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
         for (auto it = nodesInfo.begin(); it != nodesInfo.end(); it++)

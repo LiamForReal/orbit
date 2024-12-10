@@ -51,7 +51,7 @@ SOCKET Node::createSocketWithServer()
 	{
 		closesocket(sock);
 		throw std::runtime_error("Failed to resolve host.docker.internal: " + WSAGetLastError());
-	}
+	}                                                                                                                                                                                                                                                                                                                                                                                                                                                               
 
 	sockaddr_in serverAddr = {};
 	serverAddr.sin_family = AF_INET;

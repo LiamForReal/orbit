@@ -13,6 +13,7 @@
 #include "WSAInitializer.h"
 #include "docker_manager.h"
 #include "../utils/Helper.h"
+#include <ws2ipdef.h>
 
 class Server
 {
@@ -20,11 +21,16 @@ class Server
         Server(); 
         ~Server(); 
         void serve(); 
-
+        void serveControl(std::list<std::pair<std::string, std::string>>& control_info);
+        
     private: 
         void bindAndListen(); 
+        void bindAndListenControl();
         void acceptClient(); 
+        void acceptControlClient(const std::list<std::pair<std::string, std::string>>& allowedClients);
         void clientHandler(const SOCKET client_socket);
+        void clientControlHandler(const SOCKET node_sock);
         
         SOCKET _socket;
+        SOCKET _controlSocket;
 };

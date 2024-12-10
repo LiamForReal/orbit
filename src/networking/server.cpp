@@ -4,6 +4,7 @@
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
 static const unsigned short PORT = 9787;
+static const unsigned short CONTROL_PORT = 9788;
 static const unsigned int IFACE = 0;
 
 using std::string;
@@ -47,13 +48,26 @@ void Server::serve()
 	}
 }
 
+void Server::serveControl(std::list<std::pair<std::string, std::string>>& control_info) //check if its one of the nodes
+{
+	bindAndListenControl();
+	std::string input_string;
+	while (true)
+	{
+		// the main thread is only accepting clients 
+		// and add then to the list of handlers
+		std::cout << "accepting node for control...\n";
+		this->acceptControlClient(control_info);
+
+	}
+}
 
 // listen to connecting requests from clients
 // accept them, and create thread for each client
 void Server::bindAndListen()
 {
 	struct sockaddr_in sa = { 0 };
-	sa.sin_port = htons(PORT);
+	sa.sin_port = htons(unsigned int(PORT));
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = IFACE;
 	// again stepping out to the global namespace
@@ -65,6 +79,22 @@ void Server::bindAndListen()
 		throw std::runtime_error("server listen error");
 	std::cout << "listening...\n";
 
+}
+
+void Server::bindAndListenControl()
+{
+	struct sockaddr_in sa = { 0 };
+	sa.sin_port = htons(unsigned int(CONTROL_PORT));
+	sa.sin_family = AF_INET;
+	sa.sin_addr.s_addr = IFACE;
+	// again stepping out to the global namespace
+	if (::bind(this->_controlSocket, (struct sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
+		throw std::runtime_error("server bind error");
+	std::cout << "binded control\n";
+
+	if (::listen(this->_controlSocket, SOMAXCONN) == SOCKET_ERROR)
+		throw std::runtime_error("server listen error");
+	std::cout << "listening control...\n";
 }
 
 void Server::acceptClient()
@@ -80,10 +110,53 @@ void Server::acceptClient()
 
 }
 
+void Server::acceptControlClient(const std::list<std::pair<std::string, std::string>>& allowedClients)
+{
+	sockaddr_in nodeAddr;
+	int nodeAddrLen = sizeof(nodeAddr);
+
+	// Accept the client connection
+	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);
+	if (nodeSocket == INVALID_SOCKET)
+	{
+		throw std::runtime_error("Failed to accept client connection.");
+	}
+
+	// Get the client's IP and port
+	char nodeIP[INET_ADDRSTRLEN];
+	strcpy(nodeIP, inet_ntoa(nodeAddr.sin_addr)); //here I really gotta go to learn with a friend so find enother way to do it sorry
+	std::string clientIPStr(nodeIP);
+	std::string clientPortStr = std::to_string(ntohs(nodeAddr.sin_port)); // Get port as string
+
+	// Check if the client is in the allowed list
+	bool isAllowed = false;
+	for (const auto& allowedClient : allowedClients) {
+		if (allowedClient.first == clientIPStr && allowedClient.second == clientPortStr) {
+			isAllowed = true;
+			break;
+		}
+	}
+
+	if (isAllowed)
+	{
+		std::cout << "Client " << clientIPStr << ":" << clientPortStr << " accepted." << std::endl;
+		std::thread tr(&Server::clientControlHandler, this, nodeSocket);
+		tr.detach();
+	}
+
+	else
+	{
+		std::cout << "Client " << clientIPStr << ":" << clientPortStr << " is not allowed. Closing connection." << std::endl;
+		closesocket(nodeSocket);
+	}
+
+}
+
 void Server::clientHandler(const SOCKET client_socket)
 {
     try
     {
+		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
         std::string msg = ""; 
 		RequestResult rr = RequestResult();
@@ -96,6 +169,8 @@ void Server::clientHandler(const SOCKET client_socket)
 
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
+		unsigned int amountToOpen = DeserializerRequests::deserializeNodeOpeningRequest(ri.buffer).amount_to_open;
+		dm.GetControlInfo(amountToOpen);
         Helper::sendVector(client_socket, rr.buffer);
         std::cout << "sending msg...\n";
     }
@@ -103,6 +178,12 @@ void Server::clientHandler(const SOCKET client_socket)
     {
         std::cerr << e.what() << '\n';
     }
+}
+
+void Server::clientControlHandler(const SOCKET node_sock)
+{
+	//make the logic of get alive msg 
+	//only get them in the start thats it.
 }
 
 

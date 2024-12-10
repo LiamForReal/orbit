@@ -20,7 +20,7 @@
 #include "handlers/NodeRequestHandler.h"
 #define COMMUNICATE_NODE_PORT 9050 //inside network
 #define CONTROL_NODE_PORT 9051 //inside network
-#define COMMUNICATE_CONTROL_NODE_PORT 9787
+#define COMMUNICATE_CONTROL_NODE_PORT 9788 
 
 
 class Node
