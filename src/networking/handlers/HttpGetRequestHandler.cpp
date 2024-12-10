@@ -1,10 +1,11 @@
 #include "HttpGetRequestHandler.h"
-#include <fstream>
+#include <stdlib.h>
+#include <curl/curl.h>
+#include <string>
 
-HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData) : circuitsData(circuitsData)
+HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : cd(circuitsData), _socket(clientSock)
 {
 	this->rr = RequestResult();
-	this->circuitsData = circuitsData;
 }
 
 bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
@@ -12,85 +13,80 @@ bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 	return requestInfo.id == HTTP_MSG_RC;
 }
 
-std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpRequest) 
+size_t HttpGetRequestHandler::writeChunk(void* data, size_t size, size_t nmemb, void* userData)
 {
-    const int PORT = 80; // HTTP port
-    const int BUFFER_SIZE = 4096;
+    size_t real_size = size * nmemb;
 
-    // Step 1: Extract Host from the HTTP request
-    size_t hostStart = httpRequest.find("Host: ");
-    if (hostStart == std::string::npos) {
-        throw std::runtime_error("Host header not found in HTTP request");
-    }
-    hostStart += 6; // Move past "Host: "
-    size_t hostEnd = httpRequest.find("\r\n", hostStart);
-    std::string host = httpRequest.substr(hostStart, hostEnd - hostStart);
+    CurlResponse* curlResponse = static_cast<CurlResponse*>(userData);
 
-    // Step 2: Initialize Winsock
-    WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        throw std::runtime_error("WSAStartup failed");
+    // Reallocate memory for the new data chunk + null terminator
+    char* pointer = static_cast<char*>(realloc(curlResponse->string, curlResponse->size + real_size + 1));
+    if (pointer == NULL)
+    {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        return 0; // Return 0 to indicate failure to libcurl
     }
 
-    // Step 3: Resolve the domain name to an IP address
-    struct hostent* hostEntry = gethostbyname(host.c_str());
-    if (hostEntry == nullptr) {
-        WSACleanup();
-        throw std::runtime_error("Failed to resolve domain: " + host);
-    }
+    curlResponse->string = pointer;
 
-    // Step 4: Create a socket
-    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock == INVALID_SOCKET) {
-        WSACleanup();
-        throw std::runtime_error("Socket creation failed");
-    }
+    // Copy the new data chunk to the reallocated memory
+    memcpy(&(curlResponse->string[curlResponse->size]), data, real_size);
+    curlResponse->size += real_size;
 
-    // Step 5: Set up the server address
-    sockaddr_in serverAddr{};
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(PORT);
-    memcpy(&serverAddr.sin_addr, hostEntry->h_addr, hostEntry->h_length);
+    // Null-terminate the string
+    curlResponse->string[curlResponse->size] = '\0';
 
-    // Step 6: Connect to the server
-    if (connect(sock, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        closesocket(sock);
-        WSACleanup();
-        throw std::runtime_error("Failed to connect to server");
-    }
-
-    // Step 7: Send the HTTP request
-    if (send(sock, httpRequest.c_str(), httpRequest.length(), 0) == SOCKET_ERROR) {
-        closesocket(sock);
-        WSACleanup();
-        throw std::runtime_error("Failed to send request");
-    }
-
-    // Step 8: Receive the response
-    char buffer[BUFFER_SIZE];
-    std::string response;
-    int bytesReceived;
-
-    while ((bytesReceived = recv(sock, buffer, BUFFER_SIZE - 1, 0)) > 0) {
-        buffer[bytesReceived] = '\0';
-        response += buffer;
-    }
-
-    if (bytesReceived == SOCKET_ERROR) {
-        closesocket(sock);
-        WSACleanup();
-        throw std::runtime_error("Failed to receive response");
-    }
-
-    // Step 9: Clean up
-    closesocket(sock);
-    WSACleanup();
-
-    return response;
+    return real_size;
 }
 
+std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpRequest)
+{
+    CURL* curl = curl_easy_init();
+    if (!curl)
+    {
+        std::cerr << "Failed to initialize CURL!" << std::endl;
+        return "";
+    }
 
-        //std::string response = sendHttpGetRequest(domain);
+    // Initialize CurlResponse
+    CurlResponse curlResponse;
+    curlResponse.string = static_cast<char*>(malloc(1)); // Allocate initial memory
+    if (!curlResponse.string)
+    {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        curl_easy_cleanup(curl);
+        return "";
+    }
+    curlResponse.size = 0;
+
+    // Set CURL options
+    curl_easy_setopt(curl, CURLOPT_URL, httpRequest.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, HttpGetRequestHandler::writeChunk);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &curlResponse);
+    curl_easy_setopt(curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+    curl_easy_setopt(curl, CURLOPT_CAINFO, "./cacert.pem");
+
+    // Perform the HTTP request
+    CURLcode result = curl_easy_perform(curl);
+    if (result != CURLE_OK)
+    {
+        std::cerr << "CURL failed: " << curl_easy_strerror(result) << std::endl;
+        free(curlResponse.string);
+        curl_easy_cleanup(curl);
+        return "";
+    }
+
+    // Cleanup CURL
+    curl_easy_cleanup(curl);
+
+    // Convert the response to std::string
+    std::string htmlCode(curlResponse.string);
+
+    // Free allocated memory
+    free(curlResponse.string);
+
+    return htmlCode;
+}
 
 RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
@@ -101,20 +97,31 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 
 	try
 	{
+        std::cout << "1";
 		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
 		
+        rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
-		if (this->circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET)
+		if (this->cd[hgRequest.circuit_id].second != INVALID_SOCKET && cd[hgRequest.circuit_id].second != NULL)
 		{
+            std::cout << "2";
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-			Helper::sendVector(this->circuitsData[hgRequest.circuit_id].second, buffer);
+			Helper::sendVector(this->cd[hgRequest.circuit_id].second, buffer);
 		}
 		else
 		{
+            std::cout << "3";
+            //if (this->cd.find(hgRequest.circuit_id) == cd.end())
+            //{
+                //std::cout << "4";
+            cd[hgRequest.circuit_id].first = _socket;
+            //}
+            //else throw std::runtime_error("this circuit first already taken");
+            std::cout << "5";
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
-			hgResponse.content = this->sendHttpRequest(hgRequest.msg);
+			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
 		}
 	}
 	catch (std::runtime_error e)

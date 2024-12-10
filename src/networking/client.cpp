@@ -5,7 +5,7 @@ Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	_clientSocketWithFirstNode = NULL;
+	_clientSocketWithFirstNode = INVALID_SOCKET;
 
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
@@ -57,6 +57,17 @@ void Client::nodeOpening()
 	//CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse();
 }
 
+std::string Client::generateHttpGetRequest(const std::string& domain) 
+{
+	std::ostringstream request;
+	//request << "GET / HTTP/1.1\r\n";
+	//request << "Host: " << domain << "\r\n";
+	//request << "Connection: close\r\n";
+	//request << "\r\n";
+	request << domain;
+	return request.str();
+}
+
 bool Client::domainValidationCheck(std::string domain)
 {
 	//acomplish it
@@ -77,48 +88,66 @@ void Client::startConversation()
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
 	}
 
+	//headers of client sock begin
 	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-
+	
 	if (_clientSocketWithFirstNode == INVALID_SOCKET)
-		throw std::runtime_error("Could not connect to first node");
+		throw std::runtime_error("Client run error socket");
+
+	int optval = 1;
+	if (setsockopt(_clientSocketWithFirstNode, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) != 0) {
+		perror("Failed to set socket option SO_REUSEADDR");
+	}
+
+	std::cout << "Connecting to " << ccr.nodesPath.begin()->first << " " << ccr.nodesPath.begin()->second << std::endl;
 
 	struct sockaddr_in sa = { 0 };
-
 	sa.sin_port = htons(stoi(ccr.nodesPath.begin()->second));
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
-
 	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
 
 	if (status == INVALID_SOCKET)
-		throw std::runtime_error("Could not open socket with first node");
-
-	for (auto it = ccr.nodesPath.begin().operator++(); it != ccr.nodesPath.end(); it++)
 	{
-		LinkRequest linkRequest;
-		linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
-		linkRequest.circuit_id = ccr.circuit_id;
-
-		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
-
-		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-		if (Errors::LINK_ERROR == ri.id)
+		int errCode = WSAGetLastError();  // Get the error code from Winsock
+		std::cerr << "Connect failed with error code: " << errCode << std::endl;
+		throw std::runtime_error("Could not open socket with first node");
+	}
+	else std::cout << "connected successfully to the first node\n";
+    //headers of client sock end
+	if (ccr.nodesPath.size() > 1)
+	{
+		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 		{
-			throw std::runtime_error("Could not build circuit.");
+			if (it == ccr.nodesPath.begin())
+				it++;
+			LinkRequest linkRequest;
+			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
+			linkRequest.circuit_id = ccr.circuit_id;
+
+			std::cout << "sended link msg\n";
+			Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
+
+			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+			if (Errors::LINK_ERROR == ri.id)
+			{
+				throw std::runtime_error("Could not build circuit.");
+			}
 		}
 	}
-
+	
 	while (true)
 	{
 		std::cout << "Enter domain: ";
 		std::cin >> domain;
 		if (!domainValidationCheck(domain))
 			throw std::runtime_error("domain is illegal");
-		
+
 		HttpGetRequest httpGetRequest;
 		httpGetRequest.circuit_id = ccr.circuit_id;
-		httpGetRequest.msg = "GET " + domain;
+		httpGetRequest.domain = domain;
 
+		std::cout << "sends httpGet Request:\n";
 		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
 
 		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
@@ -132,7 +161,7 @@ void Client::startConversation()
 		}
 		else
 		{
-			std::cout << "HTML of " << domain << std::endl;
+			std::cout << "HTML of " << domain << ": " << std::endl;
 			std::cout << httpGetResponse.content << std::endl;
 		}
 	}

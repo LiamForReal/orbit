@@ -1,118 +1,157 @@
 networks:
   TOR_NETWORK:
-    driver: bridge
+    driver: nat
     ipam:
       config:
-      - subnet: 192.0.0.0/8
+      - subnet: 192.168.2.0/24
 services:
   node1:
+    command:
+    - entrypoint.bat
     container_name: node1
     environment:
+      NODE_IP: 192.168.2.32
       NODE_PORT: 9065
-    image: eclipse/cpp_gcc
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.48.181.135
+        ipv4_address: 192.168.2.32
+    platform: windows/amd64
     ports:
     - 9065:9050
-    - 9071:9051
+    - 9062:9051
   node10:
+    command:
+    - entrypoint.bat
     container_name: node10
     environment:
-      NODE_PORT: 9072
-    image: eclipse/cpp_gcc
+      NODE_IP: 192.168.2.175
+      NODE_PORT: 9095
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.19.166.76
+        ipv4_address: 192.168.2.175
+    platform: windows/amd64
     ports:
-    - 9072:9050
-    - 9060:9051
+    - 9095:9050
+    - 9076:9051
   node2:
+    command:
+    - entrypoint.bat
     container_name: node2
     environment:
-      NODE_PORT: 9081
-    image: eclipse/cpp_gcc
+      NODE_IP: 192.168.2.212
+      NODE_PORT: 9050
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.150.177.142
-    ports:
-    - 9081:9050
-    - 9076:9051
-  node3:
-    container_name: node3
-    environment:
-      NODE_PORT: 9087
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.246.210.49
-    ports:
-    - 9087:9050
-    - 9086:9051
-  node4:
-    container_name: node4
-    environment:
-      NODE_PORT: 9051
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.91.200.219
-    ports:
-    - 9051:9050
-    - 9057:9051
-  node5:
-    container_name: node5
-    environment:
-      NODE_PORT: 9089
-    image: eclipse/cpp_gcc
-    networks:
-      TOR_NETWORK:
-        ipv4_address: 192.207.33.195
+        ipv4_address: 192.168.2.212
+    platform: windows/amd64
     ports:
     - 9089:9050
-    - 9077:9051
+    - 9068:9051
+  node3:
+    command:
+    - entrypoint.bat
+    container_name: node3
+    environment:
+      NODE_IP: 192.168.2.131
+      NODE_PORT: 9050
+    image: gavrielnotbenigoren/node:latest
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.2.131
+    platform: windows/amd64
+    ports:
+    - 9075:9050
+    - 9100:9051
+  node4:
+    command:
+    - entrypoint.bat
+    container_name: node4
+    environment:
+      NODE_IP: 192.168.2.54
+      NODE_PORT: 9050
+    image: gavrielnotbenigoren/node:latest
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.2.54
+    platform: windows/amd64
+    ports:
+    - 9050:9050
+    - 9093:9051
+  node5:
+    command:
+    - entrypoint.bat
+    container_name: node5
+    environment:
+      NODE_IP: 192.168.2.140
+      NODE_PORT: 9088
+    image: gavrielnotbenigoren/node:latest
+    networks:
+      TOR_NETWORK:
+        ipv4_address: 192.168.2.140
+    platform: windows/amd64
+    ports:
+    - 9088:9050
+    - 9058:9051
   node6:
+    command:
+    - entrypoint.bat
     container_name: node6
     environment:
-      NODE_PORT: 9054
-    image: eclipse/cpp_gcc
+      NODE_IP: 192.168.2.33
+      NODE_PORT: 9090
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.247.146.251
+        ipv4_address: 192.168.2.33
+    platform: windows/amd64
     ports:
-    - 9054:9050
-    - 9070:9051
+    - 9090:9050
+    - 9085:9051
   node7:
+    command:
+    - entrypoint.bat
     container_name: node7
     environment:
-      NODE_PORT: 9099
-    image: eclipse/cpp_gcc
+      NODE_IP: 192.168.2.117
+      NODE_PORT: 9082
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.52.126.238
+        ipv4_address: 192.168.2.117
+    platform: windows/amd64
     ports:
-    - 9099:9050
-    - 9092:9051
+    - 9082:9050
+    - 9071:9051
   node8:
+    command:
+    - entrypoint.bat
     container_name: node8
     environment:
-      NODE_PORT: 9068
-    image: eclipse/cpp_gcc
+      NODE_IP: 192.168.2.18
+      NODE_PORT: 9080
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.141.164.182
+        ipv4_address: 192.168.2.18
+    platform: windows/amd64
     ports:
-    - 9068:9050
-    - 9080:9051
+    - 9080:9050
+    - 9057:9051
   node9:
+    command:
+    - entrypoint.bat
     container_name: node9
     environment:
-      NODE_PORT: 9067
-    image: eclipse/cpp_gcc
+      NODE_IP: 192.168.2.224
+      NODE_PORT: 9077
+    image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.10.173.45
+        ipv4_address: 192.168.2.224
+    platform: windows/amd64
     ports:
-    - 9067:9050
-    - 9073:9051
-version: '3.8'
+    - 9077:9050
+    - 9099:9051

@@ -1,9 +1,10 @@
 import random
 import ipaddress
 import yaml
+import socket
 
 # Define the network range
-subnet = ipaddress.IPv4Network("192.0.0.0/8")
+subnet = ipaddress.IPv4Network("192.168.2.0/24")
 
 # Generate unique random IPs
 def generate_random_ip(subnet, count):
@@ -45,13 +46,13 @@ def main():
     # Assign IPs
     for i, (service, ip) in enumerate(zip(compose_data["services"], random_ips)):
         compose_data["services"][service]["networks"]["TOR_NETWORK"]["ipv4_address"] = ip
-        compose_data["services"][service]["environment"] = {"NODE_IP": ip}
+        compose_data["services"][service]["environment"]["NODE_IP"] = ip
 
     # Assign Ports
     port_index = 0
     for service in compose_data["services"]:
         updated_ports = []
-        compose_data["services"][service]["environment"] += {"NODE_PORT": random_ports[port_index]}
+        compose_data["services"][service]["environment"]["NODE_PORT"] = random_ports[port_index]
         for port_mapping in compose_data["services"][service]["ports"]:
             container_port = port_mapping.split(":")[1]  # Extract container port
             host_port = random_ports[port_index]  # Assign a random host port
@@ -62,6 +63,15 @@ def main():
     # Write back to the Docker-compose file
     with open("../dockerFiles/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)
+    
+    content = ""
+    # with open("../dockerFiles/Docker-compose.yaml", "r") as file:
+    #     content = file.read()
+    # with open("../dockerFiles/Docker-compose.yaml", "w") as file:
+    #     hostname = socket.gethostname()
+    #     ip_address = '"' + socket.gethostbyname(hostname) + '"'
+    #     content = content.replace('command:', f"command: -server -advertise {ip_address} -bootstrap")
+    #     file.write(content)
 
     print("Assigned random IPs:", random_ips)
 

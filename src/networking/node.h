@@ -30,12 +30,13 @@ public:
     ~Node();
     void serveProxy(const std::string& ip, uint16_t port);
     void serveControl();
-
+    std::string getEnvVar(const LPCSTR& key);
 private:
     void bindAndListen(const std::string& ip, uint16_t port);
     void acceptClient();
     void clientHandler(const SOCKET client_socket);
     //void runCmdCommand(const std::string command);
+
     std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits; 
     SOCKET _socket;
 };

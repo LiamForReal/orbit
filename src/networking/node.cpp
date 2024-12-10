@@ -1,7 +1,7 @@
 #include "node.h"
-
 // add request handler that muches 
 
+#define ENVE_MAX_LIMIT  32,766
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
 static const unsigned int IFACE = 0;
@@ -46,15 +46,22 @@ void Node::serveProxy(const std::string& ip, uint16_t port)
 	}
 }
 
-
 // listen to connecting requests from clients
 // accept them, and create thread for each client
 void Node::bindAndListen(const std::string& ip, uint16_t port)
 {
+	std::cout << "NODE IP: " << ip << " NODE PORT: " << port << std::endl;
+
+	int optval = 1;
+	if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&optval, sizeof(optval)) < 0) {
+		std::cerr << "Failed to set SO_REUSEADDR!" << std::endl;
+		throw std::runtime_error("Failed to set SO_REUSEADDR");
+	}
+
 	struct sockaddr_in sa = { 0 };
-	sa.sin_port = htons(0); //to change!!! pass as a ev
+	sa.sin_port = htons(port);
 	sa.sin_family = AF_INET;
-	sa.sin_addr.s_addr = IFACE;
+	sa.sin_addr.s_addr = INADDR_ANY;
 	// again stepping out to the global namespace
 	if (::bind(_socket, (struct sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
 		throw std::runtime_error("Node bind error");
@@ -79,6 +86,27 @@ void Node::acceptClient()
 
 }
 
+std::string Node::getEnvVar(const LPCSTR& key) 
+{
+	// Buffer to hold the environment variable valu
+	char buffer[(int)(ENVE_MAX_LIMIT)];
+
+	// Get the environment variable
+	DWORD length = GetEnvironmentVariableA(key, buffer, (DWORD)(ENVE_MAX_LIMIT));
+
+	// Check the result
+	if (length > 0 && length < ENVE_MAX_LIMIT) {
+		return std::string(buffer); // Return the value as a string
+	}
+	else if (length == 0) {
+		throw std::runtime_error("Environment variable not found: ");
+	}
+	else {
+		throw std::runtime_error("Environment variable value is too large: ");
+	}
+}
+
+
 void Node::clientHandler(const SOCKET client_socket)
 {
 	try
@@ -93,7 +121,17 @@ void Node::clientHandler(const SOCKET client_socket)
 			ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.directMsg(ri);
 			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
-				Helper::sendVector(this->circuits[rr.circuit_id].first, rr.buffer);
+			{
+				std::cout << "sending beckward!\n";
+				Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);
+			}
+
+			if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
+			{
+				std::cout << "listening foward\n";
+				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
+				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
+			}
 		}
 	}
 	catch (const std::runtime_error& e)
@@ -107,21 +145,22 @@ int main()
 {
 	try
 	{
-		const char* ip_env = getenv("NODE_IP"); // Get the IP from the environment variable
-		const char* port_env = getenv("NODE_PORT"); // Get the port from the environment variable
-
-		const char* ip = ip_env ? ip_env : "0.0.0.0"; // Default to 0.0.0.0 if not set
-		int port = port_env ? std::atoi(port_env) : 9050; // Default to 9050 if not set
+		//change you have ct version go get it
 		WSAInitializer wsa = WSAInitializer();
 		Node node = Node();
-		string ip = ip_env;
-		uint16_t port = (uint16_t)(port_env);
-		node.serveProxy(ip, port);
+		string ip_env = node.getEnvVar((LPCSTR)("NODE_IP")); // Get the IP from the environment variable
+		string port_env = node.getEnvVar((LPCSTR)("NODE_PORT")); // Get the port from the environment variable
+		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
+ 		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
+
+		node.serveProxy(ip_env, port);
 	}
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << '\n';
 	}
+
 	system("pause");
+
 	return 0;
 }

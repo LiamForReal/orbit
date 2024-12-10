@@ -9,6 +9,7 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
+DockerManager dm = DockerManager();
 
 Server::Server()
 {
@@ -85,7 +86,6 @@ void Server::clientHandler(const SOCKET client_socket)
     {
 		RequestInfo ri;
         std::string msg = ""; 
-		DockerManager dm = DockerManager();
 		RequestResult rr = RequestResult();
 		TorRequestHandler torRequestHandler = TorRequestHandler(dm);
         char recvMsg[100];

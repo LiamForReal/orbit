@@ -12,5 +12,5 @@ private:
 	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData;
 	LinkRequestHandler* lrh;
 	HttpGetRequestHandler* hgrh;
-	SOCKET client_socket;
+	SOCKET _socket;
 };

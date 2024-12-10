@@ -1,0 +1,3 @@
+C:\Users\Giga Gavriel\Desktop\orbit\src\Node\x64\Release\libcurl.dll
+C:\Users\Giga Gavriel\Desktop\orbit\src\Node\x64\Release\zlib1.dll
+C:\Users\Giga Gavriel\Desktop\orbit\src\Node\Node\x64\Release\Node.vcxproj.Up2Date

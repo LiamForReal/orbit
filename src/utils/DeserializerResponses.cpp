@@ -6,12 +6,11 @@ RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
-
+    
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
     try {
@@ -31,11 +30,11 @@ EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeRespo
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+    
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -57,11 +56,11 @@ NodeOpenResponse DeserializerResponses::deserializeNodeOpeningResponse(const std
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+    
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -82,11 +81,9 @@ CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmatio
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -109,11 +106,11 @@ LinkResponse DeserializerResponses::deserializeLinkResponse(const std::vector<un
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+    
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -134,11 +131,11 @@ HttpGetResponse DeserializerResponses::deserializeHttpGetResponse(const std::vec
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+    
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -160,11 +157,11 @@ CloseConnectionResponse DeserializerResponses::deserializeCloseConnectionRespons
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+    
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -185,11 +182,11 @@ DeleteCircuitResponse DeserializerResponses::deserializeDeleteCircuitResponse(co
 
     unsigned int len = 0;
     std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-    std::cout << "Deserialized length: " << len << std::endl;
+    
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    std::cout << "Deserialized JSON: " << jsonDataStr << std::endl;
+    
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);

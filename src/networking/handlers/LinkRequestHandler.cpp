@@ -2,7 +2,7 @@
 
 LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : cd(circuitData), _socket(s)
 {
-	this->rr = RequestResult(); 
+	this->rr = RequestResult();
 }
 
 SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port)
@@ -55,21 +55,25 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			cd[lr.circuit_id].first = _socket;
 		}
 
+		rr.circuit_id = lr.circuit_id;
+
 		lre.status = LINK_STATUS;
 
 		if (cd[lr.circuit_id].first == _socket)
 		{
-			if (cd[lr.circuit_id].second != INVALID_SOCKET)
+			if (cd[lr.circuit_id].second != INVALID_SOCKET && cd[lr.circuit_id].second != NULL)
 			{
+				std::cout << "seconed is exisist and trying to connenct" << std::endl;
 				Helper::sendVector(cd[lr.circuit_id].second, requestInfo.buffer);
 				ri = Helper::waitForResponse(cd[lr.circuit_id].second);//sends rr but I put that on ri
 				if (ri.id == LINK_STATUS)
 					lre.status = LINK_STATUS;
-				else throw std::runtime_error("problom linkink the next node");
+				else throw std::runtime_error("problem occurred while linking the next node");
 				std::cout << "sends to the next node!\n";
 			}
 			else
 			{
+				std::cout << "seconed is new and now generating\n";
 				cd[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
 				if (cd[lr.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("socket creation failed");
@@ -82,8 +86,8 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			std::cout << "sends to the prev node!\n";
 
 		}
-		else throw std::runtime_error("the socket given is corrapt");
-		
+		else throw std::runtime_error("the socket given is corrupted");
+
 	}
 	catch (std::runtime_error& e)
 	{

@@ -1,28 +1,47 @@
 #include "docker_manager.h"
 #include <random>
-DockerManager::DockerManager() { this->amountCreated = 0; }
+
+DockerManager::DockerManager() 
+{ 
+    this->amountCreated = 0; 
+    runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");
+    runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
+}
 
 void DockerManager::runCmdCommand(const std::string& command)
 {
     int result;
     result = system(command.c_str());
     if (result == 0) 
-        std::cout << "Docker Compose process started successfully." << std::endl;
-    else std::cerr << "Failed to start Docker Compose process. Error code: " << result << std::endl;
+        std::cout << "Command process started successfully." << std::endl;
+    else std::cerr << "Failed to start command's process. Error code: " << result << std::endl;
 }
 
 void DockerManager::openDocker(const int& amount)
 {
-    const std::string containerName = "node";
-    std::string command = "cd ../dockerFiles/ && docker-compose up --build -d";  // -d flag runs it in detached mode
+    string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
+    string firstNodeName = "";
+    std::vector<string> nodesNames;
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
     if (this->amountCreated + amount >= 20)
         throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = this->amountCreated ; i < amount; i++)
     {
-        command += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1); 
+        
+        buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+        if (i != this->amountCreated)
+        {
+            portsCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+            nodesNames.emplace_back(std::string(CONTAINER_NAME) + std::to_string(i + 1));
+        }
+        else firstNodeName = std::string(CONTAINER_NAME) + std::to_string(i + 1);
     }
-    runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
-    runCmdCommand(command);
+
+    buildCircuits[firstNodeName] = nodesNames; //for next 
+
+    runCmdCommand(portsCommand);
+
+    runCmdCommand(buildCommand);
 }
 
 std::list<std::string> DockerManager::findIPs(const int& amount)
@@ -42,7 +61,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
         }
         _pclose(pipe);
         containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}\" " + std::string(CONTAINER_NAME) + char(i + 49);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + std::string(CONTAINER_NAME) + char(i + 49);
         std::cout << inspectCommand << std::endl; 
         pipe = _popen(inspectCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run inspect command");
@@ -64,19 +83,18 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
     std::list<std::string> controlNodesPorts;
     char buffer[128];
     int j;
-    std::string portsStr, hostPort = "";
+    std::string portsStr = "", hostPort = "";
 
     for (int i = this->amountCreated; i < this->amountCreated + amount; i++)
     {
         // Build the docker inspect command with necessary `cd`
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{json .NetworkSettings.Ports}}\" " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
 
         // Execute the command
         FILE* pipe = _popen(inspectCommand.c_str(), "r");
         if (!pipe)
             throw std::runtime_error("Failed to run inspect command");
 
-        portsStr.clear();
         while (fgets(buffer, sizeof(buffer), pipe) != NULL)
         {
             portsStr += buffer; // Collect JSON output
@@ -87,7 +105,7 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
         try
         {
             json portsJson = json::parse(portsStr);
-            hostPort = portsJson["9051/tcp"][0]["HostPort"];
+            // hostPort = portsJson["9051/tcp"][0]["HostPort"];
             std::cout << "container " + std::to_string(i + 1) + " id is " + hostPort + "\n";
             controlNodesPorts.push_back(hostPort);
         }
@@ -104,38 +122,47 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     std::list<std::string> proxyNodesPorts;
     char buffer[128];
     int j;
-    std::string portsStr, hostPort = "";
+    std::string portsStr = "", hostPort = "";
+    // Build the docker inspect command with necessary `cd`
+    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + 1);
+    std::cout << inspectCommand << std::endl;
+    // Execute the command
+    FILE* pipe = _popen(inspectCommand.c_str(), "r");
+    if (!pipe)
+        throw std::runtime_error("Failed to run inspect command");
 
-    for (int i = this->amountCreated; i < this->amountCreated + amount; i++)
+    portsStr.clear();
+    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
     {
-        // Build the docker inspect command with necessary `cd`
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{json .NetworkSettings.Ports}}\" " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+        printf("BUFFER: %s |ENDED|\n", buffer);
+        portsStr += buffer; // Collect JSON output
+    }
+    _pclose(pipe);
 
-        // Execute the command
-        FILE* pipe = _popen(inspectCommand.c_str(), "r");
-        if (!pipe)
-            throw std::runtime_error("Failed to run inspect command");
+    // Parse the JSON to extract the ports
+    try
+    {
+        std::cout << "portsStr: " << portsStr << std::endl;
+        //json portsJson = json::parse(portsStr);
+        std::cout << "After parse\n";
+        //hostPort = portsJson["9050/tcp"][0]["HostPort"];
+        std::cout << "portsStr: " << portsStr << std::endl;
+        hostPort = std::to_string(std::stoi(portsStr));
 
-        portsStr.clear();
-        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
+        std::cout << "container " + std::to_string(this->amountCreated + 1) + " id is " + hostPort + "\n";
+        proxyNodesPorts.emplace_back(hostPort);
+        for (int i = this->amountCreated + 1; i < amount; i++)
         {
-            portsStr += buffer; // Collect JSON output
-        }
-        _pclose(pipe);
-
-        // Parse the JSON to extract the ports
-        try
-        {
-            json portsJson = json::parse(portsStr);
-            hostPort = portsJson["9050/tcp"][0]["HostPort"];
-            std::cout << "container " + std::to_string(i + 1) + " id is " + hostPort + "\n";
-            proxyNodesPorts.push_back(hostPort);
-        }
-        catch (const std::exception& ex)
-        {
-            std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+            proxyNodesPorts.emplace_back(INTERNAL_PORT);
         }
     }
+    catch (const std::exception& ex)
+    {
+        std::cout << "ERROR HERE\n";
+        std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+    }
+
+    
     return proxyNodesPorts;
 }
 
@@ -149,9 +176,9 @@ std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(con
     auto itPort = ports.begin();
     for (int i = 0; i < ips.size(); i++)
     {
-        std::advance(itPort, i);
-        std::advance(itIp, i);
         nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+        itPort++;
+        itIp++;
     }
     this->amountCreated = this->amountCreated + create;
     return nodesInfo;
@@ -166,9 +193,9 @@ std::list<std::pair<std::string, std::string>> DockerManager::GetControlInfo(con
     auto itPort = ports.begin();
     for (int i = 0; i < ips.size(); i++)
     {
-        std::advance(itPort, i);
-        std::advance(itIp, i);
         nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+        itPort++;
+        itIp++;
     }
     return nodesInfo;
 }
