@@ -20,7 +20,7 @@
 #include "handlers/NodeRequestHandler.h"
 #define COMMUNICATE_NODE_PORT 9050 //inside network
 #define CONTROL_NODE_PORT 9051 //inside network
-#define COMMUNICATE_Node_PORT 9787
+#define COMMUNICATE_CONTROL_NODE_PORT 9787
 
 
 class Node
@@ -32,6 +32,7 @@ public:
     void serveControl();
     std::string getEnvVar(const LPCSTR& key);
 private:
+    SOCKET createSocketWithServer();
     void bindAndListen(const std::string& ip, uint16_t port);
     void acceptClient();
     void clientHandler(const SOCKET client_socket);
