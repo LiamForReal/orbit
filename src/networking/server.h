@@ -10,10 +10,10 @@
 #include <vector>
 #include <List>
 #include <utility>
+#include <ws2tcpip.h>
 #include "WSAInitializer.h"
 #include "docker_manager.h"
 #include "../utils/Helper.h"
-#include <ws2ipdef.h>
 
 class Server
 {

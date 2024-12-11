@@ -123,8 +123,9 @@ void Server::acceptControlClient(const std::list<std::pair<std::string, std::str
 	}
 
 	// Get the client's IP and port
-	char nodeIP[INET_ADDRSTRLEN];
-	strcpy(nodeIP, inet_ntoa(nodeAddr.sin_addr)); //here I really gotta go to learn with a friend so find enother way to do it sorry
+	char nodeIP[INET_ADDRSTRLEN + INC] = { 0 };
+	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
+	nodeIP[INET_ADDRSTRLEN] = NULL;
 	std::string clientIPStr(nodeIP);
 	std::string clientPortStr = std::to_string(ntohs(nodeAddr.sin_port)); // Get port as string
 
@@ -176,7 +177,7 @@ void Server::clientHandler(const SOCKET client_socket)
     }
     catch(const std::runtime_error& e)
     {
-        std::cerr << e.what() << '\n';
+        std::cerr << e.what() << std::endl;
     }
 }
 
@@ -184,6 +185,31 @@ void Server::clientControlHandler(const SOCKET node_sock)
 {
 	//make the logic of get alive msg 
 	//only get them in the start thats it.
+
+	try
+	{
+		//std::list<std::pair<std::string, std::string>> control_info;
+		RequestInfo ri;
+		std::string msg = "";
+		RequestResult rr = RequestResult();
+		TorRequestHandler torRequestHandler = TorRequestHandler(dm);
+		char recvMsg[100];
+		char buffer[128];
+		std::string containerID;
+
+		std::cout << "get msg from client " + std::to_string(node_sock) << std::endl;
+
+		ri = Helper::waitForResponse(node_sock);
+		rr = torRequestHandler.directRequest(ri);
+		unsigned int amountToOpen = DeserializerRequests::deserializeNodeOpeningRequest(ri.buffer).amount_to_open;
+		dm.GetControlInfo(amountToOpen);
+		Helper::sendVector(node_sock, rr.buffer);
+		std::cout << "sending msg...\n";
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cerr << e.what() << std::endl;
+	}
 }
 
 

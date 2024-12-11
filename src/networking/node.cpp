@@ -80,7 +80,7 @@ void Node::serveControl()
 		int bytesSent = send(serverSock, data, sizeof(data), 0);
 		if (bytesSent == -1 || bytesSent == 0)
 		{
-			std::cout << "\n\n\n alive msg doesn't sended \n\n\n";
+			std::cout << "\n\n\n alive msg wasn't send \n\n\n";
 			break;
 		}
 	}
