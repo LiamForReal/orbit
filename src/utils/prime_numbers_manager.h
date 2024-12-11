@@ -2,17 +2,18 @@
 
 #include "utils.hpp"
 #include <random>
+#include <vector>
 
 class prime_numbers_manager
 {
 public:
-	
+
     template<typename T>
-    static T getRandomPrimeNumber(T lowerBond , T upperBond)
+    static T getRandomPrimeNumber(T lowerBond, T upperBond)
     {
         T lower_bound;
         T upper_bound;
-
+        std::vector<T> primesThatAlreadyChosen = std::vector<T>();
         if (lowerBond != 1)
             lower_bound = lowerBond;
         if (upperBond != 1)
@@ -21,7 +22,7 @@ public:
         if (std::is_same<T, uint1024_t>::value)
         {
             std::cout << "is 1024\n";
-            if(lowerBond == 1)
+            if (lowerBond == 1)
                 lower_bound = T(1) << 512;
             if (upperBond == 1)
                 upper_bound = (T(1) << 1024) - 1;
@@ -39,16 +40,21 @@ public:
         boost::random::uniform_int_distribution<T> dist(lower_bound, upper_bound);
 
         T candidate;
-
         do
         {
             candidate = dist(rng);
-            if (candidate % 2 == 0) candidate++;
-        } while (!prime_numbers_manager::is_prime<T>(candidate) || prime_numbers_manager::is_divisible_by_small_primes<T>(candidate));
+            if (candidate % 2 == 0)
+                candidate++;
+            //change find to something else
+            if (primesThatAlreadyChosen.find(primesThatAlreadyChosen.begin(), primesThatAlreadyChosen.end(), candidate) == primesThatAlreadyChosen.end())
+                primesThatAlreadyChosen.emplace_back(candidate);
+            else continue;
+
+        } while (!prime_numbers_manager::is_prime<T>(candidate));
 
         return candidate;
     }
-	
+
 private:
     template<typename T>
     static bool is_prime(const T& n) {
@@ -87,20 +93,4 @@ private:
         }
         return true;
     }
-
-    template <typename T>
-    static bool is_divisible_by_small_primes(const T& candidate) {
-        // Precomputed list of small primes (first 10 primes)
-        static const std::vector<T> small_primes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29 };
-
-        // Check divisibility against each small prime
-        for (const auto& prime : small_primes) {
-            if (candidate % prime == 0) {
-                return true; // Candidate is divisible by a small prime
-            }
-        }
-
-        return false; // Candidate is not divisible by any small prime
-    }
-	/*add variables if needed*/
 };
