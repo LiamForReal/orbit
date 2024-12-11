@@ -2,7 +2,9 @@
 
 RSA::RSA()
 {
-	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>(), p = this->getRandomPrimeNumber<uint1024_t>();
+	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>(); //create a theard
+	uint1024_t p = this->getRandomPrimeNumber<uint1024_t>(); //create a thread
+	//join them
 	std::cout << "q = " << q << std::endl << "p = " << p << std::endl;
 	std::cout << "p and q generated successfully\n";
 	this->N = calcProduct(q, p);
@@ -64,7 +66,7 @@ uint2048_t RSA::calcTotient(const uint1024_t& q, const uint1024_t& p)
 	{
 		while (true)
 		{
-			E = getRandomPrimeNumber<uint2048_t>((uint2048_t)(1), this->T);
+			E = getRandomPrimeNumber<uint2048_t>(uint2048_t(1), this->T);
 			if (E >= T) 
 				continue;
 			if (!(T % E))
