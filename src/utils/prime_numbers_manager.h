@@ -13,7 +13,6 @@ public:
     {
         T lower_bound;
         T upper_bound;
-        std::vector<T> primesThatAlreadyChosen = std::vector<T>();
         if (lowerBond != 1)
             lower_bound = lowerBond;
         if (upperBond != 1)
@@ -45,12 +44,7 @@ public:
             candidate = dist(rng);
             if (candidate % 2 == 0)
                 candidate++;
-            //change find to something else
-            if (primesThatAlreadyChosen.find(primesThatAlreadyChosen.begin(), primesThatAlreadyChosen.end(), candidate) == primesThatAlreadyChosen.end())
-                primesThatAlreadyChosen.emplace_back(candidate);
-            else continue;
-
-        } while (!prime_numbers_manager::is_prime<T>(candidate));
+        } while (!prime_numbers_manager::is_prime<T>(candidate) || prime_numbers_manager::is_divisible_by_small_primes<T>(candidate));
 
         return candidate;
     }
@@ -92,5 +86,20 @@ private:
             }
         }
         return true;
+    }
+
+    template <typename T>
+    static bool is_divisible_by_small_primes(const T& candidate) {
+        // Precomputed list of small primes (first 10 primes)
+        static const std::vector<T> small_primes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29 };
+
+        // Check divisibility against each small prime
+        for (const auto& prime : small_primes) {
+            if (candidate % prime == 0) {
+                return true; // Candidate is divisible by a small prime
+            }
+        }
+
+        return false; // Candidate is not divisible by any small prime
     }
 };
