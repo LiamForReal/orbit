@@ -32,7 +32,13 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         {
             ccr.nodesPath.emplace_back(*it);
         }
-
+        /*
+        * HERE'S WHAT THAT YOU NEED TO BUILD THE MAP FROM circuit id TO list of nodes in the circuit
+        * BOLDD
+        * DLLDL
+        * DKFMDFK
+        * YOU SOULD PASS BY REFRENCE THE MAP AND AJUST IT IN THE FNCTION
+        */
         ccr.circuit_id = this->circuit_id;
         this->circuit_id++;
     }

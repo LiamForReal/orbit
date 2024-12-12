@@ -183,7 +183,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
     std::cout << "DEBUG: Status code: " << statusCode << std::endl;
     ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
 
-    if (false) //request how has no data
+    if (ri.id == ALIVE_MSG_RC) //request how has no data
         return ri;
 
 	//ri.circuit_id = Helper::getCircuitIdFromSocket(clientSocket);
