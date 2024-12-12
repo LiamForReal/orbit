@@ -1,7 +1,8 @@
 #include "NodeOpeningHandler.h"
+#include <algorithm>
 unsigned int NodeOpeningHandler::circuit_id = 1;
 
-NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager) : dm(dockerManager) 
+NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::list<std::pair<std::string, std::string>>>& controlList) : dm(dockerManager), _controlList(controlList)
 { 
     this->rr = RequestResult(); 
 }
@@ -17,6 +18,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     std::list<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
     this->rr.buffer.clear();
+
     try
     {
         NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo.buffer);
@@ -34,11 +36,14 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         }
         /*
         * HERE'S WHAT THAT YOU NEED TO BUILD THE MAP FROM circuit id TO list of nodes in the circuit
-        * BOLDD
-        * DLLDL
-        * DKFMDFK
         * YOU SOULD PASS BY REFRENCE THE MAP AND AJUST IT IN THE FNCTION
         */
+
+        std::list<std::pair<std::string, std::string>> nodesPathCopy;
+        std::copy(ccr.nodesPath.begin(), ccr.nodesPath.end(), std::back_inserter(nodesPathCopy));
+
+        this->_controlList[this->circuit_id] = nodesPathCopy;
+
         ccr.circuit_id = this->circuit_id;
         this->circuit_id++;
     }
@@ -50,4 +55,9 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     rr.buffer = SerializerResponses::serializeResponse(ccr);
 
 	return rr;
+}
+
+unsigned int NodeOpeningHandler::getCircuitID()
+{
+    return circuit_id;
 }
