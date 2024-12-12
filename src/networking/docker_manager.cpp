@@ -184,11 +184,11 @@ std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(con
     return nodesInfo;
 }
 
-std::list<std::pair<std::string, std::string>> DockerManager::GetControlInfo(const int amount) //for server
+std::list<std::pair<std::string, std::string>> DockerManager::GetControlInfo() //for server
 {
     std::list<std::pair<std::string, std::string>> nodesInfo;
-    std::list<std::string> ips = findIPs(amount);
-    std::list<std::string> ports = findControlPorts(amount);
+    std::list<std::string> ips = findIPs(this->amountCreated);
+    std::list<std::string> ports = findControlPorts(this->amountCreated);
     auto itIp = ips.begin();
     auto itPort = ports.begin();
     for (int i = 0; i < ips.size(); i++)

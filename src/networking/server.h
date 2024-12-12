@@ -22,7 +22,8 @@ class Server
         ~Server(); 
         void serve(); 
         void serveControl(std::list<std::pair<std::string, std::string>>& control_info);
-        
+        DockerManager dm;
+
     private: 
         void bindAndListen(); 
         void bindAndListenControl();
@@ -30,6 +31,7 @@ class Server
         void acceptControlClient(const std::list<std::pair<std::string, std::string>>& allowedClients);
         void clientHandler(const SOCKET client_socket);
         void clientControlHandler(const SOCKET node_sock);
+        
         
         SOCKET _socket;
         SOCKET _controlSocket;

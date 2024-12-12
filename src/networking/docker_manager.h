@@ -19,7 +19,7 @@ public:
     DockerManager();
 
     list<pair<string, string>> openAndGetInfo(const int& use, const int& create);
-    list<pair<string, string>> GetControlInfo(const int amount);
+    list<pair<string, string>> GetControlInfo();
 
 private:
     void runCmdCommand(const string& command);

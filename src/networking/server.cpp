@@ -10,12 +10,11 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
-DockerManager dm = DockerManager();
-
 Server::Server()
 {
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
+	dm = DockerManager();
 	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
 	if (_socket == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
@@ -99,9 +98,11 @@ void Server::clientHandler(const SOCKET client_socket)
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
 		unsigned int amountToOpen = DeserializerRequests::deserializeNodeOpeningRequest(ri.buffer).amount_to_open;
-		dm.GetControlInfo(amountToOpen); //here you get list of control settings to reach from server to node
+		//can help - dm.GetControlInfo(amountToOpen); 
+		// //here you get list of control settings to reach from server to node
 		//in addition you want to get map<unsigned int, list<pair<string, string>>>
 		//dont forget you need to call from here to serveControl only one time!!!
+		//DONT FORGET HERE YOU ARE ONLY UPDATING THE LIST OF CIRCUIT THE CONTROL SERVER RUNS IN THE START
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
 	}
@@ -115,15 +116,22 @@ void Server::clientHandler(const SOCKET client_socket)
 
 void Server::serveControl(std::list<std::pair<std::string, std::string>>& control_info) //check if its one of the nodes
 {
-	bindAndListenControl();
-	std::string input_string;
-	while (true)
+	try
 	{
-		// the main thread is only accepting clients 
-		// and add then to the list of handlers
-		std::cout << "accepting node for control...\n";
-		this->acceptControlClient(control_info);
+		bindAndListenControl();
+		std::string input_string;
+		while (true)
+		{
+			// the main thread is only accepting clients 
+			// and add then to the list of handlers
+			std::cout << "accepting node for control...\n";
+			this->acceptControlClient(control_info);
 
+		}
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
 	}
 }
 
@@ -224,7 +232,9 @@ int main()
     {
         WSAInitializer wsa = WSAInitializer();
         Server server = Server(); 
-        server.serve();
+        server.serve(); //RUN ON THREAD 
+		//auto control_info = server.dm.GetControlInfo(); //RUN ON THERAD
+		//server.serveControl(std::ref(control_info)); 
     }
     catch(const std::runtime_error& e)
     {
