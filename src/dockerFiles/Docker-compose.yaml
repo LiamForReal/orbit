@@ -19,7 +19,7 @@ services:
     platform: windows/amd64
     ports:
     - 9057:9050
-    - 9083:9051 //9083,9063
+    - 9083:9051 
   node10:
     command:
     - entrypoint.bat
