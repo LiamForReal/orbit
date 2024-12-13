@@ -72,6 +72,7 @@ SOCKET Node::createSocketWithServer()
 
 void Node::serveControl()
 {
+	// ADD HERE TRY CATCH CLAUSE
 	char* data = new char[1];
 	data[0] = (char)(ALIVE_MSG_RC);
 	SOCKET serverSock = createSocketWithServer();

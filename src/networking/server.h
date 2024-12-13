@@ -26,7 +26,6 @@ class Server
         void serve();
         void serveClients();
         void serveControl();
-        DockerManager dm;
 
     private: 
         void bindAndListen(); 

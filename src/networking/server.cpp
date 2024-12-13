@@ -10,11 +10,13 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
+DockerManager dm = DockerManager();
+
 Server::Server()
 {
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
-	dm = DockerManager();
+	//this->dm = DockerManager();
 
 	_controlList = std::map<unsigned int, std::list<std::pair<std::string, std::string>>>();
 
@@ -39,12 +41,10 @@ Server::~Server()
 void Server::serve()
 {
 	std::thread serveClientsThread(&Server::serveClients, this);
-	serveClientsThread.detach();
-
 	std::thread serveControlThread(&Server::serveControl, this);
-	serveControlThread.detach();
 
-	while (true);
+	serveClientsThread.join();
+	serveControlThread.join();
 }
 
 void Server::serveClients()

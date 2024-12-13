@@ -39,10 +39,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         * YOU SOULD PASS BY REFRENCE THE MAP AND AJUST IT IN THE FNCTION
         */
 
-        std::list<std::pair<std::string, std::string>> nodesPathCopy;
-        std::copy(ccr.nodesPath.begin(), ccr.nodesPath.end(), std::back_inserter(nodesPathCopy));
-
-        this->_controlList[this->circuit_id] = nodesPathCopy;
+        this->_controlList[this->circuit_id] = controlNodesInfo;
 
         ccr.circuit_id = this->circuit_id;
         this->circuit_id++;
