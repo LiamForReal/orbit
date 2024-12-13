@@ -60,10 +60,6 @@ void Client::nodeOpening()
 std::string Client::generateHttpGetRequest(const std::string& domain) 
 {
 	std::ostringstream request;
-	//request << "GET / HTTP/1.1\r\n";
-	//request << "Host: " << domain << "\r\n";
-	//request << "Connection: close\r\n";
-	//request << "\r\n";
 	request << domain;
 	return request.str();
 }

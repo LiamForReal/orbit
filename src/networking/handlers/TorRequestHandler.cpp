@@ -6,7 +6,8 @@ TorRequestHandler::~TorRequestHandler()
 	delete noh;
 }
 
-TorRequestHandler::TorRequestHandler(DockerManager& newDm, std::map<unsigned int, std::list<std::pair<std::string, std::string>>>& controlList) : dm(newDm), _controlList(controlList)
+TorRequestHandler::TorRequestHandler(DockerManager& newDm, std::map<unsigned int, std::list<std::pair<std::string, std::string>>>& controlList) 
+	: dm(newDm), _controlList(controlList)
 {
 	noh = new NodeOpeningHandler(dm, _controlList);
 	//more...

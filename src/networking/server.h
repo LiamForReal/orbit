@@ -15,6 +15,7 @@
 #include "WSAInitializer.h"
 #include "docker_manager.h"
 #include "../utils/Helper.h"
+#include <mutex>
 
 #define DEC 1
 
@@ -31,7 +32,7 @@ class Server
         void bindAndListen(); 
         void bindAndListenControl();
         void acceptClient(); 
-        void acceptControlClient(const std::list<std::pair<std::string, std::string>>& allowedClients);
+        void acceptControlClient(const std::list<string>& allowedClients);
         void clientHandler(const SOCKET client_socket);
         void clientControlHandler(const SOCKET node_sock);
         

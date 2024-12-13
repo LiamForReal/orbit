@@ -10,6 +10,8 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
+std::mutex mutex;
+
 DockerManager dm = DockerManager();
 
 Server::Server()
@@ -23,6 +25,11 @@ Server::Server()
 	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
 	if (_socket == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
+
+	_controlSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (_controlSocket == INVALID_SOCKET)
+		throw std::runtime_error("server run error control socket");
+
 }
 
 Server::~Server()
@@ -102,7 +109,9 @@ void Server::clientHandler(const SOCKET client_socket)
 		RequestInfo ri;
 		std::string msg = "";
 		RequestResult rr = RequestResult();
+		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList));//you can delete and call to the handler from here
+		mutex.unlock();
 		char recvMsg[100];
 		char buffer[128];
 		std::string containerID;
@@ -135,12 +144,28 @@ void Server::serveControl() //check if its one of the nodes
 	{
 		bindAndListenControl();
 		std::string input_string;
+		std::list<string> clientsAlowde;
 		while (true)
 		{
 			// the main thread is only accepting clients 
 			// and add then to the list of handlers
-			std::cout << "accepting node for control...\n";
-			this->acceptControlClient(std::ref(_controlList[NodeOpeningHandler::getCircuitID() - DEC]));
+			
+			
+			if (!_controlList.empty())
+			{
+				std::cout << "accepting node for control...\n";
+				mutex.lock();
+				for (auto it = _controlList.begin(); it != _controlList.end(); it++)
+				{
+					for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+					{
+						clientsAlowde.emplace_back(it2->first);
+					}
+				}
+				mutex.unlock();
+				this->acceptControlClient(clientsAlowde);
+			}
+			
 		}
 	}
 	catch (std::runtime_error& e)
@@ -164,7 +189,7 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::list<std::pair<std::string, std::string>>& allowedClients)
+void Server::acceptControlClient(const std::list<string>& allowedClients)
 {
 	sockaddr_in nodeAddr;
 	int nodeAddrLen = sizeof(nodeAddr);
@@ -181,12 +206,11 @@ void Server::acceptControlClient(const std::list<std::pair<std::string, std::str
 	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
 	nodeIP[INET_ADDRSTRLEN] = NULL;
 	std::string clientIPStr(nodeIP);
-	std::string clientPortStr = std::to_string(ntohs(nodeAddr.sin_port)); // Get port as string
 
 	// Check if the client is in the allowed list
 	bool isAllowed = false;
 	for (const auto& allowedClient : allowedClients) {
-		if (allowedClient.first == clientIPStr && allowedClient.second == clientPortStr) {
+		if (allowedClient == clientIPStr) {
 			isAllowed = true;
 			break;
 		}
@@ -194,13 +218,13 @@ void Server::acceptControlClient(const std::list<std::pair<std::string, std::str
 
 	if (isAllowed)
 	{
-		std::cout << "Client " << clientIPStr << ":" << clientPortStr << " accepted." << std::endl;
+		std::cout << "Node " << clientIPStr << " accepted." << std::endl;
 		std::thread tr(&Server::clientControlHandler, this, nodeSocket);
 		tr.detach();
 	}
 	else
 	{
-		std::cout << "Client " << clientIPStr << ":" << clientPortStr << " is not allowed. Closing connection." << std::endl;
+		std::cout << "Node " << clientIPStr << " is not allowed. Closing connection." << std::endl;
 		closesocket(nodeSocket);
 	}
 
@@ -211,43 +235,50 @@ void Server::clientControlHandler(const SOCKET node_sock)
 	try
 	{
 		RequestInfo ri;
-		//BEGIN TIMER
-		
-		// set sockopt of timeout
+		char buffer[100];
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
+
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
 		while (true)
 		{
-			unsigned int code = Helper::getStatusCodeFromSocket(node_sock);
-
-			if (WSAGetLastError() == WSAETIMEDOUT || code == WSAETIMEDOUT)
-			{ 
-				std::cerr << "TIME OUT\n";
-				throw std::runtime_error("Timed out");
-			}
-			else if (code != ALIVE_MSG_RC)
+			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
+			if (bytesRead <= 0)
 			{
-				std::cerr << "WRONG CODE SENT\n";
-				throw std::runtime_error("Wrong Code");
+				if (WSAGetLastError() == WSAETIMEDOUT)
+				{
+					std::cerr << "TIMEOUT: Node did not send alive message.\n";
+					throw std::runtime_error("Timed out waiting for alive message.");
+				}
+				else
+				{
+					std::cerr << "Error receiving from socket: " << WSAGetLastError() << std::endl;
+					throw std::runtime_error("Error receiving from node.");
+				}
 			}
-			else
-			{
-				//RESET TIMER
-				std::cout << "node  sends alive msg!\n";
-			}
-			//if(TIMER > 10) -> throw exception and print
 
-			std::cout << "sending msg...\n";
+			// Check if the received message is the alive message code
+			if (buffer[0] != ALIVE_MSG_RC)
+			{
+				std::cerr << "ERROR: Unexpected message code received.\n";
+				throw std::runtime_error("Unexpected message code received.");
+			}
+
+			std::cout << "Node alive message received.\n";
+
+			// Reset the timer for next alive check
+			timeout = SECONDS_TO_WAIT * 1000;
+			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		}
-		
 	}
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << std::endl;
-		//LOGIC
-	}
 
+		// Close the socket and remove from control list if necessary
+		closesocket(node_sock);
+		// Optionally update control list to mark the node as inactive or remove it
+	}
 }
 
 
@@ -258,8 +289,6 @@ int main()
         WSAInitializer wsa = WSAInitializer();
         Server server = Server(); 
         server.serve(); //RUN ON THREAD 
-		//auto control_info = server.dm.GetControlInfo(); //RUN ON THERAD
-		//server.serveControl(std::ref(control_info)); 
     }
     catch(const std::runtime_error& e)
     {

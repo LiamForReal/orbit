@@ -2,14 +2,15 @@
 #include <algorithm>
 unsigned int NodeOpeningHandler::circuit_id = 1;
 
-NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::list<std::pair<std::string, std::string>>>& controlList) : dm(dockerManager), _controlList(controlList)
-{ 
-    this->rr = RequestResult(); 
+NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::list<std::pair<std::string, std::string>>>& controlList) 
+    : dm(dockerManager), _controlList(controlList)
+{
+    this->rr = RequestResult();
 }
 
 bool NodeOpeningHandler::isRequestRelevant(const RequestInfo& requestInfo)
 {
-	return requestInfo.id == NODE_OPEN_RC;
+    return requestInfo.id == NODE_OPEN_RC;
 }
 
 RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
@@ -44,14 +45,14 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         ccr.circuit_id = this->circuit_id;
         this->circuit_id++;
     }
-    catch(std::runtime_error e)
+    catch (std::runtime_error e)
     {
         ccr.status = Errors::CIRCUIT_CONFIRMATION_ERROR;
     }
 
     rr.buffer = SerializerResponses::serializeResponse(ccr);
 
-	return rr;
+    return rr;
 }
 
 unsigned int NodeOpeningHandler::getCircuitID()

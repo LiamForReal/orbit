@@ -32,39 +32,50 @@ Node::~Node()
 	catch (...) {}
 }
 
-SOCKET Node::createSocketWithServer() 
+SOCKET Node::createSocketWithServer()
 {
 	SOCKET sock = INVALID_SOCKET;
 
 	// Create the socket
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock == INVALID_SOCKET) 
-		throw std::runtime_error("Error creating socket: " + WSAGetLastError());
+	if (sock == INVALID_SOCKET) {
+		throw std::runtime_error("Error creating socket: " + std::to_string(WSAGetLastError()));
+	}
 
 	// Resolve the server's IP address using `host.docker.internal`
 	addrinfo hints = {};
 	hints.ai_family = AF_INET;      // IPv4
 	hints.ai_socktype = SOCK_STREAM; // TCP
 
-	addrinfo* result = nullptr;
-	if (getaddrinfo("host.docker.internal", nullptr, &hints, &result) != 0) 
+	
+	/*
+	* addrinfo* result = nullptr;
+	* if (getaddrinfo("host.docker.internal", nullptr, &hints, &result) != 0) 
 	{
-		closesocket(sock);
-		throw std::runtime_error("Failed to resolve host.docker.internal: " + WSAGetLastError());
-	}                                                                                                                                                                                                                                                                                                                                                                                                                                                               
 
+		closesocket(sock);
+		throw std::runtime_error("Failed to resolve host.docker.internal: " + std::to_string(WSAGetLastError()));
+	}
+	*/
+	
+
+	// Set up the sockaddr_in structure
 	sockaddr_in serverAddr = {};
 	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(COMMUNICATE_CONTROL_NODE_PORT); // Use the defined port
-	serverAddr.sin_addr = reinterpret_cast<sockaddr_in*>(result->ai_addr)->sin_addr;
+	serverAddr.sin_port = htons(COMMUNICATE_CONTROL_NODE_PORT); // Port from your config 
+	//serverAddr.sin_addr = reinterpret_cast<sockaddr_in*>(result->ai_addr)->sin_addr;
+	if (inet_pton(AF_INET, "192.168.2.1", &serverAddr.sin_addr) <= 0) {
+		closesocket(sock);
+		WSACleanup();
+		throw std::runtime_error("inet_pton failed: " + std::to_string(WSAGetLastError()));
+	}
 
-	freeaddrinfo(result); // Free the addrinfo structure
+	//freeaddrinfo(result); // Free the addrinfo structure
 
 	// Connect to the server
-	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) 
-	{
+	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
 		closesocket(sock);
-		throw std::runtime_error("Connection failed: " + WSAGetLastError());
+		throw std::runtime_error("Connection failed: " + std::to_string(WSAGetLastError()));
 	}
 
 	return sock;
@@ -73,17 +84,25 @@ SOCKET Node::createSocketWithServer()
 void Node::serveControl()
 {
 	// ADD HERE TRY CATCH CLAUSE
-	char* data = new char[1];
-	data[0] = (char)(ALIVE_MSG_RC);
-	SOCKET serverSock = createSocketWithServer();
-	while (true)
+	try
 	{
-		int bytesSent = send(serverSock, data, sizeof(data), 0);
-		if (bytesSent == -1 || bytesSent == 0)
+		char* data = new char[1];
+		data[0] = (char)(ALIVE_MSG_RC);
+		SOCKET serverSock = createSocketWithServer();
+		while (true)
 		{
-			std::cout << "\n\n\n alive msg wasn't send \n\n\n";
-			break;
+			int bytesSent = send(serverSock, data, sizeof(data), 0);
+			if (bytesSent == -1 || bytesSent == 0)
+			{
+				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
+				break;
+			}
 		}
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << "control manganon problem\n";
+		std::cout << e.what() << std::endl;
 	}
 }
 
@@ -91,19 +110,12 @@ void Node::serveProxy(const std::string& ip, uint16_t port)
 {
 	bindAndListen(ip, port);
 	std::string input_string;
-	bool threadIsNotRunning = true;
 	while (true)
 	{
 		// the main thread is only accepting clients 
 		// and add then to the list of handlers
 		std::cout << "accepting client...\n";
 		acceptClient();
-		if (threadIsNotRunning)
-		{
-			std::thread aliveMsg(&Node::serveControl, this);
-			threadIsNotRunning = false;
-		}
-		
 	}
 }
 
@@ -214,6 +226,8 @@ int main()
 		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
  		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
 
+		std::thread aliveMsg(&Node::serveControl, node);
+		aliveMsg.detach();
 		node.serveProxy(ip_env, port);
 	}
 	catch (const std::runtime_error& e)
