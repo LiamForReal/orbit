@@ -271,7 +271,7 @@ void Server::clientControlHandler(const SOCKET node_sock)
 			}
 			// Reset the timer for next alive check
 			timeout = SECONDS_TO_WAIT * 1000;
-			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+			//setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		}
 	}
 	catch (const std::runtime_error& e)
