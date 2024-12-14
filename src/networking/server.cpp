@@ -243,7 +243,7 @@ void Server::clientControlHandler(const SOCKET node_sock)
 		while (true)
 		{
 			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-			if (bytesRead <= 0)
+			if (bytesRead <= 0 /* || buffer[0] == '\0'*/)
 			{
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
@@ -258,14 +258,11 @@ void Server::clientControlHandler(const SOCKET node_sock)
 			}
 
 			// Check if the received message is the alive message code
-			if (buffer[0] != ALIVE_MSG_RC)
+			if (static_cast<unsigned int>(buffer[0]) != ALIVE_MSG_RC)
 			{
-				std::cerr << "ERROR: Unexpected message code received.\n";
+				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
 			}
-
-			std::cout << "Node alive message received.\n";
-
 			// Reset the timer for next alive check
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));

@@ -95,8 +95,10 @@ void Node::serveControl()
 			if (bytesSent == -1 || bytesSent == 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
+				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
 	catch (std::runtime_error& e)
