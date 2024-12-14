@@ -57,9 +57,3 @@ typedef struct DeleteCircuitRequest
 { 
     unsigned int circuit_id; 
 } DeleteCircuitRequest;
-
-
-typedef struct AliveMsgRequest 
-{
-    unsigned char data;
-} AliveMsgRequest;

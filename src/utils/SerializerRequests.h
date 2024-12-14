@@ -21,5 +21,4 @@ class SerializerRequests
         static std::vector<unsigned char> serializeRequest(const HttpGetRequest& httpGetRequest);
         static std::vector<unsigned char> serializeRequest(const CloseConnectionRequest& closeConnectionRequest);
         static std::vector<unsigned char> serializeRequest(const DeleteCircuitRequest& deleteCircuitRequest);
-        static std::vector<unsigned char> serializeRequest(const AliveMsgRequest& aliveMsgRequest);
 };

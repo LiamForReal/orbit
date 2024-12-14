@@ -1,7 +1,6 @@
 #pragma once 
 #include "LinkRequestHandler.h"
 #include "HttpGetRequestHandler.h"
-
 class NodeRequestHandler 
 {
 public: 
@@ -12,5 +11,6 @@ private:
 	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData;
 	LinkRequestHandler* lrh;
 	HttpGetRequestHandler* hgrh;
+	
 	SOCKET _socket;
 };
