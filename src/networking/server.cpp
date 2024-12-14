@@ -238,6 +238,12 @@ void Server::clientControlHandler(const SOCKET node_sock)
 		char buffer[100];
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
 
+		/*
+		* GUVRIEL IT IS FOR U SEARCH WHAT THIS FUNCTION DO BC 
+		* I DONT HAVE STRANGHT TO EXPLAIN 
+		* AND IN LINE 255 YOU SEE TIMEOUT ERROR BY THAT YOU DONT EAVEN NEED A TIMER
+		* BC setsockopt BUTIFUL FUNCTION!!!
+		*/
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
 		while (true)
