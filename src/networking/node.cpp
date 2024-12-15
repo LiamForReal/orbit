@@ -98,13 +98,17 @@ void Node::serveControl()
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(11)); //to change - I puted 11 seconeds only for debuge
 		}
 	}
 	catch (std::runtime_error& e)
 	{
 		std::cout << "control manganon problem\n";
 		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
 	}
 }
 
@@ -235,6 +239,10 @@ int main()
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << '\n';
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
 	}
 
 	system("pause");

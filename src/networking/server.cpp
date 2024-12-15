@@ -20,7 +20,7 @@ Server::Server()
 	// for the resolution of the function socket
 	//this->dm = DockerManager();
 
-	_controlList = std::map<unsigned int, std::list<std::pair<std::string, std::string>>>();
+	_controlList = std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>();
 
 	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
 	if (_socket == INVALID_SOCKET)
@@ -120,13 +120,6 @@ void Server::clientHandler(const SOCKET client_socket)
 
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
-		//can help -dm.GetControlInfo(amountToOpen); 
-		// //here you get list of control settings to reach from server to node
-		//in addition you want to get map<unsigned int, list<pair<string, string>>>
-		// 
-		// 	WE DONT DO THiS =>	//dont forget you need to call from here to serveControl only one time!!!
-		// 
-		//DONT FORGET HERE YOU ARE ONLY UPDATING THE LIST OF CIRCUIT THE CONTROL SERVER RUNS IN THE START
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
 	}
@@ -144,16 +137,24 @@ void Server::serveControl() //check if its one of the nodes
 	{
 		bindAndListenControl();
 		std::string input_string;
-		std::list<string> clientsAlowde;
+		std::vector<string> clientsAlowde;
+		int clientsAmount = 0; 
+		unsigned int circuitId;
 		while (true)
 		{
 			// the main thread is only accepting clients 
 			// and add then to the list of handlers
 			
-			
-			if (!_controlList.empty())
+			if (_controlList.size() > clientsAmount)
 			{
-				std::cout << "accepting node for control...\n";
+				
+				auto it = _controlList.begin();
+				for (int i = 0; i < clientsAmount; i++)
+					++it;
+				
+				circuitId = it->first;
+				clientsAmount += 1;
+				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
 				mutex.lock();
 				for (auto it = _controlList.begin(); it != _controlList.end(); it++)
 				{
@@ -163,7 +164,9 @@ void Server::serveControl() //check if its one of the nodes
 					}
 				}
 				mutex.unlock();
-				this->acceptControlClient(clientsAlowde);
+				if (circuitId <= 0)
+					throw std::runtime_error("problem with circuitId");
+				this->acceptControlClient(clientsAlowde, circuitId);
 			}
 			
 		}
@@ -189,7 +192,7 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::list<string>& allowedClients)
+void Server::acceptControlClient(const std::vector<string>& allowedClients, const unsigned int& circuitId)
 {
 	sockaddr_in nodeAddr;
 	int nodeAddrLen = sizeof(nodeAddr);
@@ -219,7 +222,7 @@ void Server::acceptControlClient(const std::list<string>& allowedClients)
 	if (isAllowed)
 	{
 		std::cout << "Node " << clientIPStr << " accepted." << std::endl;
-		std::thread tr(&Server::clientControlHandler, this, nodeSocket);
+		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuitId);
 		tr.detach();
 	}
 	else
@@ -230,29 +233,25 @@ void Server::acceptControlClient(const std::list<string>& allowedClients)
 
 }
 
-void Server::clientControlHandler(const SOCKET node_sock)
+void Server::clientControlHandler(const SOCKET node_sock, const unsigned int& circuitId)
 {
 	try
 	{
 		RequestInfo ri;
 		char buffer[100];
-		DWORD timeout = SECONDS_TO_WAIT * 1000;
-
-		/*
-		* GUVRIEL IT IS FOR U SEARCH WHAT THIS FUNCTION DO BC 
-		* I DONT HAVE STRANGHT TO EXPLAIN 
-		* AND IN LINE 255 YOU SEE TIMEOUT ERROR BY THAT YOU DONT EAVEN NEED A TIMER
-		* BC setsockopt BUTIFUL FUNCTION!!!
-		*/
+		DWORD timeout = SECONDS_TO_WAIT * 1000; 
+		TorRequestHandler torRequestHandler(dm, std::ref(_controlList));
+		torRequestHandler.circuitId = circuitId;
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
 		while (true)
 		{
-			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-			if (bytesRead <= 0 /* || buffer[0] == '\0'*/)
+			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0); 
+			if (bytesRead <= 0)
 			{
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
+					//here handle
 					std::cerr << "TIMEOUT: Node did not send alive message.\n";
 					throw std::runtime_error("Timed out waiting for alive message.");
 				}
@@ -268,7 +267,7 @@ void Server::clientControlHandler(const SOCKET node_sock)
 			{
 				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
-			}
+			} 
 			// Reset the timer for next alive check
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));

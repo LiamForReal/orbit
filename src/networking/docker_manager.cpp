@@ -50,9 +50,9 @@ void DockerManager::openDocker(const int& amount)
     runCmdCommand(buildCommand);
 }
 
-std::list<std::string> DockerManager::findIPs(const int& amount)
+std::vector<std::string> DockerManager::findIPs(const int& amount)
 {
-    std::list<std::string> nodesIp;
+    std::vector<std::string> nodesIp;
     char buffer[128];
     std::string containerID;
     //int random_number = min + std::rand() % (max - min + 1); TODO: access the nodes for all the clients!!!
@@ -83,9 +83,9 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
     return nodesIp;
 }
 
-std::list<std::string> DockerManager::findControlPorts(const int& amount)
+std::vector<std::string> DockerManager::findControlPorts(const int& amount)
 {
-    std::list<std::string> controlNodesPorts;
+    std::vector<std::string> controlNodesPorts;
     char buffer[128];
     std::string portsStr = "", hostPort = "";
     std::string inspectCommand;
@@ -120,9 +120,9 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
     return controlNodesPorts;
 }
 
-std::list<std::string> DockerManager::findProxyPorts(const int& amount)
+std::vector<std::string> DockerManager::findProxyPorts(const int& amount)
 {
-    std::list<std::string> proxyNodesPorts;
+    std::vector<std::string> proxyNodesPorts;
     char buffer[128];
     std::string portsStr = "", hostPort = "";
     // Build the docker inspect command with necessary `cd`
@@ -161,12 +161,12 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     return proxyNodesPorts;
 }
 
-std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create)
+std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create)
 {
     openDocker(create);
-    std::list<std::pair<std::string, std::string>> nodesInfo;
-    std::list<std::string> ips = findIPs(use); 
-    std::list<std::string> ports = findProxyPorts(use);
+    std::vector<std::pair<std::string, std::string>> nodesInfo;
+    std::vector<std::string> ips = findIPs(use); 
+    std::vector<std::string> ports = findProxyPorts(use);
     auto itIp = ips.begin();
     auto itPort = ports.begin();
     for (int i = 0; i < ips.size(); i++)
@@ -179,11 +179,11 @@ std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(con
     return nodesInfo;
 }
 
-std::list<std::pair<std::string, std::string>> DockerManager::GetControlInfo() //for server
+std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo() //for server
 {
-    std::list<std::pair<std::string, std::string>> nodesInfo;
-    std::list<std::string> ips = findIPs(this->amountCreated);
-    std::list<std::string> ports = findControlPorts(this->amountCreated);
+    std::vector<std::pair<std::string, std::string>> nodesInfo;
+    std::vector<std::string> ips = findIPs(this->amountCreated);
+    std::vector<std::string> ports = findControlPorts(this->amountCreated);
     auto itIp = ips.begin();
     auto itPort = ports.begin();
     for (int i = 0; i < ips.size(); i++)

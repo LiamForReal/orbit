@@ -176,6 +176,10 @@ int main()
 	{
 		std::cerr << e.what() << '\n';
 	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
+	}
 	system("pause");
 	return 0;
 }

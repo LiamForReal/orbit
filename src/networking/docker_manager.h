@@ -10,7 +10,6 @@
 
 using json = nlohmann::json;
 using std::string;
-using std::list;
 using std::pair;
 
 class DockerManager
@@ -18,15 +17,15 @@ class DockerManager
 public:
     DockerManager();
 
-    list<pair<string, string>> openAndGetInfo(const int& use, const int& create);
-    list<pair<string, string>> GetControlInfo();
+    std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create);
+    std::vector<pair<string, string>> GetControlInfo();
 
 private:
     void runCmdCommand(const string& command);
     void openDocker(const int& amount);
-    list<string> findProxyPorts(const int& amount);
-    list<string> findControlPorts(const int& amount);
-    list<string> findIPs(const int& amount);
+    std::vector<string> findProxyPorts(const int& amount);
+    std::vector<string> findControlPorts(const int& amount);
+    std::vector<string> findIPs(const int& amount);
     std::map<string, std::vector<string>> buildCircuits;
     unsigned int amountCreated;
 };

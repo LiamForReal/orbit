@@ -32,11 +32,11 @@ class Server
         void bindAndListen(); 
         void bindAndListenControl();
         void acceptClient(); 
-        void acceptControlClient(const std::list<string>& allowedClients);
+        void acceptControlClient(const std::vector<string>& allowedClients, const unsigned int&  circuitId);
         void clientHandler(const SOCKET client_socket);
-        void clientControlHandler(const SOCKET node_sock);
+        void clientControlHandler(const SOCKET node_sock, const unsigned int& circuitId);
         
-        std::map<unsigned int, std::list<std::pair<std::string, std::string>>> _controlList; // nodes data
+        std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> _controlList; // nodes data
         
         SOCKET _socket;
         SOCKET _controlSocket;
