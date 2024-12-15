@@ -3,7 +3,9 @@
 RSA::RSA()
 {
 	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>(); //create a theard
+	std::cout << "Q generated!\n";
 	uint1024_t p = this->getRandomPrimeNumber<uint1024_t>(); //create a thread
+	std::cout << "P generated!\n";
 	//join them
 	std::cout << "q = " << q << std::endl << "p = " << p << std::endl;
 	std::cout << "p and q generated successfully\n";
@@ -54,35 +56,50 @@ void RSA::Decrypt(vector<unsigned char>& cypher_text)
 	
 uint2048_t RSA::calcProduct(const uint1024_t& q, const uint1024_t& p)
 {
-	return static_cast<uint2048_t>(q * p);
+	return static_cast<uint2048_t>(uint2048_t(q) * uint2048_t(p));
 }
 	
 uint2048_t RSA::calcTotient(const uint1024_t& q, const uint1024_t& p)
 {
-	return static_cast<uint2048_t>((q - 1) * (p - 1));
+	return static_cast<uint2048_t>(uint2048_t(q - 1) * uint2048_t(p - 1));
 }
 	
-	void RSA::selectPublicKey()
+void RSA::selectPublicKey()
+{
+	std::cout << "starting to generate pubkey\n";
+
+	uint2048_t lb = uint2048_t(pow(uint2048_t(2), 1024));
+	uint2048_t ub = uint2048_t(this->T);
+
+	while (true)
 	{
-		while (true)
+		E = this->getRandomPrimeNumber<uint2048_t>(lb, ub);
+
+		if (E < T && E % T != 0)
 		{
-			E = getRandomPrimeNumber<uint2048_t>(uint2048_t(1), this->T);
-			if (E >= T) 
-				continue;
-			if (!(T % E))
-				continue;
-			break;
+			std::cout << "finished to generate pubkey\n";
+			return;
 		}
 	}
+}
 	
 void RSA::selectPrivateKey()
 {
+	std::cout << "starting to generate privatekey\n";
+
+	uint2048_t lb = uint2048_t(1);
+	uint2048_t ub = uint2048_t(this->T);
+
 	cpp_int mul_saver;
 	while (true)
 	{
-		D = getRandomPrimeNumber<uint2048_t>(); 
+		D = this->getRandomPrimeNumber<uint2048_t>(lb, ub);
+
 		mul_saver = D * E;
+
 		if (mul_saver % (cpp_int)(T) == 1)
 			break;
 	}
+
+	std::cout << "finished to generate privatekey\n";
 }

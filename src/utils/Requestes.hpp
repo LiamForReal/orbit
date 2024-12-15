@@ -44,7 +44,7 @@ typedef struct LinkRequest
 
 typedef struct HttpGetRequest
 { 
-    string msg; //maybe in cpp the library have other way to save the content and it will be switched there 
+    string msg;
     unsigned int circuit_id; 
 } HttpGetRequest;
 
