@@ -93,7 +93,7 @@ void Node::serveControl()
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			std::this_thread::sleep_for(std::chrono::seconds(11)); //to change - I puted 11 seconeds only for debuge
+			std::this_thread::sleep_for(std::chrono::seconds(1)); //to change - I puted 11 seconeds only for debuge
 		}
 	}
 	catch (std::runtime_error& e)
