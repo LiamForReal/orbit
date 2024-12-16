@@ -54,3 +54,4 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
 
     return rr;
 }
+//get last id

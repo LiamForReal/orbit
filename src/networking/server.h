@@ -29,15 +29,16 @@ class Server
         void serveControl();
 
     private: 
+        SOCKET createSocket(const std::string& ip, unsigned int port);
         void bindAndListen(); 
         void bindAndListenControl();
         void acceptClient(); 
-        void acceptControlClient(const std::vector<string>& allowedClients, const unsigned int&  circuitId);
+        void acceptControlClient(const std::vector<string>& allowedClients, const unsigned int  circuitId);
         void clientHandler(const SOCKET client_socket);
-        void clientControlHandler(const SOCKET node_sock, const unsigned int& circuitId);
+        void clientControlHandler(const SOCKET node_sock, const unsigned int circuitId, string nodeIp);
         
         std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> _controlList; // nodes data
-        
+        std::map<unsigned int, SOCKET> clients;
         SOCKET _socket;
         SOCKET _controlSocket;
 };

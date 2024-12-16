@@ -127,6 +127,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\networking\handlers\DeleteCircuitRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\HttpGetRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\LinkRequestHandler.h" />
@@ -145,6 +146,7 @@
     <ClInclude Include="..\utils\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\networking\handlers\DeleteCircuitRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\LinkRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\NodeRequestHandler.cpp" />

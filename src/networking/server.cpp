@@ -108,13 +108,13 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
+		unsigned int circuit_id; // get last id from tor request handler
 		RequestResult rr = RequestResult();
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList));//you can delete and call to the handler from here
-		mutex.unlock();
-		char recvMsg[100];
-		char buffer[128];
-		std::string containerID;
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList));
+		if(clients[circuit_id] == NULL || clients[circuit_id] == INVALID_SOCKET)
+			clients[circuit_id] = client_socket;
+		mutex.unlock(); 
 
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
 
@@ -167,6 +167,9 @@ void Server::serveControl() //check if its one of the nodes
 				if (circuitId <= 0)
 					throw std::runtime_error("problem with circuitId");
 				this->acceptControlClient(clientsAlowde, circuitId);
+				mutex.lock();
+				clientsAlowde.clear();
+				mutex.unlock();
 			}
 			
 		}
@@ -192,7 +195,7 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::vector<string>& allowedClients, const unsigned int& circuitId)
+void Server::acceptControlClient(const std::vector<string>& allowedClients, const unsigned int circuitId)
 {
 	sockaddr_in nodeAddr;
 	int nodeAddrLen = sizeof(nodeAddr);
@@ -222,7 +225,7 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients, cons
 	if (isAllowed)
 	{
 		std::cout << "Node " << clientIPStr << " accepted." << std::endl;
-		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuitId);
+		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuitId, clientIPStr);
 		tr.detach();
 	}
 	else
@@ -233,27 +236,76 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients, cons
 
 }
 
-void Server::clientControlHandler(const SOCKET node_sock, const unsigned int& circuitId)
+SOCKET Server::createSocket(const std::string& ip, unsigned int port)
+{
+	SOCKET sock = INVALID_SOCKET;
+
+	// Create the socket
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock == INVALID_SOCKET) {
+		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
+		return INVALID_SOCKET;
+	}
+
+	// Set up the sockaddr_in structure
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port); // Convert to network byte order
+	if (inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr) <= 0) {
+		std::cerr << "Invalid IP address format" << std::endl;
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	// Connect to the server
+	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+		std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	return sock;
+}
+
+void Server::clientControlHandler(const SOCKET node_sock,const unsigned int circuitId, string nodeIp)
 {
 	try
 	{
-		RequestInfo ri;
+		DeleteCircuitRequest dcr;
 		char buffer[100];
 		DWORD timeout = SECONDS_TO_WAIT * 1000; 
-		TorRequestHandler torRequestHandler(dm, std::ref(_controlList));
-		torRequestHandler.circuitId = circuitId;
+		TorRequestHandler torRequestHandler = TorRequestHandler(dm, std::ref(_controlList));
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-
+		SOCKET sockWithNode;
 		while (true)
 		{
+			mutex.lock();
 			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0); 
+			mutex.unlock();
 			if (bytesRead <= 0)
 			{
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
 					//here handle
 					std::cerr << "TIMEOUT: Node did not send alive message.\n";
-					throw std::runtime_error("Timed out waiting for alive message.");
+					dcr.circuit_id = circuitId;
+					std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+					for (auto it = this->_controlList[circuitId].begin(); it != this->_controlList[circuitId].end(); ++it)
+					{
+						if (it->first == nodeIp)
+							continue;
+						
+						sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
+						mutex.lock();
+						Helper::sendVector(sockWithNode, deleteCircuitBuffer);
+						mutex.unlock();
+					}//delete
+					mutex.lock();
+					Helper::sendVector(clients[circuitId], deleteCircuitBuffer);//now send to client 
+					mutex.unlock();
+					
+					//now get from client...
+					//ajust new circuits
 				}
 				else
 				{

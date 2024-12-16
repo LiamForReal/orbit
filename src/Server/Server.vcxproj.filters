@@ -57,7 +57,7 @@
     <ClInclude Include="..\utils\RequestInfo.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\networking\handlers\DeleteCircuitRequestHandler.h">
+    <ClInclude Include="..\utils\SerializerRequests.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -89,7 +89,7 @@
     <ClCompile Include="..\networking\handlers\TorRequestHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\networking\handlers\DeleteCircuitRequestHandler.cpp">
+    <ClCompile Include="..\utils\SerializerRequests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

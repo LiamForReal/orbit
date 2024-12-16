@@ -18,6 +18,7 @@
 #include "../utils/SerializerRequests.h"
 #include "../utils/DeserializerResponses.h"
 #include "handlers/NodeRequestHandler.h"
+#include <mutex>
 #define COMMUNICATE_NODE_PORT 9050 //inside network
 #define CONTROL_NODE_PORT 9051 //inside network
 #define COMMUNICATE_CONTROL_NODE_PORT 9788 
