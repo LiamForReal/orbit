@@ -108,12 +108,18 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
-		unsigned int circuit_id; // get last id from tor request handler
 		RequestResult rr = RequestResult();
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList));
-		if(clients[circuit_id] == NULL || clients[circuit_id] == INVALID_SOCKET)
-			clients[circuit_id] = client_socket;
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients));
+		for (auto it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			if (it->second == INVALID_SOCKET)
+			{
+				std::cout << "new client allocated\n\n";
+				it->second = client_socket;
+				break;
+			}
+		}
 		mutex.unlock(); 
 
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
@@ -122,10 +128,15 @@ void Server::clientHandler(const SOCKET client_socket)
 		rr = torRequestHandler.directRequest(ri);
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
+		if (static_cast<unsigned int>(rr.buffer[0]) == CIRCUIT_CONFIRMATION_ERROR)
+		{
+			throw std::runtime_error("failed to get nodes details");
+		}
 	}
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << std::endl;
+		clientHandler(client_socket);
 	}
 }
 
@@ -139,7 +150,6 @@ void Server::serveControl() //check if its one of the nodes
 		std::string input_string;
 		std::vector<string> clientsAlowde;
 		int clientsAmount = 0; 
-		unsigned int circuitId;
 		while (true)
 		{
 			// the main thread is only accepting clients 
@@ -152,7 +162,6 @@ void Server::serveControl() //check if its one of the nodes
 				for (int i = 0; i < clientsAmount; i++)
 					++it;
 				
-				circuitId = it->first;
 				clientsAmount += 1;
 				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
 				mutex.lock();
@@ -164,9 +173,7 @@ void Server::serveControl() //check if its one of the nodes
 					}
 				}
 				mutex.unlock();
-				if (circuitId <= 0)
-					throw std::runtime_error("problem with circuitId");
-				this->acceptControlClient(clientsAlowde, circuitId);
+				this->acceptControlClient(clientsAlowde);
 				mutex.lock();
 				clientsAlowde.clear();
 				mutex.unlock();
@@ -195,11 +202,11 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::vector<string>& allowedClients, const unsigned int circuitId)
+void Server::acceptControlClient(const std::vector<string>& allowedClients)
 {
 	sockaddr_in nodeAddr;
 	int nodeAddrLen = sizeof(nodeAddr);
-
+	std::vector<unsigned int> circuits;
 	// Accept the client connection
 	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);
 	if (nodeSocket == INVALID_SOCKET)
@@ -211,12 +218,12 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients, cons
 	char nodeIP[INET_ADDRSTRLEN + INC] = { 0 };
 	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
 	nodeIP[INET_ADDRSTRLEN] = NULL;
-	std::string clientIPStr(nodeIP);
+	std::string nodeIPStr(nodeIP);
 
 	// Check if the client is in the allowed list
 	bool isAllowed = false;
 	for (const auto& allowedClient : allowedClients) {
-		if (allowedClient == clientIPStr) {
+		if (allowedClient == nodeIPStr) {
 			isAllowed = true;
 			break;
 		}
@@ -224,13 +231,25 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients, cons
 
 	if (isAllowed)
 	{
-		std::cout << "Node " << clientIPStr << " accepted." << std::endl;
-		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuitId, clientIPStr);
+		std::cout << "Node " << nodeIPStr << " accepted." << std::endl;
+		for (auto it = _controlList.begin(); it != _controlList.end(); ++it)
+		{
+			for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+			{
+				if (it2->first == nodeIPStr)
+				{
+					circuits.emplace_back(it->first);
+					break;
+				}
+			}
+				
+		}
+		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuits, nodeIPStr);
 		tr.detach();
 	}
 	else
 	{
-		std::cout << "Node " << clientIPStr << " is not allowed. Closing connection." << std::endl;
+		std::cout << "Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
 		closesocket(nodeSocket);
 	}
 
@@ -267,14 +286,14 @@ SOCKET Server::createSocket(const std::string& ip, unsigned int port)
 	return sock;
 }
 
-void Server::clientControlHandler(const SOCKET node_sock,const unsigned int circuitId, string nodeIp)
+void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, string nodeIp)
 {
 	try
 	{
 		DeleteCircuitRequest dcr;
 		char buffer[100];
+		std::vector<string> nodesCrushed;
 		DWORD timeout = SECONDS_TO_WAIT * 1000; 
-		TorRequestHandler torRequestHandler = TorRequestHandler(dm, std::ref(_controlList));
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		SOCKET sockWithNode;
 		while (true)
@@ -288,24 +307,32 @@ void Server::clientControlHandler(const SOCKET node_sock,const unsigned int circ
 				{
 					//here handle
 					std::cerr << "TIMEOUT: Node did not send alive message.\n";
-					dcr.circuit_id = circuitId;
-					std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
-					for (auto it = this->_controlList[circuitId].begin(); it != this->_controlList[circuitId].end(); ++it)
+					for (int i = 0; i < circuits.size(); i++)
 					{
-						if (it->first == nodeIp)
-							continue;
-						
-						sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
+						std::cout << "handle circuit - " << circuits[i] << "\n\n";
+						dcr.circuit_id = circuits[i];
+						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+						for (auto it = this->_controlList[circuits[i]].begin(); it != this->_controlList[circuits[i]].end(); ++it)
+						{
+							if (it->first == nodeIp)
+							{
+								nodesCrushed.emplace_back(nodeIp);
+								continue;
+							}
+								
+
+							sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
+							mutex.lock();
+							Helper::sendVector(sockWithNode, deleteCircuitBuffer);
+							mutex.unlock();
+						}//delete
 						mutex.lock();
-						Helper::sendVector(sockWithNode, deleteCircuitBuffer);
+						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
 						mutex.unlock();
-					}//delete
-					mutex.lock();
-					Helper::sendVector(clients[circuitId], deleteCircuitBuffer);//now send to client 
-					mutex.unlock();
-					
-					//now get from client...
+					}
 					//ajust new circuits
+					//now get from client...
+					
 				}
 				else
 				{

@@ -5,6 +5,7 @@
 #include <list>
 #include <utility>
 #include "../utils/json.hpp"
+#include <algorithm>
 #define CONTAINER_NAME "node"
 #define INTERNAL_PORT "9050"
 
@@ -23,9 +24,11 @@ public:
 private:
     void runCmdCommand(const string& command);
     void openDocker(const int& amount);
-    std::vector<string> findProxyPorts(const int& amount);
-    std::vector<string> findControlPorts(const int& amount);
-    std::vector<string> findIPs(const int& amount);
-    std::map<string, std::vector<string>> buildCircuits;
+    std::vector<string> findProxyPorts(std::vector<string> containersNames);
+    std::vector<string> findControlPorts(std::vector<string> containersNames);
+    std::vector<string> findIPs(std::vector<string> containersNames);
+    std::vector<string> pathNodeExisting;
+    std::vector<string> guardNodeExisting;
     unsigned int amountCreated;
+    unsigned int _clientsAmount;
 };

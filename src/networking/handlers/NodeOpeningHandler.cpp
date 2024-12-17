@@ -1,9 +1,10 @@
 #include "NodeOpeningHandler.h"
 #include <algorithm>
-unsigned int NodeOpeningHandler::circuit_id = 1;
 
-NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList) 
-    : dm(dockerManager), _controlList(controlList)
+unsigned int NodeOpeningHandler::circuit_id = 1 + (rand() % 200);
+
+NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::map<unsigned int, SOCKET>& clients)
+    : dm(dockerManager), _controlList(controlList), _clients(clients)
 {
     this->rr = RequestResult();
 }
@@ -28,6 +29,8 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
 
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
+        if (nodesInfo.empty())
+            throw std::runtime_error("the failed to take nodes details");
         controlNodesInfo = dm.GetControlInfo();
         ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
@@ -40,14 +43,16 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         * YOU SOULD PASS BY REFRENCE THE MAP AND AJUST IT IN THE FNCTION
         */
 
+        
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
         ccr.circuit_id = this->circuit_id;
+        _clients[circuit_id] = INVALID_SOCKET;
         this->circuit_id++;
     }
     catch (std::runtime_error e)
     {
-        ccr.status = Errors::CIRCUIT_CONFIRMATION_ERROR;
+        ccr.status = CIRCUIT_CONFIRMATION_ERROR;
     }
 
     rr.buffer = SerializerResponses::serializeResponse(ccr);
