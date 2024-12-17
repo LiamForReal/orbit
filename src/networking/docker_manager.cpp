@@ -18,6 +18,53 @@ void DockerManager::runCmdCommand(const std::string& command)
     else std::cerr << "Failed to start command's process. Error code: " << result << std::endl;
 }
 
+void DockerManager::setNewNodes(const int& create, const int& use)
+{
+    if (this->amountCreated + create >= 20)
+        throw std::runtime_error("to many nodes the server cant allow it!");
+
+    for (int i = 0; i < create; i++) //put all the nodes I wanna work with node1 - noden
+        unDefinedNodes.emplace_back(std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1));
+    //node2 node3 node4 , node1 node8 node6
+    if (use > pathNodeExisting.size() + unDefinedNodes.size())//chack use confirmation
+        throw std::runtime_error("use is grater then all the nodes exisiting");
+
+}
+
+std::vector<string> DockerManager::SelectPathAndAdjustNetwork(int use)
+{
+    std::vector<string> nodeSelected;
+    std::vector<string> tmp;
+    for (int i = 0; i < unDefinedNodes.size(); ++i)  //node selected get all the nodes and choose unique paths to every client each
+    {
+        nodeSelected.emplace_back(unDefinedNodes[(i + _clientsAmount) % unDefinedNodes.size()]);
+    }
+    for (auto it = nodeSelected.begin(); it != nodeSelected.end(); ++it)
+    {
+        if (*it != *nodeSelected.begin())
+        {
+            pathNodeExisting.emplace_back(*it);  
+        }
+        else guardNodeExisting.emplace_back(*it); 
+    }
+    nodeSelected.clear();
+    for (int i = 1; i < use; ++i)  //node selected get all the nodes and choose unique paths to every client each
+    {
+        tmp.emplace_back(pathNodeExisting[i % pathNodeExisting.size()]);
+    }
+    nodeSelected.emplace_back(guardNodeExisting[_clientsAmount - 1]);
+    nodeSelected.insert(nodeSelected.end(), tmp.begin(), tmp.end());
+    string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
+    std::cout << "CLIENT" << _clientsAmount << " PATH:\n [ " << *nodeSelected.begin() << ", ";
+    for (auto it = nodeSelected.begin() + 1; it != nodeSelected.end(); it++)
+    {
+        portsCommand += " " + *it;
+        std::cout << *it << ", ";
+    }
+    std::cout << "]\n";
+    runCmdCommand(portsCommand);
+    return nodeSelected;
+}
 void DockerManager::openDocker(const int& amount)
 {
     
@@ -150,40 +197,8 @@ std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(c
     {
         _clientsAmount++;
         std::vector<std::pair<std::string, std::string>> nodesInfo;
-        std::vector<string> nodeSelected;
-
-        if (this->amountCreated + create >= 20)
-            throw std::runtime_error("to many nodes the server cant allow it!");
-
-        for (int i = 0; i < create; i++) //put all the nodes I wanna work with node1 - noden
-            pathNodeExisting.emplace_back(std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1));
-
-        if (use > pathNodeExisting.size() + 1)//chack use confirmation
-            throw std::runtime_error("use is grater then all the nodes exisiting");
-
-        std::cout << "client " + _clientsAmount << " path: ";
-        for (int i = 0; i < use; ++i)  //node selected get all the nodes and choose unique paths to every client each
-        {
-            nodeSelected.emplace_back(pathNodeExisting[(i + _clientsAmount) % pathNodeExisting.size()]);
-            std::cout << nodeSelected[i] << " ,";
-        }
-        std::cout << std::endl;
-        for (auto it = pathNodeExisting.begin(); it != pathNodeExisting.end(); ++it)
-        {
-            if (*it == *nodeSelected.begin())
-            {
-                pathNodeExisting.erase(it);//takes all the others nodes exisiting
-                break;
-            }
-            
-        }
-        guardNodeExisting.emplace_back(*nodeSelected.begin()); //takes all the guaed nodes exisiting 
-        string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
-        for (auto it = nodeSelected.begin() + 1; it != nodeSelected.end(); it++)
-        {
-            portsCommand += " " + *it;
-        }
-        runCmdCommand(portsCommand);
+        setNewNodes(create, use);
+        std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use);
         openDocker(create);
         std::vector<std::string> ips = findIPs(nodeSelected);
         std::vector<std::string> ports = findProxyPorts(nodeSelected);

@@ -24,11 +24,16 @@ public:
 private:
     void runCmdCommand(const string& command);
     void openDocker(const int& amount);
+    void setNewNodes(const int& create, const int& use);
+    std::vector<string> SelectPathAndAdjustNetwork(int use);
     std::vector<string> findProxyPorts(std::vector<string> containersNames);
     std::vector<string> findControlPorts(std::vector<string> containersNames);
     std::vector<string> findIPs(std::vector<string> containersNames);
+    void adjustCrushedNodes(std::vector<string> crushedNodes);
+
     std::vector<string> pathNodeExisting;
     std::vector<string> guardNodeExisting;
+    std::vector<string> unDefinedNodes;
     unsigned int amountCreated;
     unsigned int _clientsAmount;
 };

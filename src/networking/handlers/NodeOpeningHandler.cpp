@@ -42,8 +42,6 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         * HERE'S WHAT THAT YOU NEED TO BUILD THE MAP FROM circuit id TO list of nodes in the circuit
         * YOU SOULD PASS BY REFRENCE THE MAP AND AJUST IT IN THE FNCTION
         */
-
-        
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
         ccr.circuit_id = this->circuit_id;

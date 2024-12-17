@@ -213,15 +213,28 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
     return ri;
 }
 
-RequestInfo Helper::waitForResponse(SOCKET socket)
+
+RequestInfo Helper::waitForResponse(SOCKET socket, unsigned int timeout)
 {
-	unsigned int statusCode; 
-	while(true)
+	unsigned int statusCode;
+	auto start = std::chrono::steady_clock::now(); // Record the start time
+
+	while (true)
 	{
 		statusCode = Helper::socketHasData(socket);
-		if(statusCode != 0 && statusCode != -1)
+		if (statusCode != 0 && statusCode != -1)
 		{
 			return Helper::buildRI(socket, statusCode);
+		}
+
+		// Check if timeout is non-zero and the time limit has been exceeded
+		if (timeout > 0)
+		{
+			auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start).count();
+			if (elapsed >= timeout)
+			{
+				return RequestInfo(); // Return an empty RequestInfo if time limit exceeded
+			}
 		}
 	}
 }

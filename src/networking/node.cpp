@@ -79,6 +79,7 @@ void Node::serveControl()
 	try
 	{
 		char* data = new char[1];
+		RequestInfo ri;
 		data[0] = (char)(ALIVE_MSG_RC);
 		SOCKET serverSock = createSocketWithServer();
 		int bytesSent; 
@@ -93,7 +94,10 @@ void Node::serveControl()
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			std::this_thread::sleep_for(std::chrono::seconds(1)); //to change - I puted 11 seconeds only for debuge
+			ri = Helper::waitForResponse(serverSock, 2);
+			if (ri.buffer.empty())
+				continue;
+			std::cout << "server sends " << ri.id << " request tipe\n";
 		}
 	}
 	catch (std::runtime_error& e)
