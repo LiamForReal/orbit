@@ -63,6 +63,7 @@ std::vector<string> DockerManager::SelectPathAndAdjustNetwork(int use)
     }
     std::cout << "]\n";
     runCmdCommand(portsCommand);
+    unDefinedNodes.clear();
     return nodeSelected;
 }
 void DockerManager::openDocker(const int& amount)
@@ -237,4 +238,33 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
         itIp++;
     }
     return nodesInfo;
+}
+
+void DockerManager::adjustCrushedNodes(std::vector<string> crushedNodes) // list of ips
+{
+    std::vector<string> nodeExisting;
+    nodeExisting.insert(nodeExisting.end(), guardNodeExisting.begin(), guardNodeExisting.end());
+    nodeExisting.insert(nodeExisting.end(), pathNodeExisting.begin(), pathNodeExisting.end());
+    std::vector<std::string> ips = findIPs(nodeExisting);
+    std::map<string, string> containesNameToIp;
+    for (int i = 0; i < nodeExisting.size(); i++)
+    {
+        containesNameToIp[nodeExisting[i]] = ips[i];
+    }
+
+    for (auto it = guardNodeExisting.begin(); it != guardNodeExisting.end(); ++it)
+    {
+        if (std::find(crushedNodes.begin(), crushedNodes.end(), containesNameToIp[*it]) != crushedNodes.end())
+        {
+            guardNodeExisting.erase(it);
+        }
+    }
+
+    for (auto it = pathNodeExisting.begin(); it != pathNodeExisting.end(); ++it)
+    {
+        if (std::find(crushedNodes.begin(), crushedNodes.end(), containesNameToIp[*it]) != crushedNodes.end())
+        {
+            pathNodeExisting.erase(it);
+        }
+    }
 }

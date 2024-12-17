@@ -319,8 +319,6 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 								nodesCrushed.emplace_back(nodeIp);
 								continue;
 							}
-								
-
 							sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
 							mutex.lock();
 							Helper::sendVector(sockWithNode, deleteCircuitBuffer);
@@ -330,9 +328,8 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
 						mutex.unlock();
 					}
-					//ajust new circuits
+					dm.adjustCrushedNodes(nodesCrushed);
 					//now get from client...
-					
 				}
 				else
 				{
