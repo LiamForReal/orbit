@@ -68,8 +68,8 @@ void RSA::selectPublicKey()
 {
 	std::cout << "starting to generate pubkey\n";
 
-	uint2048_t lb = uint2048_t(pow(uint2048_t(2), 1024));
-	uint2048_t ub = uint2048_t(this->T);
+	uint2048_t lb = uint2048_t("65000");
+	uint2048_t ub = uint2048_t("500000");
 
 	while (true)
 	{
@@ -87,19 +87,32 @@ void RSA::selectPrivateKey()
 {
 	std::cout << "starting to generate privatekey\n";
 
-	uint2048_t lb = uint2048_t(1);
+	uint2048_t lb = 0;
 	uint2048_t ub = uint2048_t(this->T);
 
+	int bits = 1024;
+	
+	do
+	{
+		lb = uint2048_t(uint2048_t(2) << bits);
+		bits--;
+	} while (lb >= ub);
+
 	cpp_int mul_saver;
+
 	while (true)
 	{
 		D = this->getRandomPrimeNumber<uint2048_t>(lb, ub);
 
 		mul_saver = D * E;
 
-		if (mul_saver % (cpp_int)(T) == 1)
-			break;
-	}
+		std::cout << std::endl << std::endl;
+		std::cout << mul_saver << " % " << (cpp_int)(T) << " = " << mul_saver % (cpp_int)(T) << " ==? 1\n\n";
 
-	std::cout << "finished to generate privatekey\n";
+		if (mul_saver % (cpp_int)(T) == (cpp_int)(1))
+		{
+			std::cout << "finished to generate privatekey\n";
+			return;
+		}
+	}
 }
