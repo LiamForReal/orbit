@@ -5,6 +5,9 @@ int main()
 {
 	std::cout << "TEST BEGIN:" << std::endl;
 	RSA rsa = RSA();
+
+	return 0;
+
 	std::vector<unsigned char> text;
 	std::cout << "text before: Hello world!\n";
 	for (unsigned char ch : "Hello world!") {

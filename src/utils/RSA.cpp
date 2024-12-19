@@ -35,7 +35,7 @@ RSA::RSA()
 	selectPublicKey();
 	std::cout << "E (public key) = " << this->E << std::endl;
 	selectPrivateKey();
-	std::cout << "D (public key) = " << this->D << std::endl;
+	std::cout << "D (private key) = " << this->D << std::endl;
 	std::cout << "done making public and private keys!!!\n";
 }
 
@@ -73,6 +73,11 @@ void RSA::Decrypt(vector<unsigned char>& cypher_text)
 	}
 }
 	
+cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod)
+{
+	return ((num % mod + mod) % mod);
+}
+
 void RSA::generateP(std::promise<uint1024_t>&& promiseP)
 {
 	uint1024_t p = this->getRandomPrimeNumber<uint1024_t>();
@@ -122,32 +127,49 @@ void RSA::selectPrivateKey()
 {
 	std::cout << "starting to generate privatekey\n";
 
-	uint2048_t lb = 0;
-	uint2048_t ub = uint2048_t(this->T);
+	cpp_int E = this->E;
+	cpp_int T = this->T;
 
-	int bits = 1024;
-	
+	cpp_int x0 = 1;
+	cpp_int y0 = 0;
+
+	cpp_int x1 = 0;
+	cpp_int y1 = 1;
+
+	cpp_int dividend = 0;
+	cpp_int remainder = 0;
+
 	do
 	{
-		lb = uint2048_t(uint2048_t(2) << bits);
-		bits--;
-	} while (lb >= ub);
-
-	cpp_int mul_saver;
-
-	while (true)
-	{
-		D = this->getRandomPrimeNumber<uint2048_t>(lb, ub);
-
-		mul_saver = D * E;
-
-		std::cout << std::endl << std::endl;
-		std::cout << mul_saver << " % " << (cpp_int)(T) << " = " << mul_saver % (cpp_int)(T) << " ==? 1\n\n";
-
-		if (mul_saver % (cpp_int)(T) == (cpp_int)(1))
+		if (T > E)
 		{
-			std::cout << "finished to generate privatekey\n";
-			return;
+			dividend = T / E;
+			remainder = T % E;
+
+			x1 = x1 - dividend * x0;
+			y1 = y1 - dividend * y0;
+
+			T = remainder;
 		}
-	}
+		else
+		{
+			dividend = E / T;
+			remainder = E % T;
+
+			x0 = x0 - dividend * x1;
+			y0 = y0 - dividend * y1;
+
+			E = remainder;
+		}
+	} while (E > 0);
+
+	this->D = (uint2048_t)(euclideanMod(x1, this->T));
+
+	std::cout << this->D << std::endl << std::endl;
+
+	cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
+
+	std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;
+
+	std::cout << "Finished to generate private key\n";
 }

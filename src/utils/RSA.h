@@ -24,6 +24,7 @@ protected:
 	}
 
 private:
+	cpp_int euclideanMod(const cpp_int& num, const cpp_int& mod);
 	void generateP(std::promise<uint1024_t>&& promiseP);
 	void generateQ(std::promise<uint1024_t>&& promiseQ);
 	uint2048_t calcProduct(const uint1024_t& q, const uint1024_t& p);
