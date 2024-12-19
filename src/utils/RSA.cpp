@@ -2,13 +2,32 @@
 
 RSA::RSA()
 {
-	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>(); //create a theard
-	std::cout << "Q generated!\n";
-	uint1024_t p = this->getRandomPrimeNumber<uint1024_t>(); //create a thread
-	std::cout << "P generated!\n";
-	//join them
+	this->_generatedP = false;
+	this->_generatedQ = false;
+
+	std::promise<uint1024_t> promiseQ;
+	std::promise<uint1024_t> promiseP;
+
+	std::future<uint1024_t> futurePromiseQ = promiseQ.get_future();
+	std::future<uint1024_t> futurePromiseP = promiseP.get_future();
+
+	std::thread generateQThread(&RSA::generateQ, this, std::move(promiseQ));
+	std::thread generatePThread(&RSA::generateP, this, std::move(promiseP));
+
+	generateQThread.join();
+	generatePThread.join();
+
+	while (!this->_generatedP || !this->_generatedQ)
+	{
+
+	}
+
+	uint1024_t q = futurePromiseQ.get();
+	uint1024_t p = futurePromiseP.get();
+
 	std::cout << "q = " << q << std::endl << "p = " << p << std::endl;
 	std::cout << "p and q generated successfully\n";
+
 	this->N = calcProduct(q, p);
 	std::cout << "N (product) = " << this->N << std::endl;
 	this->T = calcTotient(q, p);
@@ -54,6 +73,22 @@ void RSA::Decrypt(vector<unsigned char>& cypher_text)
 	}
 }
 	
+void RSA::generateP(std::promise<uint1024_t>&& promiseP)
+{
+	uint1024_t p = this->getRandomPrimeNumber<uint1024_t>();
+	std::cout << "P generated!\n";
+	promiseP.set_value(p);
+	this->_generatedP = true;
+}
+
+void RSA::generateQ(std::promise<uint1024_t>&& promiseQ)
+{
+	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>();
+	std::cout << "Q generated!\n";
+	promiseQ.set_value(q);
+	this->_generatedQ = true;
+}
+
 uint2048_t RSA::calcProduct(const uint1024_t& q, const uint1024_t& p)
 {
 	return static_cast<uint2048_t>(uint2048_t(q) * uint2048_t(p));

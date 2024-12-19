@@ -125,7 +125,7 @@ private:
     template<typename T>
     static bool is_prime(const T& n) 
     {
-        int k = 20;
+        int k = 60;
         if (n <= 1 || n == 4)  return false;
         if (n <= 3) return true;
         if (is_divisible_by_small_primes<T>(n))
@@ -141,7 +141,7 @@ private:
         // Iterate given number of 'k' times
         for (int i = 0; i < k; i++)
         {
-            std::cout << "PERFORMING ROUND " << i << "\n";
+            std::cout << "PERFORMING ROUND " << (i+1) << "\n";
             if (!millerTest<T>(d, n))
                 return false;
         }
