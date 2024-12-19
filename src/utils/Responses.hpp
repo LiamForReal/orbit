@@ -58,7 +58,7 @@ typedef struct CircuitConfirmationResponse
 {
 	unsigned int status; 
 	unsigned circuit_id;
-    list<pair<string, string>> nodesPath; 
+    std::vector<pair<string, string>> nodesPath; 
 } CircuitConfirmationResponse;
 
 typedef struct LinkResponse

@@ -21,7 +21,7 @@ public:
 
     std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create);
     std::vector<pair<string, string>> GetControlInfo();
-    std::vector<std::pair<std::string, std::string>> adjustCrushedNodes(std::vector<string> crushedNodes, const int& use);
+    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(std::vector<string> crushedNodes, const int& use);
 
 private:
     void runCmdCommand(const string& command);

@@ -17,6 +17,7 @@
 #include "../utils/Helper.h"
 #include <mutex>
 
+#define MAX_INT_OF_BYTE 256
 #define DEC 1
 
 class Server

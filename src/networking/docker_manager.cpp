@@ -258,7 +258,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
     return nodesInfo;
 }
 
-std::vector<std::pair<std::string, std::string>> DockerManager::adjustCrushedNodes(std::vector<string> crushedNodes, const int& use) // list of ips
+std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(std::vector<string> crushedNodes, const int& use) // list of ips
 {
     try
     {
