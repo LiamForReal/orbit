@@ -292,6 +292,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 	{
 		DeleteCircuitRequest dcr;
 		char buffer[100];
+		unsigned int clientuse = 0;
 		std::vector<string> nodesCrushed;
 		DWORD timeout = SECONDS_TO_WAIT * 1000; 
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
@@ -309,6 +310,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 					std::cerr << "TIMEOUT: Node did not send alive message.\n";
 					for (int i = 0; i < circuits.size(); i++)
 					{
+						clientuse = circuits[i];
 						std::cout << "handle circuit - " << circuits[i] << "\n\n";
 						dcr.circuit_id = circuits[i];
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
@@ -328,7 +330,8 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
 						mutex.unlock();
 					}
-					dm.adjustCrushedNodes(nodesCrushed);
+					dm.adjustCrushedNodes(nodesCrushed, clientuse); //returns a value
+					Helper::waitForResponse
 					//now get from client...
 				}
 				else

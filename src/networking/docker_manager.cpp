@@ -1,4 +1,5 @@
 #include "docker_manager.h"
+
 #include <random>
 
 DockerManager::DockerManager() 
@@ -68,7 +69,6 @@ std::vector<string> DockerManager::SelectPathAndAdjustNetwork(int use)
 }
 void DockerManager::openDocker(const int& amount)
 {
-    
     string firstNodeName = "";
     std::vector<string> nodesNames;
     std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
@@ -79,6 +79,24 @@ void DockerManager::openDocker(const int& amount)
 
     runCmdCommand(buildCommand);
 }
+
+void DockerManager::openDockerByContanerName(std::vector<string>& contanersNames)
+{
+    string firstNodeName = "";
+    std::vector<string> nodesNames;
+
+    std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_info_init.py";
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
+    for (auto it = contanersNames.begin(); it != contanersNames.end(); ++it)
+    {
+        regenerateIpsCommend += " " + *it;
+        buildCommand += " " + *it;
+    }
+
+    runCmdCommand(regenerateIpsCommend);
+    runCmdCommand(buildCommand);
+}
+
 
 std::vector<std::string> DockerManager::findIPs(std::vector<string> containersNames)
 {
@@ -240,31 +258,29 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
     return nodesInfo;
 }
 
-void DockerManager::adjustCrushedNodes(std::vector<string> crushedNodes) // list of ips
+std::vector<std::pair<std::string, std::string>> DockerManager::adjustCrushedNodes(std::vector<string> crushedNodes, const int& use) // list of ips
 {
-    std::vector<string> nodeExisting;
-    nodeExisting.insert(nodeExisting.end(), guardNodeExisting.begin(), guardNodeExisting.end());
-    nodeExisting.insert(nodeExisting.end(), pathNodeExisting.begin(), pathNodeExisting.end());
-    std::vector<std::string> ips = findIPs(nodeExisting);
-    std::map<string, string> containesNameToIp;
-    for (int i = 0; i < nodeExisting.size(); i++)
+    try
     {
-        containesNameToIp[nodeExisting[i]] = ips[i];
-    }
-
-    for (auto it = guardNodeExisting.begin(); it != guardNodeExisting.end(); ++it)
-    {
-        if (std::find(crushedNodes.begin(), crushedNodes.end(), containesNameToIp[*it]) != crushedNodes.end())
+        std::vector<std::pair<std::string, std::string>> nodesInfo;
+        setNewNodes(crushedNodes.size(), crushedNodes.size());
+        std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use);
+        openDocker(crushedNodes.size());
+        std::vector<std::string> ips = findIPs(nodeSelected);
+        std::vector<std::string> ports = findProxyPorts(nodeSelected);
+        auto itIp = ips.begin();
+        auto itPort = ports.begin();
+        for (int i = 0; i < ips.size(); i++)
         {
-            guardNodeExisting.erase(it);
+            nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+            itPort++;
+            itIp++;
         }
+        return nodesInfo;
     }
-
-    for (auto it = pathNodeExisting.begin(); it != pathNodeExisting.end(); ++it)
+    catch (std::runtime_error& e)
     {
-        if (std::find(crushedNodes.begin(), crushedNodes.end(), containesNameToIp[*it]) != crushedNodes.end())
-        {
-            pathNodeExisting.erase(it);
-        }
+        std::cerr << "amount to use is grater then the amount of exisiting nodes!!!\n";
+        return std::vector<std::pair<std::string, std::string>>();
     }
 }

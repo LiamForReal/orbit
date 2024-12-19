@@ -6,6 +6,7 @@
 #include <utility>
 #include "../utils/json.hpp"
 #include <algorithm>
+
 #define CONTAINER_NAME "node"
 #define INTERNAL_PORT "9050"
 
@@ -20,11 +21,12 @@ public:
 
     std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create);
     std::vector<pair<string, string>> GetControlInfo();
-    void adjustCrushedNodes(std::vector<string> crushedNodes);
+    std::vector<std::pair<std::string, std::string>> adjustCrushedNodes(std::vector<string> crushedNodes, const int& use);
 
 private:
     void runCmdCommand(const string& command);
     void openDocker(const int& amount);
+    void openDockerByContanerName(std::vector<string>& contanersNames);
     void setNewNodes(const int& create, const int& use);
     std::vector<string> SelectPathAndAdjustNetwork(int use);
     std::vector<string> findProxyPorts(std::vector<string> containersNames);
