@@ -19,7 +19,7 @@ RSA::RSA()
 
 	while (!this->_generatedP || !this->_generatedQ)
 	{
-
+		// wait until the P & Q generation threads end.
 	}
 
 	uint1024_t q = futurePromiseQ.get();
@@ -31,7 +31,7 @@ RSA::RSA()
 	this->N = calcProduct(q, p);
 	std::cout << "N (product) = " << this->N << std::endl;
 	this->T = calcTotient(q, p);
-	std::cout << "T (toshient) = " << this->T << std::endl;
+	std::cout << "T (totient) = " << this->T << std::endl;
 	selectPublicKey();
 	std::cout << "E (public key) = " << this->E << std::endl;
 	selectPrivateKey();
@@ -39,39 +39,53 @@ RSA::RSA()
 	std::cout << "done making public and private keys!!!\n";
 }
 
-void RSA::Encrypt(vector<unsigned char>& text)
+vector<unsigned char> RSA::Encrypt(vector<unsigned char>& plainTextVec)
 {
-	// char ^ E MODE N
-	cpp_int textValue;
-	for (auto it = text.begin(); it != text.end(); it++)
+	vector<unsigned char> cipherTextVec;
+
+	// Process each byte (or group of bytes if applicable)
+	for (size_t i = 0; i < plainTextVec.size(); ++i)
 	{
-		textValue += *it;
+		unsigned char ch = plainTextVec[i];
+
+		uint2048_t encryptedCh = (uint2048_t)mod_exp<uint2048_t>(ch, this->E, this->N);
+
+		// Split the encrypted value into 256-byte chunks
+		for (short j = 0; j < 256; j++)
+		{
+			unsigned char encryptedChPart = (unsigned char)(encryptedCh & 0xFF);
+			cipherTextVec.push_back(encryptedChPart);
+			encryptedCh >>= 8;
+		}
 	}
-	text.clear();
-	cpp_int cypherValue = mod_exp<uint2048_t>(textValue, this->E, this->N);
-	size_t byteCount = (msb(cypherValue) / 8) + 1;
-	for (size_t i = 0; i < byteCount; i++)
-	{
-		text.emplace_back(static_cast<unsigned char>((cypherValue >> (i * 8)) & 0xFF));
-	}
+
+	return cipherTextVec;
 }
 
-void RSA::Decrypt(vector<unsigned char>& cypher_text)
+vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 {
-	// char ^ D MODE Ns
-	cpp_int cypherValue;
-	for (auto it = cypher_text.begin(); it != cypher_text.end(); it++)
+	vector<unsigned char> plainTextVec;
+
+	for (size_t i = 0; i < cipherTextVec.size(); i += 256)
 	{
-		cypherValue += *it;
+		uint2048_t encryptedCh = 0;
+
+		// Rebuild the encrypted message (uint2048_t) from 256 bytes
+		for (short j = 255; j >= 0; --j)
+		{
+			encryptedCh = (encryptedCh << 8) | cipherTextVec[i + j];
+		}
+
+		uint2048_t decryptedCh = (uint2048_t)mod_exp<uint2048_t>(encryptedCh, this->D, this->N);
+
+		// The decrypted value is expected to be a single byte
+		unsigned char decryptedByte = (unsigned char)(decryptedCh & 0xFF);
+		plainTextVec.push_back(decryptedByte);
 	}
-	cypher_text.clear();
-	cpp_int textValue = mod_exp<uint2048_t>(cypherValue, this->D, this->N);
-	size_t byteCount = (msb(textValue) / 8) + 1;
-	for (size_t i = 0; i < byteCount; i++)
-	{
-		cypher_text.emplace_back(static_cast<unsigned char>((textValue >> (i * 8)) & 0xFF));
-	}
+
+	return plainTextVec;
 }
+
 	
 cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod)
 {
@@ -161,15 +175,24 @@ void RSA::selectPrivateKey()
 
 			E = remainder;
 		}
-	} while (E > 0);
+	} while (E > 0 && T > 0);
 
-	this->D = (uint2048_t)(euclideanMod(x1, this->T));
+	std::cout << "E is 0\n";
 
-	std::cout << this->D << std::endl << std::endl;
+	if (E == 0)
+	{
+		// x0 is equals to totient, x1 is equals to private key
+		this->D = (uint2048_t)(euclideanMod(x1, this->T));
+	}
+	if (T == 0) 
+	{
+		// x0 is equals to private key, x1 is equals to -totient
+		this->D = (uint2048_t)(euclideanMod(x0, this->T));
+	}
 
-	cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
-
-	std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;
+	// std::cout << this->D << std::endl << std::endl;
+	// cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
+	// std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;
 
 	std::cout << "Finished to generate private key\n";
 }
