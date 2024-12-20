@@ -155,14 +155,8 @@ void Server::serveControl() //check if its one of the nodes
 			// the main thread is only accepting clients 
 			// and add then to the list of handlers
 			
-			if (_controlList.size() > clientsAmount)
+			if (!_controlList.empty())
 			{
-				
-				auto it = _controlList.begin();
-				for (int i = 0; i < clientsAmount; i++)
-					++it;
-				
-				clientsAmount += 1;
 				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
 				mutex.lock();
 				for (auto it = _controlList.begin(); it != _controlList.end(); it++)
@@ -309,13 +303,15 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
 					//here handle
-					std::cerr << "TIMEOUT: Node did not send alive message.\n";
+					std::cerr << "TIMEOUT: Node" << nodeIp << "did not send alive message.\n";
+					std::cout << "1";
 					for (int i = 0; i < circuits.size(); i++)
 					{
 						clientuse = this->_controlList[circuits[i]].size();
 						std::cout << "handle circuit - " << circuits[i] << "\n\n";
 						dcr.circuit_id = circuits[i];
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+						std::cout << "\n2";
 						mutex.lock();
 						for (auto it = this->_controlList[circuits[i]].begin(); it != this->_controlList[circuits[i]].end(); ++it)
 						{
@@ -327,8 +323,10 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 							sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
 							Helper::sendVector(sockWithNode, deleteCircuitBuffer);
 						}//delete
+						std::cout << "3";
 						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
 						mutex.unlock();
+						std::cout << "4";
 						ccr.nodesPath = dm.giveCircuitAfterCrush(nodesCrushed, clientuse); //returns a value
 						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
 						for (int j = circuits[i] + 1; j < MAX_INT_OF_BYTE; j++)
@@ -339,14 +337,17 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 								break;
 							}
 						}
+						std::cout << "5";
 						ri = Helper::waitForResponse(ccr.circuit_id, 10);
 						if (ri.buffer.empty())
 							throw std::runtime_error("client didn't send a status");
 						else if (ri.id == CIRCUIT_CONFIRMATION_ERROR)
 							throw std::runtime_error("error has prevented the client to delete circuit");
+						std::cout << "6";
 						mutex.lock();
 						_clients[ccr.circuit_id] = _clients[circuits[i]];
 						_clients.erase(circuits[i]);
+						std::cout << "7";
 						Helper::sendVector(_clients[ccr.circuit_id], SerializerResponses::serializeResponse(ccr));
 						mutex.unlock();
 					}

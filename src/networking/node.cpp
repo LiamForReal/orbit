@@ -94,7 +94,7 @@ void Node::serveControl()
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			ri = Helper::waitForResponse(serverSock, 2);
+			ri = Helper::waitForResponse(serverSock, 12);
 			if (ri.buffer.empty())
 				continue;
 			std::cout << "server sends " << ri.id << " request tipe\n";

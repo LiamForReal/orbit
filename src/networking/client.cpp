@@ -1,6 +1,8 @@
 #include "client.h"
 using std::vector;
 
+std::mutex mtx;
+
 Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
@@ -70,6 +72,37 @@ bool Client::domainValidationCheck(std::string domain)
 	return true;
 }
 
+void Client::listenToServerInfo()
+{
+	try
+	{
+		RequestInfo ri;
+		while (true)
+		{
+			ri = Helper::waitForResponse(this->_clientSocketWithDS, 1);
+			if (ri.buffer.empty())
+				continue;
+			else if (ri.id == DELETE_CIRCUIT_RC)
+			{
+				throw std::runtime_error("the circuit is corrapted!");
+			}
+			std::cout << "server sends " << ri.id << " request tipe\n";
+		}
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
+		if (e.what() == "the circuit is corrapted!")
+		{
+			throw std::runtime_error("adjust new circuit");
+		}
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
+	}
+}
+
 void Client::startConversation()
 {
 	char buffer[100];
@@ -131,7 +164,9 @@ void Client::startConversation()
 			}
 		}
 	}
-	
+
+	HttpGetRequest httpGetRequest;
+
 	while (true)
 	{
 		std::cout << "Enter domain: ";
@@ -139,7 +174,6 @@ void Client::startConversation()
 		if (!domainValidationCheck(domain))
 			throw std::runtime_error("domain is illegal");
 
-		HttpGetRequest httpGetRequest;
 		httpGetRequest.circuit_id = ccr.circuit_id;
 		httpGetRequest.domain = domain;
 

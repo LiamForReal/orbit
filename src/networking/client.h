@@ -6,6 +6,10 @@
 #include <iostream>
 #include <vector>
 #include "WSAInitializer.h"
+#include <atomic>
+#include <condition_variable>
+#include <stdexcept>
+#include <mutex>
 #include "../utils/Requestes.hpp"
 #include "../utils/Responses.hpp"
 #include "../utils/DeserializerResponses.h"
@@ -25,7 +29,9 @@ public:
 	void startConversation();
 	void nodeOpening();
 	bool domainValidationCheck(std::string domain);
+	void listenToServerInfo();
 private:
+	
 	std::string generateHttpGetRequest(const std::string& domain);
 
 	SOCKET _clientSocketWithDS;
