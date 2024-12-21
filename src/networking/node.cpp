@@ -71,11 +71,6 @@ SOCKET Node::createSocketWithServer()
 
 void Node::serveControl()
 {
-	/*
-	* every circuit need to run this thread 
-	* for example if the node is part of 2 circuits so he'll run it twice
-	*/
-	// ADD HERE TRY CATCH CLAUSE
 	try
 	{
 		char* data = new char[1];
@@ -88,13 +83,15 @@ void Node::serveControl()
 			mtx.lock();
 			bytesSent = send(serverSock, data, sizeof(data), 0);
 			mtx.unlock();
-			if (bytesSent == -1 || bytesSent == 0)
+			if (bytesSent <= 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			ri = Helper::waitForResponse(serverSock, 12);
+			//return; node crush
+			// add node crush exe to check  
+			ri = Helper::waitForResponse(serverSock, 1);
 			if (ri.buffer.empty())
 				continue;
 			std::cout << "server sends " << ri.id << " request tipe\n";

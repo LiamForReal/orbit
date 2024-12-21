@@ -110,13 +110,13 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::string msg = "";
 		RequestResult rr = RequestResult();
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients));
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
 		for (auto it = _clients.begin(); it != _clients.end(); ++it)
 		{
 			if (it->second == INVALID_SOCKET)
 			{
 				std::cout << "new client allocated\n\n";
-				it->second = client_socket;
+				it->second = client_socket; //change the invalid
 				break;
 			}
 		}
@@ -154,7 +154,7 @@ void Server::serveControl() //check if its one of the nodes
 		{
 			// the main thread is only accepting clients 
 			// and add then to the list of handlers
-			
+			//client -> nodes 
 			if (!_controlList.empty())
 			{
 				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
@@ -167,10 +167,8 @@ void Server::serveControl() //check if its one of the nodes
 					}
 				}
 				mutex.unlock();
-				this->acceptControlClient(clientsAlowde);
-				mutex.lock();
+				this->acceptControlClient(clientsAlowde); //give all the exisiting nodes
 				clientsAlowde.clear();
-				mutex.unlock();
 			}
 			
 		}
@@ -232,11 +230,10 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients)
 			{
 				if (it2->first == nodeIPStr)
 				{
-					circuits.emplace_back(it->first);
+					circuits.emplace_back(it->first); //take all the circuits this node is part of 
 					break;
 				}
 			}
-				
 		}
 		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuits, nodeIPStr);
 		tr.detach();
@@ -287,7 +284,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 		DeleteCircuitRequest dcr;
 		char buffer[100];
 		RequestInfo ri;
-		unsigned int clientuse = 0;
+		unsigned int amountToUse = 0;
 		std::vector<string> nodesCrushed;
 		CircuitConfirmationResponse ccr;
 		DWORD timeout = SECONDS_TO_WAIT * 1000; 
@@ -303,11 +300,11 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
 					//here handle
-					std::cerr << "TIMEOUT: Node" << nodeIp << "did not send alive message.\n";
+					std::cerr << "TIMEOUT: Node" << nodeIp << " did not send alive message.\n";
 					std::cout << "1";
 					for (int i = 0; i < circuits.size(); i++)
 					{
-						clientuse = this->_controlList[circuits[i]].size();
+						amountToUse = this->_controlList[circuits[i]].size(); //client amount to use
 						std::cout << "handle circuit - " << circuits[i] << "\n\n";
 						dcr.circuit_id = circuits[i];
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
@@ -327,33 +324,23 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
 						mutex.unlock();
 						std::cout << "4";
-						ccr.nodesPath = dm.giveCircuitAfterCrush(nodesCrushed, clientuse); //returns a value
+						ccr.nodesPath = dm.giveCircuitAfterCrush(nodesCrushed, amountToUse); //take all the nodes how crushed give them new ips and rerun them then generate circuit again 
 						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
-						for (int j = circuits[i] + 1; j < MAX_INT_OF_BYTE; j++)
-						{
-							if (_controlList.find(j) == _controlList.end())
-							{
-								ccr.circuit_id = j;
-								break;
-							}
-						}
+						ccr.circuit_id = circuits[i];
+						_controlList[circuits[i]] = ccr.nodesPath;
+
 						std::cout << "5";
-						ri = Helper::waitForResponse(ccr.circuit_id, 10);
+						ri = Helper::waitForResponse(_clients[circuits[i]], 10);
 						if (ri.buffer.empty())
 							throw std::runtime_error("client didn't send a status");
 						else if (ri.id == CIRCUIT_CONFIRMATION_ERROR)
 							throw std::runtime_error("error has prevented the client to delete circuit");
 						std::cout << "6";
 						mutex.lock();
-						_clients[ccr.circuit_id] = _clients[circuits[i]];
-						_clients.erase(circuits[i]);
-						std::cout << "7";
 						Helper::sendVector(_clients[ccr.circuit_id], SerializerResponses::serializeResponse(ccr));
 						mutex.unlock();
+						nodesCrushed.clear();
 					}
-					
-					//Helper::waitForResponse
-					//now get from client...
 				}
 				else
 				{

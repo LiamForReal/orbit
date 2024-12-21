@@ -84,6 +84,7 @@ void Client::listenToServerInfo()
 				continue;
 			else if (ri.id == DELETE_CIRCUIT_RC)
 			{
+				//TOCHANGE BY MAIN 
 				throw std::runtime_error("the circuit is corrapted!");
 			}
 			std::cout << "server sends " << ri.id << " request tipe\n";
@@ -205,6 +206,14 @@ int main()
 		Client client = Client();
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
 		client.startConversation();
+
+		//thread listen to ds -> this thread start only after startConversation is got the input from ds 
+		// boolian property after recving (wait for function...)
+		// 
+		//when the thread is getting DELETE CIRCUIT REQUEST it suppose to stop immidiatly the operating of startConvarsation and to reRunIt
+		//to put start convarsation on thread. -> add another boolian -> look at the picture 
+		// 
+		//it should happend always eaven after it happends one time it should continue to check
 	}
 	catch (const std::runtime_error e)
 	{

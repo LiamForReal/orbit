@@ -37,7 +37,7 @@ services:
     - 9068:9051
   node2:
     command:
-    - entrypoint_crush.bat
+    - entrypoint_crush.bat 
     container_name: node2
     environment:
       NODE_IP: 192.168.2.217
