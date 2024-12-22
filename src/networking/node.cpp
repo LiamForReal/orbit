@@ -75,9 +75,13 @@ void Node::serveControl()
 	{
 		char* data = new char[1];
 		RequestInfo ri;
+		RequestResult rr;
 		data[0] = (char)(ALIVE_MSG_RC);
 		SOCKET serverSock = createSocketWithServer();
 		int bytesSent; 
+
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), serverSock);
+
 		while (true)
 		{
 			mtx.lock();
@@ -91,10 +95,22 @@ void Node::serveControl()
 			}
 			//return; node crush
 			// add node crush exe to check  
+			mtx.lock();
 			ri = Helper::waitForResponse(serverSock, 1);
+			mtx.unlock();
 			if (ri.buffer.empty())
 				continue;
-			std::cout << "server sends " << ri.id << " request tipe\n";
+			
+			rr = nodeRequestHandler.directMsg(ri);
+
+			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
+			{
+				std::cout << "Delete successfully done!\n";
+			}
+			else
+			{
+				std::cerr << "Failed to delete circuit!\n";
+			}
 		}
 	}
 	catch (std::runtime_error& e)

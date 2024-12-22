@@ -272,7 +272,7 @@ SOCKET Server::createSocket(const std::string& ip, unsigned int port)
 	}
 
 	// Connect to the server
-	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+	if (::connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
 		std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
 		closesocket(sock);
 		return INVALID_SOCKET;
@@ -299,6 +299,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 			mutex.lock();
 			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0); 
 			mutex.unlock();
+
 			if (bytesRead <= 0)
 			{
 				if (WSAGetLastError() == WSAETIMEDOUT)
@@ -311,7 +312,11 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 
 					for (int i = 0; i < circuits.size(); i++)
 					{
-						amountToUse = this->_controlList[circuits[i]].size(); //client amount to use
+						mutex.lock();
+						std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> controlListCopy(this->_controlList);
+						mutex.unlock();
+
+						amountToUse = controlListCopy[circuits[i]].size(); //client amount to use
 						mutex.lock();
 						std::cout << "handle circuit - " << circuits[i] << "\n\n";
 						mutex.unlock();
@@ -319,17 +324,28 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						dcr.circuit_id = circuits[i];
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
 						std::cout << "\n2";
-						mutex.lock();
-						for (auto it = this->_controlList[circuits[i]].begin(); it != this->_controlList[circuits[i]].end(); ++it)
+
+						for (auto it = controlListCopy[circuits[i]].begin(); it != controlListCopy[circuits[i]].end(); ++it)
 						{
 							if (it->first == nodeIp)
 							{
 								nodesCrushed.emplace_back(nodeIp);
 								continue;
 							}
+
+							// maybe server cannot communicate with the nodes
+							// because we giving him parameters with which he cannot talk?
+							mutex.lock();
 							sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
+							mutex.unlock();
+
+							mutex.lock();
+							std::cout << "created socket and sends delete circuit\n";
 							Helper::sendVector(sockWithNode, deleteCircuitBuffer);
+							mutex.unlock();
 						}//delete
+
+						mutex.lock();
 						std::cout << "3";
 						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
 						mutex.unlock();
@@ -337,7 +353,9 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						ccr.nodesPath = dm.giveCircuitAfterCrush(nodesCrushed, amountToUse); //take all the nodes how crushed give them new ips and rerun them then generate circuit again 
 						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
 						ccr.circuit_id = circuits[i];
+						mutex.lock();
 						_controlList[circuits[i]] = ccr.nodesPath;
+						mutex.unlock();
 
 						std::cout << "5";
 						mutex.lock();
@@ -352,7 +370,11 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(_clients[ccr.circuit_id], SerializerResponses::serializeResponse(ccr));
 						mutex.unlock();
 						nodesCrushed.clear();
+						controlListCopy.clear();
 					}
+
+					timeout = SECONDS_TO_WAIT * 1000;
+					setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 				}
 				else
 				{
@@ -369,7 +391,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 			} 
 			// Reset the timer for next alive check
 			timeout = SECONDS_TO_WAIT * 1000;
-			//setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		}
 	}
 	catch (const std::runtime_error& e)
@@ -389,6 +411,8 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 
 int main()
 {
+	srand(time(NULL));
+
     try
     {
         WSAInitializer wsa = WSAInitializer();

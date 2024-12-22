@@ -1,11 +1,13 @@
 #include "NodeOpeningHandler.h"
 #include <algorithm>
 
-unsigned int NodeOpeningHandler::circuit_id = 1 + (rand() % 200); //256 so take a space from there
+unsigned int NodeOpeningHandler::circuit_id = 1; //256 so take a space from there
 
 NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::map<unsigned int, SOCKET>& clients)
     : dm(dockerManager), _controlList(controlList), _clients(clients)
 {
+    srand(time(NULL));
+    NodeOpeningHandler::circuit_id = 1 + (rand() % 200);
     this->rr = RequestResult();
 }
 
