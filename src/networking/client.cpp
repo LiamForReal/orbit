@@ -1,6 +1,8 @@
 #include "client.h"
 using std::vector;
 
+std::mutex mtx;
+
 Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
@@ -10,6 +12,9 @@ Client::Client()
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 
+	this->_passedListenWait = false;
+	this->_passedPathGetWait = false;
+	this->_restartConversation = false;
 }
 
 Client::~Client()
@@ -70,13 +75,84 @@ bool Client::domainValidationCheck(std::string domain)
 	return true;
 }
 
-void Client::startConversation()
+void Client::listenToServerInfo()
+{
+	try
+	{
+		RequestInfo ri;
+		while (true)
+		{
+			this->_passedListenWait = false;
+			ri = Helper::waitForResponse(this->_clientSocketWithDS, 1);
+			this->_passedListenWait = true;
+			if (ri.buffer.empty())
+				continue;
+			else if (ri.id == DELETE_CIRCUIT_RC)
+			{
+				//TOCHANGE BY MAIN 
+				this->_restartConversation = true;
+				throw std::runtime_error("the circuit is corrapted!");
+			}
+			std::cout << "server sends " << ri.id << " request tipe\n";
+		}
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
+		if (e.what() == "the circuit is corrapted!")
+		{
+			throw std::runtime_error("adjust new circuit");
+		}
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
+	}
+}
+
+bool Client::getPassedListenWait() const
+{
+	return this->_passedListenWait;
+}
+
+bool Client::getPassedPathGetWait() const
+{
+	return this->_passedPathGetWait;
+}
+
+bool Client::getRestartConversation() const
+{
+	return this->_restartConversation;
+}
+
+void Client::setPassedPathGetWait(const bool& passedPathGetWait)
+{
+	this->_passedPathGetWait = passedPathGetWait;
+}
+
+void Client::setRestartConversation(const bool& restartConversation)
+{
+	this->_restartConversation = restartConversation;
+}
+
+void Client::startConversation(const bool& openNodes)
 {
 	char buffer[100];
 	std::string domain;
 	RequestInfo ri;
-	nodeOpening();
+
+	if (openNodes)
+	{
+		nodeOpening();
+	}
+
 	ri = Helper::waitForResponse(this->_clientSocketWithDS);
+
+	if (openNodes)
+	{
+		this->_passedPathGetWait = true;
+	}
+
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
 
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
@@ -131,7 +207,9 @@ void Client::startConversation()
 			}
 		}
 	}
-	
+
+	HttpGetRequest httpGetRequest;
+
 	while (true)
 	{
 		std::cout << "Enter domain: ";
@@ -139,7 +217,6 @@ void Client::startConversation()
 		if (!domainValidationCheck(domain))
 			throw std::runtime_error("domain is illegal");
 
-		HttpGetRequest httpGetRequest;
 		httpGetRequest.circuit_id = ccr.circuit_id;
 		httpGetRequest.domain = domain;
 
@@ -170,11 +247,43 @@ int main()
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client();
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
-		client.startConversation();
+		//client.startConversation();
+
+		std::thread startConversationThread(&Client::startConversation, std::ref(client), true);
+		startConversationThread.detach();
+
+		while (true)
+		{
+			if (client.getPassedPathGetWait())
+			{
+				std::thread listenToServerInfoThread(&Client::listenToServerInfo, std::ref(client));
+				listenToServerInfoThread.detach();
+				client.setPassedPathGetWait(false);
+			}
+			if (client.getRestartConversation())
+			{
+				startConversationThread.~thread();
+				client.setRestartConversation(false);
+				startConversationThread = std::thread(&Client::startConversation, std::ref(client), false);
+				startConversationThread.detach();
+			}
+		}
+
+		//thread listen to ds -> this thread start only after startConversation is got the input from ds 
+		// boolian property after recving (wait for function...)
+		// 
+		//when the thread is getting DELETE CIRCUIT REQUEST it suppose to stop immidiatly the operating of startConvarsation and to reRunIt
+		//to put start convarsation on thread. -> add another boolian -> look at the picture 
+		// 
+		//it should happend always eaven after it happends one time it should continue to check
 	}
 	catch (const std::runtime_error e)
 	{
 		std::cerr << e.what() << '\n';
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
 	}
 	system("pause");
 	return 0;

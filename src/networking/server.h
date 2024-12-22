@@ -17,6 +17,7 @@
 #include "../utils/Helper.h"
 #include <mutex>
 
+#define MAX_INT_OF_BYTE 256
 #define DEC 1
 
 class Server
@@ -29,15 +30,16 @@ class Server
         void serveControl();
 
     private: 
+        SOCKET createSocket(const std::string& ip, unsigned int port);
         void bindAndListen(); 
         void bindAndListenControl();
         void acceptClient(); 
-        void acceptControlClient(const std::list<string>& allowedClients);
+        void acceptControlClient(const std::vector<string>& allowedClients);
         void clientHandler(const SOCKET client_socket);
-        void clientControlHandler(const SOCKET node_sock);
+        void clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, string nodeIp);
         
-        std::map<unsigned int, std::list<std::pair<std::string, std::string>>> _controlList; // nodes data
-        
+        std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> _controlList; // nodes data
+        std::map<unsigned int, SOCKET> _clients;
         SOCKET _socket;
         SOCKET _controlSocket;
 };

@@ -97,28 +97,24 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 
 	try
 	{
-        std::cout << "1";
 		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
 		
         rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
 		if (this->cd[hgRequest.circuit_id].second != INVALID_SOCKET && cd[hgRequest.circuit_id].second != NULL)
 		{
-            std::cout << "2";
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
 			Helper::sendVector(this->cd[hgRequest.circuit_id].second, buffer);
 		}
 		else
 		{
-            std::cout << "3";
             //if (this->cd.find(hgRequest.circuit_id) == cd.end())
             //{
                 //std::cout << "4";
             cd[hgRequest.circuit_id].first = _socket;
             //}
             //else throw std::runtime_error("this circuit first already taken");
-            std::cout << "5";
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);

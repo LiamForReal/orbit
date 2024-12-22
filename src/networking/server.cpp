@@ -20,7 +20,7 @@ Server::Server()
 	// for the resolution of the function socket
 	//this->dm = DockerManager();
 
-	_controlList = std::map<unsigned int, std::list<std::pair<std::string, std::string>>>();
+	_controlList = std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>();
 
 	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
 	if (_socket == INVALID_SOCKET)
@@ -110,28 +110,32 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::string msg = "";
 		RequestResult rr = RequestResult();
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList));//you can delete and call to the handler from here
-		mutex.unlock();
-		char recvMsg[100];
-		char buffer[128];
-		std::string containerID;
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
+		for (auto it = _clients.begin(); it != _clients.end(); ++it)
+		{
+			if (it->second == INVALID_SOCKET)
+			{
+				std::cout << "new client allocated\n\n";
+				it->second = client_socket; //change the invalid
+				break;
+			}
+		}
+		mutex.unlock(); 
 
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
 
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
-		//can help -dm.GetControlInfo(amountToOpen); 
-		// //here you get list of control settings to reach from server to node
-		//in addition you want to get map<unsigned int, list<pair<string, string>>>
-		// 
-		// 	WE DONT DO THiS =>	//dont forget you need to call from here to serveControl only one time!!!
-		// 
-		//DONT FORGET HERE YOU ARE ONLY UPDATING THE LIST OF CIRCUIT THE CONTROL SERVER RUNS IN THE START
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
+		if (static_cast<unsigned int>(rr.buffer[0]) == CIRCUIT_CONFIRMATION_ERROR)
+		{
+			throw std::runtime_error("failed to get nodes details");
+		}
 	}
 	catch (const std::runtime_error& e)
 	{
+		std::cout << "client handler crushes!!!";
 		std::cerr << e.what() << std::endl;
 	}
 }
@@ -144,16 +148,16 @@ void Server::serveControl() //check if its one of the nodes
 	{
 		bindAndListenControl();
 		std::string input_string;
-		std::list<string> clientsAlowde;
+		std::vector<string> clientsAlowde;
+		int clientsAmount = 0; 
 		while (true)
 		{
 			// the main thread is only accepting clients 
 			// and add then to the list of handlers
-			
-			
+			//client -> nodes 
 			if (!_controlList.empty())
 			{
-				std::cout << "accepting node for control...\n";
+				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
 				mutex.lock();
 				for (auto it = _controlList.begin(); it != _controlList.end(); it++)
 				{
@@ -163,7 +167,8 @@ void Server::serveControl() //check if its one of the nodes
 					}
 				}
 				mutex.unlock();
-				this->acceptControlClient(clientsAlowde);
+				this->acceptControlClient(clientsAlowde); //give all the exisiting nodes
+				clientsAlowde.clear();
 			}
 			
 		}
@@ -189,11 +194,11 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::list<string>& allowedClients)
+void Server::acceptControlClient(const std::vector<string>& allowedClients)
 {
 	sockaddr_in nodeAddr;
 	int nodeAddrLen = sizeof(nodeAddr);
-
+	std::vector<unsigned int> circuits;
 	// Accept the client connection
 	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);
 	if (nodeSocket == INVALID_SOCKET)
@@ -205,12 +210,12 @@ void Server::acceptControlClient(const std::list<string>& allowedClients)
 	char nodeIP[INET_ADDRSTRLEN + INC] = { 0 };
 	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
 	nodeIP[INET_ADDRSTRLEN] = NULL;
-	std::string clientIPStr(nodeIP);
+	std::string nodeIPStr(nodeIP);
 
 	// Check if the client is in the allowed list
 	bool isAllowed = false;
 	for (const auto& allowedClient : allowedClients) {
-		if (allowedClient == clientIPStr) {
+		if (allowedClient == nodeIPStr) {
 			isAllowed = true;
 			break;
 		}
@@ -218,43 +223,136 @@ void Server::acceptControlClient(const std::list<string>& allowedClients)
 
 	if (isAllowed)
 	{
-		std::cout << "Node " << clientIPStr << " accepted." << std::endl;
-		std::thread tr(&Server::clientControlHandler, this, nodeSocket);
+		mutex.lock();
+		std::cout << "Node " << nodeIPStr << " accepted." << std::endl;
+		mutex.unlock();
+		for (auto it = _controlList.begin(); it != _controlList.end(); ++it)
+		{
+			for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+			{
+				if (it2->first == nodeIPStr)
+				{
+					circuits.emplace_back(it->first); //take all the circuits this node is part of 
+					break;
+				}
+			}
+		}
+		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuits, nodeIPStr);
 		tr.detach();
 	}
 	else
 	{
-		std::cout << "Node " << clientIPStr << " is not allowed. Closing connection." << std::endl;
+		mutex.lock();
+		std::cout << "Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
+		mutex.unlock();
 		closesocket(nodeSocket);
 	}
 
 }
 
-void Server::clientControlHandler(const SOCKET node_sock)
+SOCKET Server::createSocket(const std::string& ip, unsigned int port)
+{
+	SOCKET sock = INVALID_SOCKET;
+
+	// Create the socket
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock == INVALID_SOCKET) {
+		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
+		return INVALID_SOCKET;
+	}
+
+	// Set up the sockaddr_in structure
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port); // Convert to network byte order
+	if (inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr) <= 0) {
+		std::cerr << "Invalid IP address format" << std::endl;
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	// Connect to the server
+	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+		std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	return sock;
+}
+
+void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, string nodeIp)
 {
 	try
 	{
-		RequestInfo ri;
+		DeleteCircuitRequest dcr;
 		char buffer[100];
-		DWORD timeout = SECONDS_TO_WAIT * 1000;
-
-		/*
-		* GUVRIEL IT IS FOR U SEARCH WHAT THIS FUNCTION DO BC 
-		* I DONT HAVE STRANGHT TO EXPLAIN 
-		* AND IN LINE 255 YOU SEE TIMEOUT ERROR BY THAT YOU DONT EAVEN NEED A TIMER
-		* BC setsockopt BUTIFUL FUNCTION!!!
-		*/
+		RequestInfo ri;
+		unsigned int amountToUse = 0;
+		std::vector<string> nodesCrushed;
+		CircuitConfirmationResponse ccr;
+		DWORD timeout = SECONDS_TO_WAIT * 1000; 
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-
+		SOCKET sockWithNode;
 		while (true)
 		{
-			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-			if (bytesRead <= 0 /* || buffer[0] == '\0'*/)
+			mutex.lock();
+			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0); 
+			mutex.unlock();
+			if (bytesRead <= 0)
 			{
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
-					std::cerr << "TIMEOUT: Node did not send alive message.\n";
-					throw std::runtime_error("Timed out waiting for alive message.");
+					//here handle
+					mutex.lock();
+					std::cerr << "TIMEOUT: Node" << nodeIp << " did not send alive message.\n";
+					std::cout << "1";
+					mutex.unlock();
+
+					for (int i = 0; i < circuits.size(); i++)
+					{
+						amountToUse = this->_controlList[circuits[i]].size(); //client amount to use
+						mutex.lock();
+						std::cout << "handle circuit - " << circuits[i] << "\n\n";
+						mutex.unlock();
+
+						dcr.circuit_id = circuits[i];
+						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+						std::cout << "\n2";
+						mutex.lock();
+						for (auto it = this->_controlList[circuits[i]].begin(); it != this->_controlList[circuits[i]].end(); ++it)
+						{
+							if (it->first == nodeIp)
+							{
+								nodesCrushed.emplace_back(nodeIp);
+								continue;
+							}
+							sockWithNode = createSocket(it->first, static_cast<unsigned int>(std::stoi(it->second)));
+							Helper::sendVector(sockWithNode, deleteCircuitBuffer);
+						}//delete
+						std::cout << "3";
+						Helper::sendVector(_clients[circuits[i]], deleteCircuitBuffer);//now send to client 
+						mutex.unlock();
+						std::cout << "4";
+						ccr.nodesPath = dm.giveCircuitAfterCrush(nodesCrushed, amountToUse); //take all the nodes how crushed give them new ips and rerun them then generate circuit again 
+						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
+						ccr.circuit_id = circuits[i];
+						_controlList[circuits[i]] = ccr.nodesPath;
+
+						std::cout << "5";
+						mutex.lock();
+						ri = Helper::waitForResponse(_clients[circuits[i]]);
+						mutex.unlock();
+						if (ri.buffer.empty())
+							throw std::runtime_error("client didn't send a status");
+						else if (ri.id == CIRCUIT_CONFIRMATION_ERROR)
+							throw std::runtime_error("error has prevented the client to delete circuit");
+						std::cout << "6";
+						mutex.lock();
+						Helper::sendVector(_clients[ccr.circuit_id], SerializerResponses::serializeResponse(ccr));
+						mutex.unlock();
+						nodesCrushed.clear();
+					}
 				}
 				else
 				{
@@ -268,7 +366,7 @@ void Server::clientControlHandler(const SOCKET node_sock)
 			{
 				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
-			}
+			} 
 			// Reset the timer for next alive check
 			timeout = SECONDS_TO_WAIT * 1000;
 			//setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
@@ -281,6 +379,10 @@ void Server::clientControlHandler(const SOCKET node_sock)
 		// Close the socket and remove from control list if necessary
 		closesocket(node_sock);
 		// Optionally update control list to mark the node as inactive or remove it
+	}
+	catch (...)
+	{
+		std::cout << "problem cought!\n";
 	}
 }
 

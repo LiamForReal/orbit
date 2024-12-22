@@ -8,7 +8,7 @@ static const unsigned int IFACE = 0;
 
 using std::string;
 using std::vector;
-
+std::mutex mtx;
 
 Node::Node()
 {
@@ -47,18 +47,6 @@ SOCKET Node::createSocketWithServer()
 	hints.ai_family = AF_INET;      // IPv4
 	hints.ai_socktype = SOCK_STREAM; // TCP
 
-	
-	/*
-	* addrinfo* result = nullptr;
-	* if (getaddrinfo("host.docker.internal", nullptr, &hints, &result) != 0) 
-	{
-
-		closesocket(sock);
-		throw std::runtime_error("Failed to resolve host.docker.internal: " + std::to_string(WSAGetLastError()));
-	}
-	*/
-	
-
 	// Set up the sockaddr_in structure
 	sockaddr_in serverAddr = {};
 	serverAddr.sin_family = AF_INET;
@@ -83,28 +71,40 @@ SOCKET Node::createSocketWithServer()
 
 void Node::serveControl()
 {
-	// ADD HERE TRY CATCH CLAUSE
 	try
 	{
 		char* data = new char[1];
+		RequestInfo ri;
 		data[0] = (char)(ALIVE_MSG_RC);
 		SOCKET serverSock = createSocketWithServer();
+		int bytesSent; 
 		while (true)
 		{
-			int bytesSent = send(serverSock, data, sizeof(data), 0);
-			if (bytesSent == -1 || bytesSent == 0)
+			mtx.lock();
+			bytesSent = send(serverSock, data, sizeof(data), 0);
+			mtx.unlock();
+			if (bytesSent <= 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			//return; node crush
+			// add node crush exe to check  
+			ri = Helper::waitForResponse(serverSock, 1);
+			if (ri.buffer.empty())
+				continue;
+			std::cout << "server sends " << ri.id << " request tipe\n";
 		}
 	}
 	catch (std::runtime_error& e)
 	{
 		std::cout << "control manganon problem\n";
 		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
 	}
 }
 
@@ -235,6 +235,10 @@ int main()
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << '\n';
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
 	}
 
 	system("pause");

@@ -6,6 +6,10 @@
 #include <iostream>
 #include <vector>
 #include "WSAInitializer.h"
+#include <atomic>
+#include <condition_variable>
+#include <stdexcept>
+#include <mutex>
 #include "../utils/Requestes.hpp"
 #include "../utils/Responses.hpp"
 #include "../utils/DeserializerResponses.h"
@@ -22,11 +26,25 @@ public:
 	Client();
 	~Client();
 	void connectToServer(std::string serverIP, int port);
-	void startConversation();
+	void startConversation(const bool& openNodes = true);
 	void nodeOpening();
 	bool domainValidationCheck(std::string domain);
+	void listenToServerInfo();
+
+	bool getPassedListenWait() const;
+	bool getPassedPathGetWait() const;
+	bool getRestartConversation() const;
+
+	void setPassedPathGetWait(const bool& passedPathGetWait);
+	void setRestartConversation(const bool& restartConversation);
+
 private:
+	
 	std::string generateHttpGetRequest(const std::string& domain);
+
+	bool _passedListenWait;
+	bool _passedPathGetWait;
+	bool _restartConversation;
 
 	SOCKET _clientSocketWithDS;
 	SOCKET _clientSocketWithFirstNode;

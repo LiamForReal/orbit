@@ -1,9 +1,10 @@
 #include "NodeOpeningHandler.h"
 #include <algorithm>
-unsigned int NodeOpeningHandler::circuit_id = 1;
 
-NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::list<std::pair<std::string, std::string>>>& controlList) 
-    : dm(dockerManager), _controlList(controlList)
+unsigned int NodeOpeningHandler::circuit_id = 1 + (rand() % 200); //256 so take a space from there
+
+NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::map<unsigned int, SOCKET>& clients)
+    : dm(dockerManager), _controlList(controlList), _clients(clients)
 {
     this->rr = RequestResult();
 }
@@ -15,8 +16,8 @@ bool NodeOpeningHandler::isRequestRelevant(const RequestInfo& requestInfo)
 
 RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
 {
-    std::list<std::pair<std::string, std::string>> nodesInfo;
-    std::list<std::pair<std::string, std::string>> controlNodesInfo;
+    std::vector<std::pair<std::string, std::string>> nodesInfo;
+    std::vector<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
     this->rr.buffer.clear();
 
@@ -28,35 +29,26 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
 
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
+        if (nodesInfo.empty())
+            throw std::runtime_error("the failed to take nodes details");
         controlNodesInfo = dm.GetControlInfo();
         ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
-        for (auto it = nodesInfo.begin(); it != nodesInfo.end(); it++)
-        {
-            ccr.nodesPath.emplace_back(*it);
-        }
-        /*
-        * HERE'S WHAT THAT 
-        NEED TO BUILD THE MAP FROM circuit id TO list of nodes in the circuit
-        * YOU SOULD PASS BY REFRENCE THE MAP AND AJUST IT IN THE FNCTION
-        */
+        ccr.nodesPath = nodesInfo;
 
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
         ccr.circuit_id = this->circuit_id;
+        _clients[circuit_id] = INVALID_SOCKET;
         this->circuit_id++;
     }
     catch (std::runtime_error e)
     {
-        ccr.status = Errors::CIRCUIT_CONFIRMATION_ERROR;
+        ccr.status = CIRCUIT_CONFIRMATION_ERROR;
     }
 
     rr.buffer = SerializerResponses::serializeResponse(ccr);
 
     return rr;
 }
-
-unsigned int NodeOpeningHandler::getCircuitID()
-{
-    return circuit_id;
-}
+//get last id
