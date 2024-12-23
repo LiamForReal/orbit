@@ -41,6 +41,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
         ccr.circuit_id = this->circuit_id;
+        std::cout << "\n\nthe circuit chosen is " << circuit_id << "\n\n";
         _clients[circuit_id] = INVALID_SOCKET;
         this->circuit_id++;
     }
