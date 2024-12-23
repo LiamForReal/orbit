@@ -335,7 +335,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
 
 						// Regenerate the circuit for the remaining nodes
-						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush({ nodeIp }, _controlList[circuitId].size());
+						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size());
 						_controlList[circuitId] = newCircuit;
 
 						CircuitConfirmationResponse ccr;

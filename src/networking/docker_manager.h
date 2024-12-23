@@ -9,7 +9,7 @@
 
 #define CONTAINER_NAME "node"
 #define INTERNAL_PORT "9050"
-
+#define NODE_CAPACITY 10 
 using json = nlohmann::json;
 using std::string;
 using std::pair;
@@ -21,7 +21,7 @@ public:
 
     std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create);
     std::vector<pair<string, string>> GetControlInfo();
-    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(std::vector<string> crushedNodes, const int& use);
+    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(string crushedNode, const int& use);
 
 private:
     void runCmdCommand(const string& command);

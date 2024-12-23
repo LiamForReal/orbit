@@ -258,22 +258,34 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
     return nodesInfo;
 }
 
-std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(std::vector<string> crushedNodes, const int& use) // list of ips
+std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string crushedNode, const int& use) // list of ips
 {
     try
     {
         std::vector<std::pair<std::string, std::string>> nodesInfo;
-        setNewNodes(crushedNodes.size(), crushedNodes.size());
+        std::vector<string> nodes;
+        string nodeName;
+        int num = 1;
+        for (int i = 1; i <= NODE_CAPACITY; i++)
+            nodes.emplace_back(CONTAINER_NAME + std::to_string(i));
+        std::vector<std::string> ips = findIPs(nodes);
+        //std::vector<std::string> ports = findProxyPorts(nodeSelected);
+        for (auto it = nodes.begin(); it != nodes.end(); ++it)
+        {
+            if (crushedNode == *it)
+            {
+                nodeName = CONTAINER_NAME + std::to_string(num);
+            }
+            num++;
+        } //TO FIX
         std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use);
-        openDocker(crushedNodes.size());
-        std::vector<std::string> ips = findIPs(nodeSelected);
-        std::vector<std::string> ports = findProxyPorts(nodeSelected);
+
         auto itIp = ips.begin();
-        auto itPort = ports.begin();
+        //auto itPort = ports.begin();
         for (int i = 0; i < ips.size(); i++)
         {
-            nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
-            itPort++;
+            //nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+            //itPort++;
             itIp++;
         }
         return nodesInfo;
