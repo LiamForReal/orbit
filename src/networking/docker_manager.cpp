@@ -258,6 +258,11 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
     return nodesInfo;
 }
 
+/*
+* find the node name -> reconfigure its ip by py script -> 
+* rerun him -> add him to the nodes properly path/guard ->
+* use function to find circuit -> get circuit ips and ports -> return
+*/
 std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string crushedNode, const int& use) // list of ips
 {
     try
