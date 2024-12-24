@@ -8,7 +8,7 @@ static const unsigned int IFACE = 0;
 
 using std::string;
 using std::vector;
-std::mutex mtx;
+//std::mutex mtx;
 
 Node::Node()
 {
@@ -69,6 +69,7 @@ SOCKET Node::createSocketWithServer()
 	return sock;
 }
 
+
 void Node::serveControl()
 {
 	try
@@ -79,14 +80,12 @@ void Node::serveControl()
 		data[0] = (char)(ALIVE_MSG_RC);
 		SOCKET serverSock = createSocketWithServer();
 		int bytesSent; 
-
+		
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), serverSock);
 
 		while (true)
 		{
-			mtx.lock();
 			bytesSent = send(serverSock, data, sizeof(data), 0);
-			mtx.unlock();
 			if (bytesSent <= 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
@@ -95,12 +94,12 @@ void Node::serveControl()
 			}
 			//return; node crush
 			// add node crush exe to check  
-			mtx.lock();
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
 			ri = Helper::waitForResponse(serverSock, 1);
-			mtx.unlock();
 			if (ri.buffer.empty())
 				continue;
-			
+
+			std::cout << "delete sended!\n\n";
 			rr = nodeRequestHandler.directMsg(ri);
 
 			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])

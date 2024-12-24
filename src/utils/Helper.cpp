@@ -186,14 +186,9 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int& statusCode)
     if (ri.id == ALIVE_MSG_RC) //request how has no data
         return ri;
 
-	//ri.circuit_id = Helper::getCircuitIdFromSocket(clientSocket);
-
-    //std::cout << "DEBUG: Circuit id: " << ri.circuit_id << std::endl;
-    //ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.circuit_id));
-
     msgLength = Helper::getLengthPartFromSocket(socket);
     std::cout << "DEBUG: Length: " << msgLength << std::endl;
-    // Insert message length in little-endian format
+
     for (j = 0; j < BYTES_TO_COPY; ++j) {
         ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
     }

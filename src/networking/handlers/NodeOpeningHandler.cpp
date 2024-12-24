@@ -30,7 +30,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
 
         // here open and get ips from docker.
-        nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open);
+        nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);
         if (nodesInfo.empty())
             throw std::runtime_error("the failed to take nodes details");
         controlNodesInfo = dm.GetControlInfo();

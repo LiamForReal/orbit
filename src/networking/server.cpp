@@ -119,12 +119,12 @@ void Server::clientHandler(const SOCKET client_socket)
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
 		mutex.lock();
-		for (auto it = _clients.begin(); it != _clients.end(); ++it)
+		for (auto it : _clients)
 		{
-			if (it->second == INVALID_SOCKET)
+			if (it.second == INVALID_SOCKET)
 			{
 				std::cout << "new client allocated\n\n";
-				it->second = client_socket; //change the invalid
+				it.second = client_socket; //change the invalid
 				break;
 			}
 		}
@@ -162,11 +162,11 @@ void Server::serveControl() //check if its one of the nodes
 			{
 				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
 				mutex.lock();
-				for (auto it = _controlList.begin(); it != _controlList.end(); it++)
+				for (auto it : _controlList)
 				{
-					for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+					for (auto it2 : it.second)
 					{
-						clientsAlowde.emplace_back(it2->first);
+						clientsAlowde.emplace_back(it2.first);
 					}
 				}
 				mutex.unlock();
@@ -229,13 +229,13 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients)
 		mutex.lock();
 		std::cout << "Node " << nodeIPStr << " accepted." << std::endl;
 		mutex.unlock();
-		for (auto it = _controlList.begin(); it != _controlList.end(); ++it)
+		for (auto it : _controlList)
 		{
-			for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
+			for (auto it2 : it.second)
 			{
-				if (it2->first == nodeIPStr)
+				if (it2.first == nodeIPStr)
 				{
-					circuits.emplace_back(it->first); //take all the circuits this node is part of 
+					circuits.emplace_back(it.first); //take all the circuits this node is part of 
 					break;
 				}
 			}
@@ -296,60 +296,57 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 
 		while (true)
 		{
-			// Wait for notifications or timeout
-			{
-				std::unique_lock<std::mutex> lock(circuitMutex);
 
-				// Check circuit-specific notifications for the current node
-				circuitCondition.wait_for(lock, std::chrono::milliseconds(SECONDS_TO_WAIT * 500), [&]()
-					{
-						for (unsigned int circuitId : circuits)
-						{
-							// Ensure only affected circuits for the current node are checked
-							if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
-							{
-								return true; // Break when a relevant notification is found
-							}
-						}
-						return false; // No relevant notifications
-					});
+			std::unique_lock<std::mutex> lock(circuitMutex);
 
-				// Process circuit notifications if any
-				for (unsigned int circuitId : circuits)
+			// Check circuit-specific notifications for the current node
+			circuitCondition.wait_for(lock, std::chrono::milliseconds(SECONDS_TO_WAIT * 500), [&]()
 				{
-					if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
+					for (unsigned int circuitId : circuits)
 					{
-						// Remove the node from the notifications
-						_circuitsToNotify[circuitId].erase(nodeIp);
-						if (_circuitsToNotify[circuitId].empty())
+						// Ensure only affected circuits for the current node are checked
+						if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
 						{
-							_circuitsToNotify.erase(circuitId); // Clean up if no more nodes are affected
+							return true; // Break when a relevant notification is found
 						}
-
-						// Handle delete circuit logic
-						dcr.circuit_id = circuitId;
-						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
-
-						// Notify the remaining nodes
-						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
-						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
-
-						// Regenerate the circuit for the remaining nodes
-						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size());
-						_controlList[circuitId] = newCircuit;
-
-						CircuitConfirmationResponse ccr;
-						ccr.circuit_id = circuitId;
-						ccr.nodesPath = newCircuit;
-						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
-						std::vector<unsigned char> responseBuffer = SerializerResponses::serializeResponse(ccr);
-						Helper::sendVector(_clients[circuitId], responseBuffer);
-
-						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
 					}
+					return false; // No relevant notifications
+				});
+
+			// Process circuit notifications if any
+			for (unsigned int circuitId : circuits)
+			{
+				if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
+				{
+					// Remove the node from the notifications
+					_circuitsToNotify[circuitId].erase(nodeIp);
+					if (_circuitsToNotify[circuitId].empty())
+					{
+						_circuitsToNotify.erase(circuitId); // Clean up if no more nodes are affected
+					}
+
+					// Handle delete circuit logic
+					dcr.circuit_id = circuitId;
+					std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+
+					// Notify the remaining nodes
+					Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
+					std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
+
+					// Regenerate the circuit for the remaining nodes
+					std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
+					_controlList[circuitId] = newCircuit;
+
+					CircuitConfirmationResponse ccr;
+					ccr.circuit_id = circuitId;
+					ccr.nodesPath = newCircuit;
+					ccr.status = CIRCUIT_CONFIRMATION_STATUS;
+					std::vector<unsigned char> responseBuffer = SerializerResponses::serializeResponse(ccr);
+					Helper::sendVector(_clients[circuitId], responseBuffer);
+
+					std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
 				}
 			}
-
 			// Receive alive message
 			mutex.lock();
 			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
@@ -403,7 +400,6 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 		std::cout << "Unexpected problem caught!\n";
 	}
 }
-
 
 int main()
 {

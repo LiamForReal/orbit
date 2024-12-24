@@ -90,6 +90,7 @@ void Client::listenToServerInfo()
 			else if (ri.id == DELETE_CIRCUIT_RC)
 			{
 				//TOCHANGE BY MAIN 
+				std::cout << "got delete!!!\n";
 				this->_restartConversation = true;
 				throw std::runtime_error("the circuit is corrapted!");
 			}
