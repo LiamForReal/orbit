@@ -89,8 +89,7 @@ void Node::serveControl()
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			//return; node crush
-			// add node crush exe to check  
+
 			ri = Helper::waitForResponse(serverSock, 1);
 			if (ri.buffer.empty())
 				continue;
@@ -193,6 +192,7 @@ void Node::clientHandler(const SOCKET client_socket)
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), client_socket);
 		while (true)
 		{
+			//wait for msg from main
 			ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.directMsg(ri);
 			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
@@ -203,8 +203,17 @@ void Node::clientHandler(const SOCKET client_socket)
 
 			if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
 			{
-				std::cout << "listening foward\n";
-				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
+				//client -> 1 
+				//clint <- next updated!!
+				//client -> 1 -> 2
+				//clint <- 1 <- next updated!!
+				//client -> ask for domain 
+				//client -> 1 -> 2 -> web serever (curl)
+				//client <- 1 <- 2 <- web server
+				// + run it on thread
+				//add notes
+ 				std::cout << "listening foward\n";//client -> 1 -> 2 -> 3 -> 4 -> web server 
+				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second); //make the main function to manager the circuits and every new circuit run thread on this function
 				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
 			}
 		}
