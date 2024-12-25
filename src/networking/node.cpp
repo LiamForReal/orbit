@@ -152,6 +152,8 @@ void Node::serveControl()
 	try
 	{
 		SOCKET serverSock = createSocketWithServer();
+		unsigned long l;
+		ioctlsocket(serverSock, FIONREAD, &l);
 
 		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
 		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));

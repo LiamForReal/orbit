@@ -80,14 +80,19 @@ void DockerManager::openDocker(const int& amount)
     runCmdCommand(buildCommand);
 }
 
-void DockerManager::openDocker(const string& contanerName)
+void DockerManager::openDocker(const string& containerName)
 {
-    std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_info_init.py " + contanerName;
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d " + contanerName;
+    if (containerName.empty())
+    {
+        std::cout << "Empty container name\n";
+        return;
+    }
+
+    std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_ip_changer.py " + containerName;
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d " + containerName;
     runCmdCommand(regenerateIpsCommend);
     runCmdCommand(buildCommand);
 }
-
 
 std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersNames)
 {
@@ -265,16 +270,17 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
     {
         std::vector<std::pair<std::string, std::string>> nodesInfo;
         std::vector<string> nodes;
-        string nodeName;
+        string nodeName = "";
         int NodeNumber = 1;
         for (int i = 1; i <= NODE_CAPACITY; i++)
             nodes.emplace_back(CONTAINER_NAME + std::to_string(i));
         std::vector<std::string> ips = findIPs(nodes);
-        for (auto it : nodes)
+        for (auto it : ips)
         {
             if (NodeIp == it)
             {
                 nodeName = CONTAINER_NAME + std::to_string(NodeNumber);
+                std::cout << "Found that node container name is " << nodeName << " (" << NodeIp << ")" << std::endl;
                 break;
             }
             NodeNumber++;

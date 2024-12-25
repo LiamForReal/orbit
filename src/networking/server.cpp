@@ -109,6 +109,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
+		unsigned int circuitID = 0;
 		RequestResult rr = RequestResult();
 		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
@@ -123,8 +124,9 @@ void Server::clientHandler(const SOCKET client_socket)
 		{
 			if (it.second == INVALID_SOCKET)
 			{
+				_clients[it.first] = client_socket;
+
 				std::cout << "new client allocated\n\n";
-				it.second = client_socket; //change the invalid
 				break;
 			}
 		}
@@ -294,6 +296,8 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
+		std::cout << "Enter to control with socket " << node_sock << std::endl;
+
 		while (true)
 		{
 			// Wait for notifications or timeout
@@ -331,8 +335,13 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
 
 						// Notify the remaining nodes
-						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
+						Helper::sendVector(node_sock, deleteCircuitBuffer);
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
+
+						std::this_thread::sleep_for(std::chrono::seconds(1));
+
+						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
+						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
 
 						// Regenerate the circuit for the remaining nodes
 						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
@@ -388,6 +397,8 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
 			}
+
+			std::cout << "Alive sent (" << nodeIp << ")\n";
 
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
