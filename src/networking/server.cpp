@@ -176,6 +176,13 @@ void Server::serveControl() //check if its one of the nodes
 				clientsAlowde.clear();
 			}
 			
+			// IMPORTANT NOTE FOR FUTURE DEBUGGING [25.12.2024]:
+			// THE ASSIGNMENTS OF CLIENTS ALLOWED COULD AND HAPPENING
+			// AFTER _CONTROL_LIST IS UPDATED, AND IT FORGETS THE NEW NODES IN THE CIRCUIT,
+			// OR IN OUR CASE THE NEW NODE'S IP.
+			// * TO FIX THAT - TO GIVE ACCEPTCONTROLCLIENT NOTHING (VOID) AND MAKE THIS FUNCTION
+			// AFTER ACCEPTING CLIENTS AND BEFORE CHECK ITS VALIDATION,
+			// TO CREATE THIS STRUCTURE OF CLIENTS ALLOWED.
 		}
 	}
 	catch (std::runtime_error& e)
@@ -345,7 +352,9 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 
 						// Regenerate the circuit for the remaining nodes
 						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
+						mutex.lock();
 						_controlList[circuitId] = newCircuit;
+						mutex.unlock();
 
 						CircuitConfirmationResponse ccr;
 						ccr.circuit_id = circuitId;

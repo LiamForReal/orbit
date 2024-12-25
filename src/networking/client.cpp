@@ -92,7 +92,7 @@ void Client::listenToServerInfo()
 				//TOCHANGE BY MAIN 
 				std::cout << "got delete!!!\n";
 				this->_restartConversation = true;
-				throw std::runtime_error("the circuit is corrapted!");
+				throw std::runtime_error("the circuit is corrupted!");
 			}
 			std::cout << "server sends " << ri.id << " request tipe\n";
 		}
