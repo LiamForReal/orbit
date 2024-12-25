@@ -8,7 +8,6 @@ static const unsigned int IFACE = 0;
 
 using std::string;
 using std::vector;
-//std::mutex mtx;
 
 Node::Node()
 {
@@ -79,10 +78,8 @@ void Node::serveControl()
 		RequestResult rr;
 		data[0] = (char)(ALIVE_MSG_RC);
 		SOCKET serverSock = createSocketWithServer();
-		int bytesSent; 
-		
+		int bytesSent;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), serverSock);
-
 		while (true)
 		{
 			bytesSent = send(serverSock, data, sizeof(data), 0);
@@ -92,13 +89,14 @@ void Node::serveControl()
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
+			else std::cout << "\nalive msg was sended!\n";
 			//return; node crush
 			// add node crush exe to check  
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			ri = Helper::waitForResponse(serverSock, 1);
+			ri = Helper::waitForResponse(serverSock, 5);
+
 			if (ri.buffer.empty())
 				continue;
-
 			std::cout << "delete sended!\n\n";
 			rr = nodeRequestHandler.directMsg(ri);
 
@@ -110,6 +108,7 @@ void Node::serveControl()
 			{
 				std::cerr << "Failed to delete circuit!\n";
 			}
+			std::cout << "6";
 		}
 	}
 	catch (std::runtime_error& e)
@@ -176,7 +175,7 @@ void Node::acceptClient()
 
 }
 
-std::string Node::getEnvVar(const LPCSTR& key) 
+std::string Node::getEnvVar(const LPCSTR& key)
 {
 	// Buffer to hold the environment variable valu
 	char buffer[(int)(ENVE_MAX_LIMIT)];
@@ -241,7 +240,7 @@ int main()
 		string ip_env = node.getEnvVar((LPCSTR)("NODE_IP")); // Get the IP from the environment variable
 		string port_env = node.getEnvVar((LPCSTR)("NODE_PORT")); // Get the port from the environment variable
 		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
- 		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
+		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
 
 		std::thread aliveMsg(&Node::serveControl, node);
 		aliveMsg.detach();

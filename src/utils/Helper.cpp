@@ -150,7 +150,7 @@ unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int 
 	}
 
 	unsigned char* data = new unsigned char[bytesNum];
-	int res = recv(sc, reinterpret_cast<char*>(data), bytesNum, flags);
+	int res = recv(sc, (char*)(data), bytesNum, flags);
 
 	if (res == SOCKET_ERROR)
 	{
@@ -216,18 +216,23 @@ RequestInfo Helper::waitForResponse(SOCKET socket, unsigned int timeout)
 
 	while (true)
 	{
+		std::cout << "1";
 		statusCode = Helper::socketHasData(socket);
 		if (statusCode != 0 && statusCode != -1)
 		{
+			std::cout << "5";
 			return Helper::buildRI(socket, statusCode);
 		}
 
 		// Check if timeout is non-zero and the time limit has been exceeded
+		std::cout << "2";
 		if (timeout > 0)
 		{
 			auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start).count();
+			std::cout << "3";
 			if (elapsed >= timeout)
 			{
+				std::cout << "4";
 				return RequestInfo(); // Return an empty RequestInfo if time limit exceeded
 			}
 		}
