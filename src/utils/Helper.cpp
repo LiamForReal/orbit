@@ -210,62 +210,16 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int statusCode)
 }
 
 
-RequestInfo Helper::waitForResponse(SOCKET clientSocket, int timeoutInSeconds) 
+RequestInfo Helper::waitForResponse(SOCKET socket)
 {
-	RequestInfo ri; // Default to an empty RequestInfo
-	char buffer[1]; // Only need the first byte for status code
+	unsigned int statusCode;
 
-	// Set the socket to non-blocking mode
-	u_long mode = 1; // 1 to enable non-blocking mode
-	ioctlsocket(clientSocket, FIONBIO, &mode);
-
-	auto startTime = std::chrono::steady_clock::now();
-
-	while (true) {
-		// Check timeout only if a valid timeout is provided
-		if (timeoutInSeconds > 0) {
-			auto elapsedTime = std::chrono::steady_clock::now() - startTime;
-			if (std::chrono::duration_cast<std::chrono::seconds>(elapsedTime).count() >= timeoutInSeconds) {
-				// Timeout occurred, return empty RequestInfo
-				break;
-			}
+	while (true)
+	{
+		statusCode = Helper::socketHasData(socket);
+		if (statusCode != 0 && statusCode != -1)
+		{
+			return Helper::buildRI(socket, statusCode);
 		}
-
-		fd_set readfds;
-		FD_ZERO(&readfds);
-		FD_SET(clientSocket, &readfds);
-
-		timeval selectTimeout;
-		selectTimeout.tv_sec = 0;
-		selectTimeout.tv_usec = 100000; // 100ms
-
-		int activity = select(0, &readfds, nullptr, nullptr, &selectTimeout);
-
-		if (activity > 0 && FD_ISSET(clientSocket, &readfds)) {
-			int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-
-			if (bytesReceived > 0) {
-				// Pass the first byte and socket to buildRi
-				ri = Helper::buildRI(clientSocket, (unsigned int)(buffer[0]));
-				break; // Exit loop after successfully building the response
-			}
-			else if (bytesReceived == 0) {
-				// Connection closed by the client, return empty RequestInfo
-				break;
-			}
-			else if (WSAGetLastError() != WSAEWOULDBLOCK) {
-				// Actual error occurred, return empty RequestInfo
-				break;
-			}
-		}
-
-		// Allow other threads some time to execute
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}
-
-	// Restore the socket to blocking mode
-	mode = 0;
-	ioctlsocket(clientSocket, FIONBIO, &mode);
-
-	return ri; // Return empty RequestInfo if no valid data was received
 }

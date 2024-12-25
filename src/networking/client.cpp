@@ -83,7 +83,7 @@ void Client::listenToServerInfo()
 		while (true)
 		{
 			this->_passedListenWait = false;
-			ri = Helper::waitForResponse(this->_clientSocketWithDS, 1);
+			ri = Helper::waitForResponse(this->_clientSocketWithDS);
 			this->_passedListenWait = true;
 			if (ri.buffer.empty())
 				continue;

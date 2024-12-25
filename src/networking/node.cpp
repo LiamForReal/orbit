@@ -9,6 +9,8 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
+std::mutex mutex;
+
 Node::Node()
 {
 	// notice that we step out to the global namespace
@@ -60,7 +62,8 @@ SOCKET Node::createSocketWithServer()
 	//freeaddrinfo(result); // Free the addrinfo structure
 
 	// Connect to the server
-	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) 
+	{
 		closesocket(sock);
 		throw std::runtime_error("Connection failed: " + std::to_string(WSAGetLastError()));
 	}
@@ -68,39 +71,18 @@ SOCKET Node::createSocketWithServer()
 	return sock;
 }
 
-
-void Node::serveControl()
+void Node::controlReceiver(SOCKET& serverSock)
 {
 	try
 	{
-		char* data = new char[1];
 		RequestInfo ri;
 		RequestResult rr;
-		data[0] = (char)(ALIVE_MSG_RC);
-		SOCKET serverSock = createSocketWithServer();
-		int bytesSent;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), serverSock);
+
 		while (true)
 		{
-			bytesSent = send(serverSock, data, sizeof(data), 0);
-			if (bytesSent <= 0)
-			{
-				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
-				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
-				break;
-			}
-<<<<<<< HEAD
+			ri = Helper::waitForResponse(serverSock);
 
-=======
-			else std::cout << "\nalive msg was sended!\n";
-			//return; node crush
-			// add node crush exe to check  
-			std::this_thread::sleep_for(std::chrono::milliseconds(500));
->>>>>>> cf4b302e6efd8e0130ed831841d5cf6529d39aee
-			ri = Helper::waitForResponse(serverSock, 1);
-
-			if (ri.buffer.empty())
-				continue;
 			std::cout << "delete sended!\n\n";
 			rr = nodeRequestHandler.directMsg(ri);
 
@@ -112,17 +94,79 @@ void Node::serveControl()
 			{
 				std::cerr << "Failed to delete circuit!\n";
 			}
-			std::cout << "6";
+			std::cout << "Ended function\n";
 		}
 	}
 	catch (std::runtime_error& e)
 	{
-		std::cout << "control manganon problem\n";
+		std::cout << "[RECEIVER] Control manganon problem!\n";
 		std::cout << e.what() << std::endl;
 	}
 	catch (...)
 	{
-		std::cout << "an unaccespted error\n";
+		std::cout << "[RECEIVER] An unexpected error occurred!\n";
+	}
+}
+
+void Node::controlSender(SOCKET& serverSock)
+{
+	char* data = NULL;
+
+	try
+	{
+		data = new char[1];
+		data[0] = (char)(ALIVE_MSG_RC);
+
+		int bytesSent = 0;
+
+		while (true)
+		{
+			mutex.lock();
+			bytesSent = send(serverSock, data, sizeof(data), 0);
+			mutex.unlock();
+			if (bytesSent <= 0)
+			{
+				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
+				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
+				break;
+			}
+			else std::cout << "\nalive msg was sended!\n";
+			//return; node crush
+			// add node crush exe to check
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		}
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << "[SENDER] Control manganon problem!\n";
+		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "[SENDER] An unexpected error occurred!\n";
+	}
+}
+
+void Node::serveControl()
+{
+	try
+	{
+		SOCKET serverSock = createSocketWithServer();
+
+		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
+		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
+
+		controlSenderThread.join();
+		controlReceiverThread.join();
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << "Control manganon problem!\n";
+		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "An unexpected error occurred!\n";
 	}
 }
 

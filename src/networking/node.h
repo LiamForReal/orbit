@@ -26,19 +26,21 @@
 
 class Node
 {
-public:
-    Node();
-    ~Node();
-    void serveProxy(const std::string& ip, uint16_t port);
-    void serveControl();
-    std::string getEnvVar(const LPCSTR& key);
-private:
-    SOCKET createSocketWithServer();
-    void bindAndListen(const std::string& ip, uint16_t port);
-    void acceptClient();
-    void clientHandler(const SOCKET client_socket);
-    //void runCmdCommand(const std::string command);
+    public:
+        Node();
+        ~Node();
+        void serveProxy(const std::string& ip, uint16_t port);
+        void controlReceiver(SOCKET& serverSock);
+        void controlSender(SOCKET& serverSock);
+        void serveControl();
+        std::string getEnvVar(const LPCSTR& key);
+        
+    private:
+        SOCKET createSocketWithServer();
+        void bindAndListen(const std::string& ip, uint16_t port);
+        void acceptClient();
+        void clientHandler(const SOCKET client_socket);
 
-    std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits; 
-    SOCKET _socket;
+        std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits; 
+        SOCKET _socket;
 };
