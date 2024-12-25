@@ -22,8 +22,8 @@ public:
     static unsigned int getCircuitIdFromSocket(const SOCKET sc); //
 	static unsigned int getLengthPartFromSocket(const SOCKET sc); //
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
-	static RequestInfo buildRI(SOCKET socket, unsigned int& statusCode);
-	static RequestInfo waitForResponse(SOCKET socket, unsigned int timeout = 0);
+	static RequestInfo buildRI(SOCKET socket, unsigned int statusCode);
+	static RequestInfo waitForResponse(SOCKET socket,int timeout = -1);
 
 private:
 	static std::string getPartFromSocket(const SOCKET sc, const int bytesNum);

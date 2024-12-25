@@ -16,9 +16,14 @@
 #include "docker_manager.h"
 #include "../utils/Helper.h"
 #include <mutex>
+#include<set>
+#include<condition_variable>
+#include "handlers/TorRequestHandler.h"
 
 #define MAX_INT_OF_BYTE 256
 #define DEC 1
+#define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
+#define AMOUNT_OF_BYTES 1250
 
 class Server
 {
@@ -40,6 +45,7 @@ class Server
         
         std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> _controlList; // nodes data
         std::map<unsigned int, SOCKET> _clients;
+        std::map<unsigned int, std::set<std::string>> _circuitsToNotify;
         SOCKET _socket;
         SOCKET _controlSocket;
 };

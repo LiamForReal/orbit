@@ -12,6 +12,9 @@ Client::Client()
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 
+	this->_passedListenWait = false;
+	this->_passedPathGetWait = false;
+	this->_restartConversation = false;
 }
 
 Client::~Client()
@@ -79,12 +82,16 @@ void Client::listenToServerInfo()
 		RequestInfo ri;
 		while (true)
 		{
+			this->_passedListenWait = false;
 			ri = Helper::waitForResponse(this->_clientSocketWithDS, 1);
+			this->_passedListenWait = true;
 			if (ri.buffer.empty())
 				continue;
 			else if (ri.id == DELETE_CIRCUIT_RC)
 			{
 				//TOCHANGE BY MAIN 
+				std::cout << "got delete!!!\n";
+				this->_restartConversation = true;
 				throw std::runtime_error("the circuit is corrapted!");
 			}
 			std::cout << "server sends " << ri.id << " request tipe\n";
@@ -104,13 +111,49 @@ void Client::listenToServerInfo()
 	}
 }
 
-void Client::startConversation()
+bool Client::getPassedListenWait() const
+{
+	return this->_passedListenWait;
+}
+
+bool Client::getPassedPathGetWait() const
+{
+	return this->_passedPathGetWait;
+}
+
+bool Client::getRestartConversation() const
+{
+	return this->_restartConversation;
+}
+
+void Client::setPassedPathGetWait(const bool& passedPathGetWait)
+{
+	this->_passedPathGetWait = passedPathGetWait;
+}
+
+void Client::setRestartConversation(const bool& restartConversation)
+{
+	this->_restartConversation = restartConversation;
+}
+
+void Client::startConversation(const bool& openNodes)
 {
 	char buffer[100];
 	std::string domain;
 	RequestInfo ri;
-	nodeOpening();
+
+	if (openNodes)
+	{
+		nodeOpening();
+	}
+
 	ri = Helper::waitForResponse(this->_clientSocketWithDS);
+
+	if (openNodes)
+	{
+		this->_passedPathGetWait = true;
+	}
+
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
 
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
@@ -205,7 +248,27 @@ int main()
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client();
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
-		client.startConversation();
+		//client.startConversation();
+
+		std::thread startConversationThread(&Client::startConversation, std::ref(client), true);
+		startConversationThread.detach();
+
+		while (true)
+		{
+			if (client.getPassedPathGetWait())
+			{
+				std::thread listenToServerInfoThread(&Client::listenToServerInfo, std::ref(client));
+				listenToServerInfoThread.detach();
+				client.setPassedPathGetWait(false);
+			}
+			if (client.getRestartConversation())
+			{
+				startConversationThread.~thread();
+				client.setRestartConversation(false);
+				startConversationThread = std::thread(&Client::startConversation, std::ref(client), false);
+				startConversationThread.detach();
+			}
+		}
 
 		//thread listen to ds -> this thread start only after startConversation is got the input from ds 
 		// boolian property after recving (wait for function...)
