@@ -93,7 +93,7 @@ void Node::serveControl()
 			//return; node crush
 			// add node crush exe to check  
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
-			ri = Helper::waitForResponse(serverSock, 5);
+			ri = Helper::waitForResponse(serverSock, 1);
 
 			if (ri.buffer.empty())
 				continue;
