@@ -6,7 +6,7 @@
 #include <utility>
 #include "../utils/json.hpp"
 #include <algorithm>
-
+#include <mutex>
 #define CONTAINER_NAME "node"
 #define INTERNAL_PORT "9050"
 #define NODE_CAPACITY 10 
@@ -21,7 +21,7 @@ public:
 
     std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create, const unsigned int circuitId);
     std::vector<pair<string, string>> GetControlInfo();
-    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(string crushedNode, const int use, const unsigned int circuitId);
+    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(string crushedNode, const int use, const unsigned int circuitId, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::mutex& mtx);
 
 private:
     void runCmdCommand(const string& command);

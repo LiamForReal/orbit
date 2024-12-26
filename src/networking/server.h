@@ -39,7 +39,7 @@ class Server
         void bindAndListen(); 
         void bindAndListenControl();
         void acceptClient(); 
-        void acceptControlClient(const std::vector<string>& allowedClients);
+        void acceptControlClient();
         void clientHandler(const SOCKET client_socket);
         void clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, string nodeIp);
         

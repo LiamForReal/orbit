@@ -83,6 +83,7 @@ void Node::controlReceiver(SOCKET& serverSock)
 		{
 			ri = Helper::waitForResponse(serverSock);
 
+			mutex.lock();
 			std::cout << "delete sended!\n\n";
 			rr = nodeRequestHandler.directMsg(ri);
 
@@ -94,7 +95,8 @@ void Node::controlReceiver(SOCKET& serverSock)
 			{
 				std::cerr << "Failed to delete circuit!\n";
 			}
-			std::cout << "Ended function\n";
+			mutex.unlock();
+
 		}
 	}
 	catch (std::runtime_error& e)
@@ -130,10 +132,10 @@ void Node::controlSender(SOCKET& serverSock)
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
-			else std::cout << "\nalive msg was sended!\n";
+			//else std::cout << "\nalive msg was sended!\n";
 			//return; node crush
 			// add node crush exe to check
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
 	catch (std::runtime_error& e)

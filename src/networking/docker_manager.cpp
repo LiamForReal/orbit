@@ -89,7 +89,7 @@ void DockerManager::openDocker(const string& containerName)
     }
 
     std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_ip_changer.py " + containerName;
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d " + containerName;
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up -d " + containerName; //only restarts
     runCmdCommand(regenerateIpsCommend);
     runCmdCommand(buildCommand);
 }
@@ -189,11 +189,11 @@ std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& cont
     {
         hostPort = std::to_string(std::stoi(portsStr));
 
-        std::cout << "container " << std::to_string(this->amountCreated + 1) << " proxy port is " << hostPort << "\n";
+        std::cout << "container 1 (of this function calling) proxy port is " << hostPort << "\n";
         proxyNodesPorts.emplace_back(hostPort);
         for (int i = 1; i < containersNames.size(); i++)
         {
-            std::cout << "container " << std::to_string(this->amountCreated + i + 1) << " proxy port is 9050\n";
+            std::cout << "container " << std::to_string( i + 1) << " proxy port is 9050\n";
             proxyNodesPorts.emplace_back(INTERNAL_PORT);
         }
     }
@@ -264,7 +264,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
 * 3rerun him -> 4add him to the nodes properly path/guard ->
 * use function to find circuit -> get circuit ips and ports -> return
 */
-std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string NodeIp, const int use, const unsigned int circuitId) // list of ips
+std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string NodeIp, const int use, const unsigned int circuitId, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::mutex& mtx) // list of ips
 {
     try
     {
@@ -272,6 +272,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
         std::vector<string> nodes;
         string nodeName = "";
         int NodeNumber = 1;
+
         for (int i = 1; i <= NODE_CAPACITY; i++)
             nodes.emplace_back(CONTAINER_NAME + std::to_string(i));
         std::vector<std::string> ips = findIPs(nodes);
@@ -285,11 +286,9 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
             }
             NodeNumber++;
         }
-        openDocker(nodeName);
         std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use, circuitId);
         std::vector<std::string> ports = findProxyPorts(nodeSelected);
-        ips = findIPs(nodes);
-
+        ips = findIPs(nodeSelected);
         auto itIp = ips.begin();
         auto itPort = ports.begin();
         for (int i = 0; i < ips.size(); i++)
@@ -298,6 +297,10 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
             itPort++;
             itIp++;
         }
+        mtx.lock();
+        controlList[circuitId] = nodesInfo;
+        mtx.unlock();
+        openDocker(nodeName);
         return nodesInfo;
     }
     catch (std::runtime_error& e)

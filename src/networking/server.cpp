@@ -152,8 +152,6 @@ void Server::serveControl() //check if its one of the nodes
 	try
 	{
 		bindAndListenControl();
-		std::string input_string;
-		std::vector<string> clientsAlowde;
 		int clientsAmount = 0; 
 		while (true)
 		{
@@ -163,17 +161,7 @@ void Server::serveControl() //check if its one of the nodes
 			if (!_controlList.empty())
 			{
 				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
-				mutex.lock();
-				for (auto it : _controlList)
-				{
-					for (auto it2 : it.second)
-					{
-						clientsAlowde.emplace_back(it2.first);
-					}
-				}
-				mutex.unlock();
-				this->acceptControlClient(clientsAlowde); //give all the exisiting nodes
-				clientsAlowde.clear();
+				this->acceptControlClient(); //give all the exisiting nodes
 			}
 			
 			// IMPORTANT NOTE FOR FUTURE DEBUGGING [25.12.2024]:
@@ -206,9 +194,10 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::vector<string>& allowedClients)
+void Server::acceptControlClient()
 {
 	sockaddr_in nodeAddr;
+	std::vector<string> AlowdeNodes;
 	int nodeAddrLen = sizeof(nodeAddr);
 	std::vector<unsigned int> circuits;
 	// Accept the client connection
@@ -218,6 +207,19 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients)
 		throw std::runtime_error("Failed to accept client connection.");
 	}
 
+	mutex.lock();
+	std::cout << "[ ";
+	for (auto it : _controlList)
+	{
+		for (auto it2 : it.second)
+		{
+			AlowdeNodes.emplace_back(it2.first);
+			std::cout << it2.first << ", ";
+		}
+	}
+	std::cout << "]";
+	mutex.unlock();
+
 	// Get the client's IP and port
 	char nodeIP[INET_ADDRSTRLEN + INC] = { 0 };
 	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
@@ -226,8 +228,10 @@ void Server::acceptControlClient(const std::vector<string>& allowedClients)
 
 	// Check if the client is in the allowed list
 	bool isAllowed = false;
-	for (const auto& allowedClient : allowedClients) {
-		if (allowedClient == nodeIPStr) {
+	for (auto allowedClient : AlowdeNodes) 
+	{
+		if (allowedClient == nodeIPStr) 
+		{
 			isAllowed = true;
 			break;
 		}
@@ -351,10 +355,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
 
 						// Regenerate the circuit for the remaining nodes
-						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
-						mutex.lock();
-						_controlList[circuitId] = newCircuit;
-						mutex.unlock();
+						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId, std::ref(_controlList), mutex);
 
 						CircuitConfirmationResponse ccr;
 						ccr.circuit_id = circuitId;
@@ -364,6 +365,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(_clients[circuitId], responseBuffer);
 
 						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
+						return; //close this socket does not exsist
 					}
 				}
 			}
@@ -407,7 +409,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 				throw std::runtime_error("Unexpected message code received.");
 			}
 
-			std::cout << "Alive sent (" << nodeIp << ")\n";
+			//std::cout << "Alive sent (" << nodeIp << ")\n";
 
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));

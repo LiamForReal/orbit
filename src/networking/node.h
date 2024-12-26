@@ -30,8 +30,6 @@ class Node
         Node();
         ~Node();
         void serveProxy(const std::string& ip, uint16_t port);
-        void controlReceiver(SOCKET& serverSock);
-        void controlSender(SOCKET& serverSock);
         void serveControl();
         std::string getEnvVar(const LPCSTR& key);
         
@@ -40,6 +38,8 @@ class Node
         void bindAndListen(const std::string& ip, uint16_t port);
         void acceptClient();
         void clientHandler(const SOCKET client_socket);
+        void controlReceiver(SOCKET& serverSock);
+        void controlSender(SOCKET& serverSock);
 
         std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits; 
         SOCKET _socket;
