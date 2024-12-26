@@ -201,23 +201,20 @@ void Server::acceptControlClient()
 	int nodeAddrLen = sizeof(nodeAddr);
 	std::vector<unsigned int> circuits;
 	// Accept the client connection
-	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);
+	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);//wait here
 	if (nodeSocket == INVALID_SOCKET)
 	{
 		throw std::runtime_error("Failed to accept client connection.");
 	}
-
-	mutex.lock();
-	std::cout << "[ ";
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	mutex.lock(); // update
 	for (auto it : _controlList)
 	{
 		for (auto it2 : it.second)
 		{
 			AlowdeNodes.emplace_back(it2.first);
-			std::cout << it2.first << ", ";
 		}
 	}
-	std::cout << "]";
 	mutex.unlock();
 
 	// Get the client's IP and port
@@ -349,13 +346,14 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(node_sock, deleteCircuitBuffer);
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
 
-						std::this_thread::sleep_for(std::chrono::seconds(1));
+						std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
 						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
 
 						// Regenerate the circuit for the remaining nodes
-						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId, std::ref(_controlList), mutex);
+						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
+						_controlList[circuitId] = newCircuit;
 
 						CircuitConfirmationResponse ccr;
 						ccr.circuit_id = circuitId;

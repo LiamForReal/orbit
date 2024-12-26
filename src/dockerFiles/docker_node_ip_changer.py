@@ -40,6 +40,7 @@ def main():
 
     for service, ip in zip(services, random_ips):
         compose_data["services"][service]["networks"]["TOR_NETWORK"]["ipv4_address"] = ip
+        compose_data["services"][service]["environment"]["NODE_IP"] = ip
 
     with open("../dockerFiles/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)

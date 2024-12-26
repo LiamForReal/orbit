@@ -38,6 +38,8 @@ public:
 	void setPassedPathGetWait(const bool& passedPathGetWait);
 	void setRestartConversation(const bool& restartConversation);
 
+	void closeSocketWithFirstNode();
+	
 private:
 	
 	std::string generateHttpGetRequest(const std::string& domain);
@@ -46,6 +48,6 @@ private:
 	bool _passedPathGetWait;
 	bool _restartConversation;
 
-	SOCKET _clientSocketWithDS;
 	SOCKET _clientSocketWithFirstNode;
+	SOCKET _clientSocketWithDS;
 };

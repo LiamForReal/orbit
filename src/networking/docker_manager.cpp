@@ -87,10 +87,7 @@ void DockerManager::openDocker(const string& containerName)
         std::cout << "Empty container name\n";
         return;
     }
-
-    std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_ip_changer.py " + containerName;
     std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up -d " + containerName; //only restarts
-    runCmdCommand(regenerateIpsCommend);
     runCmdCommand(buildCommand);
 }
 
@@ -264,7 +261,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
 * 3rerun him -> 4add him to the nodes properly path/guard ->
 * use function to find circuit -> get circuit ips and ports -> return
 */
-std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string NodeIp, const int use, const unsigned int circuitId, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::mutex& mtx) // list of ips
+std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string NodeIp, const int use, const unsigned int circuitId) // list of ips
 {
     try
     {
@@ -286,8 +283,11 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
             }
             NodeNumber++;
         }
+        std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_ip_changer.py " + nodeName;
+        runCmdCommand(regenerateIpsCommend);
         std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use, circuitId);
         std::vector<std::string> ports = findProxyPorts(nodeSelected);
+        openDocker(nodeName);
         ips = findIPs(nodeSelected);
         auto itIp = ips.begin();
         auto itPort = ports.begin();
@@ -297,10 +297,6 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
             itPort++;
             itIp++;
         }
-        mtx.lock();
-        controlList[circuitId] = nodesInfo;
-        mtx.unlock();
-        openDocker(nodeName);
         return nodesInfo;
     }
     catch (std::runtime_error& e)

@@ -21,7 +21,7 @@ public:
 
     std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create, const unsigned int circuitId);
     std::vector<pair<string, string>> GetControlInfo();
-    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(string crushedNode, const int use, const unsigned int circuitId, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::mutex& mtx);
+    std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(string crushedNode, const int use, const unsigned int circuitId);
 
 private:
     void runCmdCommand(const string& command);

@@ -136,6 +136,12 @@ void Client::setRestartConversation(const bool& restartConversation)
 	this->_restartConversation = restartConversation;
 }
 
+void Client::closeSocketWithFirstNode()
+{
+	closesocket(this->_clientSocketWithFirstNode);
+	this->_clientSocketWithFirstNode = NULL;
+}
+
 void Client::startConversation(const bool& openNodes)
 {
 	char buffer[100];
@@ -210,34 +216,31 @@ void Client::startConversation(const bool& openNodes)
 	}
 
 	HttpGetRequest httpGetRequest;
+	
+	std::cout << "Enter domain: ";
+	std::cin >> domain;
+	if (!domainValidationCheck(domain))
+		throw std::runtime_error("domain is illegal");
 
-	while (true)
+	httpGetRequest.circuit_id = ccr.circuit_id;
+	httpGetRequest.domain = domain;
+
+	std::cout << "sends httpGet Request:\n";
+	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
+
+	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+
+	HttpGetResponse httpGetResponse;
+	httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
+
+	if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
 	{
-		std::cout << "Enter domain: ";
-		std::cin >> domain;
-		if (!domainValidationCheck(domain))
-			throw std::runtime_error("domain is illegal");
-
-		httpGetRequest.circuit_id = ccr.circuit_id;
-		httpGetRequest.domain = domain;
-
-		std::cout << "sends httpGet Request:\n";
-		Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
-
-		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-
-		HttpGetResponse httpGetResponse;
-		httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
-
-		if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
-		{
-			std::cerr << "Could not get HTML of " << domain << std::endl;
-		}
-		else
-		{
-			std::cout << "HTML of " << domain << ": " << std::endl;
-			std::cout << httpGetResponse.content << std::endl;
-		}
+		std::cerr << "Could not get HTML of " << domain << std::endl;
+	}
+	else
+	{
+		std::cout << "HTML of " << domain << ": " << std::endl;
+		std::cout << httpGetResponse.content << std::endl;
 	}
 }
 
@@ -265,6 +268,7 @@ int main()
 			{
 				startConversationThread.~thread();
 				client.setRestartConversation(false);
+				client.closeSocketWithFirstNode();
 				startConversationThread = std::thread(&Client::startConversation, std::ref(client), false);
 				startConversationThread.detach();
 			}
