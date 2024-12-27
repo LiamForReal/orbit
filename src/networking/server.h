@@ -19,6 +19,7 @@
 #include<set>
 #include<condition_variable>
 #include "handlers/TorRequestHandler.h"
+#include "../utils/RSA.h"
 
 #define MAX_INT_OF_BYTE 256
 #define DEC 1
@@ -48,4 +49,8 @@ class Server
         std::map<unsigned int, std::set<std::string>> _circuitsToNotify;
         SOCKET _socket;
         SOCKET _controlSocket;
+
+        RSA rsa;
+        // map<circuitID, clientRSAPubkey>
+        std::map<unsigned int, uint2048_t> rsaWithClients;
 };

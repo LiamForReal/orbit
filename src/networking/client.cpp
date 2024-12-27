@@ -5,6 +5,10 @@ std::mutex mtx;
 
 Client::Client()
 {
+	std::cout << "Client is pregenerating RSA keys...\n";
+	this->rsa = RSA();
+	std::cout << "Client finished pregenerating RSA keys...\n";
+
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	_clientSocketWithFirstNode = INVALID_SOCKET;

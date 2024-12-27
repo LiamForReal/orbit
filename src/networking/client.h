@@ -15,6 +15,8 @@
 #include "../utils/DeserializerResponses.h"
 #include "../utils/SerializerRequests.h"
 #include "../utils/Helper.h"
+#include "../utils/RSA.h"
+
 #define COMMUNICATE_NODE_PORT 9050
 #define COMMUNICATE_SERVER_PORT 9787
 #define MAX_NODES_TO_OPEN 5
@@ -50,4 +52,8 @@ private:
 
 	SOCKET _clientSocketWithFirstNode;
 	SOCKET _clientSocketWithDS;
+
+	RSA rsa;
+	uint2048_t rsaServerPubkey;
+	uint2048_t rsaFirstNodePubkey;
 };

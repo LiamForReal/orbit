@@ -17,6 +17,10 @@ DockerManager dm = DockerManager();
 
 Server::Server()
 {
+	std::cout << "RSA is pregenerating RSA keys...\n";
+	this->rsa = RSA();
+	std::cout << "RSA finished pregenerating RSA keys...\n";
+	
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
 	//this->dm = DockerManager();
