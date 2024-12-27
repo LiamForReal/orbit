@@ -1,6 +1,6 @@
 #include "server.h"
 #include "handlers/TorRequestHandler.h"
-#define SECONDS_TO_WAIT 15 //the maximum time we wait for node alives
+#define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
 static const unsigned short PORT = 9787;
@@ -338,7 +338,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(node_sock, deleteCircuitBuffer);
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
 
-						std::this_thread::sleep_for(std::chrono::milliseconds(500));
+						std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
 						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
@@ -355,15 +355,13 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						Helper::sendVector(_clients[circuitId], responseBuffer);
 
 						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
-						return; //close this socket does not exsist
+						return; // close this socket does not exist
 					}
 				}
 			}
 
 			// Receive alive message
-			mutex.lock();
 			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-			mutex.unlock();
 
 			if (bytesRead <= 0)
 			{
@@ -398,9 +396,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
 			}
-
-			//std::cout << "Alive sent (" << nodeIp << ")\n";
-
+			// Commit: Reset timeout after successful receive
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		}
@@ -415,6 +411,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 		std::cout << "Unexpected problem caught!\n";
 	}
 }
+
 
 int main()
 {

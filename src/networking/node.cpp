@@ -83,12 +83,14 @@ void Node::controlReceiver(SOCKET& serverSock)
 		{
 			ri = Helper::waitForResponse(serverSock);
 
-			mutex.lock();
+			
 			std::cout << "\n\ndelete sended! with id " << ri.id << "\n\n";
 			
 			if (ri.id == DELETE_CIRCUIT_RC)
 			{
+				mutex.lock();
 				rr = nodeRequestHandler.directMsg(ri);
+				mutex.unlock();
 
 				if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
 				{
@@ -100,7 +102,7 @@ void Node::controlReceiver(SOCKET& serverSock)
 				}
 			}
 			else std::cout << "didn't get delete circuit proper msg!!!\n";
-			mutex.unlock();
+			
 			std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		}
 	}
@@ -126,9 +128,7 @@ void Node::controlSender(SOCKET& serverSock)
 
 		while (true)
 		{
-			mutex.lock();
 			bytesSent = send(serverSock, data, sizeof(data), 0);
-			mutex.unlock();
 			if (bytesSent <= 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
@@ -156,17 +156,17 @@ void Node::serveControl()
 {
 	try
 	{
-		SOCKET serverSockRecver = createSocketWithServer();
+		//SOCKET serverSockRecver = createSocketWithServer();
 		SOCKET serverSockSender = createSocketWithServer();
 
 		//unsigned long l;
 		//ioctlsocket(serverSock, FIONREAD, &l);
 
 		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSockSender));
-		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSockRecver));
+		//std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSockRecver));
 
 		controlSenderThread.join();
-		controlReceiverThread.join();
+		//controlReceiverThread.join();
 	}
 	catch (std::runtime_error& e)
 	{
@@ -266,7 +266,9 @@ void Node::clientHandler(const SOCKET client_socket)
 		{
 			//wait for msg from main
 			ri = Helper::waitForResponse(client_socket);
+			mutex.lock();
 			rr = nodeRequestHandler.directMsg(ri);
+			mutex.unlock();
 			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
 			{
 				std::cout << "sending beckward!\n";
