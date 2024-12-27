@@ -1,6 +1,6 @@
 #include "server.h"
 #include "handlers/TorRequestHandler.h"
-#define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
+#define SECONDS_TO_WAIT 15 //the maximum time we wait for node alives
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
 static const unsigned short PORT = 9787;
@@ -118,8 +118,8 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
 
 		ri = Helper::waitForResponse(client_socket);
-		rr = torRequestHandler.directRequest(ri);
 		mutex.lock();
+		rr = torRequestHandler.directRequest(ri);
 		for (auto it : _clients)
 		{
 			if (it.second == INVALID_SOCKET)
@@ -163,14 +163,6 @@ void Server::serveControl() //check if its one of the nodes
 				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
 				this->acceptControlClient(); //give all the exisiting nodes
 			}
-			
-			// IMPORTANT NOTE FOR FUTURE DEBUGGING [25.12.2024]:
-			// THE ASSIGNMENTS OF CLIENTS ALLOWED COULD AND HAPPENING
-			// AFTER _CONTROL_LIST IS UPDATED, AND IT FORGETS THE NEW NODES IN THE CIRCUIT,
-			// OR IN OUR CASE THE NEW NODE'S IP.
-			// * TO FIX THAT - TO GIVE ACCEPTCONTROLCLIENT NOTHING (VOID) AND MAKE THIS FUNCTION
-			// AFTER ACCEPTING CLIENTS AND BEFORE CHECK ITS VALIDATION,
-			// TO CREATE THIS STRUCTURE OF CLIENTS ALLOWED.
 		}
 	}
 	catch (std::runtime_error& e)

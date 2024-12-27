@@ -33,7 +33,9 @@ RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requ
 		this->rr.circuit_id = dcr.circuit_id;
 		
 		closeSocket(this->cd[dcr.circuit_id].first);
+		this->cd[dcr.circuit_id].first = INVALID_SOCKET;
 		closeSocket(this->cd[dcr.circuit_id].second);
+		this->cd[dcr.circuit_id].second = INVALID_SOCKET;
 		this->cd.erase(dcr.circuit_id);
 		dcre.status = DELETE_CIRCUIT_STATUS;
 	}

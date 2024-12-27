@@ -1,0 +1,43 @@
+node1  | 
+node1  | C:\app>Node_crush.exe
+node1  | ip is: 192.168.2.7, port is: 9050
+node1  | NODE IP: 192.168.2.7 NODE PORT: 9050
+node2  | 
+node2  | C:\app>Node.exe
+node2  | ip is: 192.168.2.5, port is: 9062
+node2  | NODE IP: 192.168.2.5 NODE PORT: 9062
+node2  | binded
+node2  | listening...
+node2  | accepting client...
+node2  | Client accepted !
+node2  | accepting client...
+node2  | DEBUG: Status code: 60
+node2  | DEBUG: Length: 50
+node2  | DEBUG: The message is: {"circuit_id":192,"nextNode":["192.168.2.7",9050]}
+node2  | 50
+node2  | seconed is new and now generating
+node2  | next createdsending beckward!
+node2  | Sending...
+node2  | socket to send: 152
+node2  | DEBUG: Status code: 67
+node2  | DEBUG: Length: 0
+node2  | DEBUG: The message is: 
+node2  | 
+node2  | 
+node2  | delete sended! with id 67
+node2  | 
+node2  | didn't get delete circuit proper msg!!!
+node2  | DEBUG: Status code: 67
+node2  | DEBUG: Length: 12860
+node2  | DEBUG: Status code: 60
+node2  | DEBUG: Length: 67
+node2  | DEBUG: The message is: 
+node2  | 67
+node1  | binded
+node1  | listening...
+node1  | accepting client...
+node1  | Error while receiving from socket: 296
+node1  | Client accepted !
+node1  | accepting client...
+
+node2 exited with code 3221225477

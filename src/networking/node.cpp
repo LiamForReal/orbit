@@ -84,19 +84,24 @@ void Node::controlReceiver(SOCKET& serverSock)
 			ri = Helper::waitForResponse(serverSock);
 
 			mutex.lock();
-			std::cout << "delete sended!\n\n";
-			rr = nodeRequestHandler.directMsg(ri);
+			std::cout << "\n\ndelete sended! with id " << ri.id << "\n\n";
+			
+			if (ri.id == DELETE_CIRCUIT_RC)
+			{
+				rr = nodeRequestHandler.directMsg(ri);
 
-			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
-			{
-				std::cout << "Delete successfully done!\n";
+				if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
+				{
+					std::cout << "Delete successfully done!\n";
+				}
+				else
+				{
+					std::cerr << "Failed to delete circuit!\n";
+				}
 			}
-			else
-			{
-				std::cerr << "Failed to delete circuit!\n";
-			}
+			else std::cout << "didn't get delete circuit proper msg!!!\n";
 			mutex.unlock();
-
+			std::this_thread::sleep_for(std::chrono::milliseconds(500));
 		}
 	}
 	catch (std::runtime_error& e)
@@ -112,11 +117,9 @@ void Node::controlReceiver(SOCKET& serverSock)
 
 void Node::controlSender(SOCKET& serverSock)
 {
-	char* data = NULL;
-
 	try
 	{
-		data = new char[1];
+		char* data = new char[1];
 		data[0] = (char)(ALIVE_MSG_RC);
 
 		int bytesSent = 0;
@@ -129,13 +132,13 @@ void Node::controlSender(SOCKET& serverSock)
 			if (bytesSent <= 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
-				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
+				std::cout << "send: data: " << unsigned char(data) << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
 			//else std::cout << "\nalive msg was sended!\n";
 			//return; node crush
 			// add node crush exe to check
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 		}
 	}
 	catch (std::runtime_error& e)
@@ -153,12 +156,14 @@ void Node::serveControl()
 {
 	try
 	{
-		SOCKET serverSock = createSocketWithServer();
-		unsigned long l;
-		ioctlsocket(serverSock, FIONREAD, &l);
+		SOCKET serverSockRecver = createSocketWithServer();
+		SOCKET serverSockSender = createSocketWithServer();
 
-		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
-		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
+		//unsigned long l;
+		//ioctlsocket(serverSock, FIONREAD, &l);
+
+		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSockSender));
+		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSockRecver));
 
 		controlSenderThread.join();
 		controlReceiverThread.join();
@@ -170,7 +175,7 @@ void Node::serveControl()
 	}
 	catch (...)
 	{
-		std::cout << "An unexpected error occurred!\n";
+		std::cout << "\nAn unexpected error occurred!\n";
 	}
 }
 
@@ -277,10 +282,9 @@ void Node::clientHandler(const SOCKET client_socket)
 				//client -> ask for domain 
 				//client -> 1 -> 2 -> web serever (curl)
 				//client <- 1 <- 2 <- web server
-				// + run it on thread
 				//add notes
  				std::cout << "listening foward\n";//client -> 1 -> 2 -> 3 -> 4 -> web server 
-				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second); //make the main function to manager the circuits and every new circuit run thread on this function
+				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
 				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
 			}
 		}
@@ -288,6 +292,13 @@ void Node::clientHandler(const SOCKET client_socket)
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << '\n';
+		std::cout << "runtime: problem got from socket";
+		//clientHandler(client_socket);
+	}
+	catch (...)
+	{
+		std::cout << "...: problem got from socket";
+		//clientHandler(client_socket);
 	}
 }
 
