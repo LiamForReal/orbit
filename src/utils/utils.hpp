@@ -17,7 +17,7 @@ cpp_int mod_exp(cpp_int inputBase, T inputPower, T inputMod)
 	cpp_int power = inputPower;
 	cpp_int mod = inputMod;
 
-	//base = base % mod;
+	base = base % mod;
 
 	if (base == 0) return 0;
 
