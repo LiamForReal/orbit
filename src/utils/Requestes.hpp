@@ -21,6 +21,7 @@ typedef enum RequestCode
 typedef struct RsaKeyExchangeRequest
 {
     uint2048_t public_key;
+    uint2048_t product;
 } RsaKeyExchangeRequest;
 
 typedef struct EcdheKeyExchangeRequest

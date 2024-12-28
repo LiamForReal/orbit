@@ -51,6 +51,4 @@ class Server
         SOCKET _controlSocket;
 
         RSA rsa;
-        // map<circuitID, clientRSAPubkey>
-        std::map<unsigned int, uint2048_t> rsaWithClients;
 };

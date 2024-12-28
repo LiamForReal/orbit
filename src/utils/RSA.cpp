@@ -39,6 +39,29 @@ RSA::RSA()
 	std::cout << "done making public and private keys!!!\n";
 }
 
+vector<unsigned char> RSA::Encrypt(vector<unsigned char> plainTextVec, const uint2048_t& pubkey, const uint2048_t& product)
+{
+	vector<unsigned char> cipherTextVec;
+
+	// Process each byte (or group of bytes if applicable)
+	for (size_t i = 0; i < plainTextVec.size(); ++i)
+	{
+		unsigned char ch = plainTextVec[i];
+
+		uint2048_t encryptedCh = (uint2048_t)mod_exp<uint2048_t>(ch, pubkey, product);
+
+		// Split the encrypted value into 256-byte chunks
+		for (short j = 0; j < 256; j++)
+		{
+			unsigned char encryptedChPart = (unsigned char)(encryptedCh & 0xFF);
+			cipherTextVec.push_back(encryptedChPart);
+			encryptedCh >>= 8;
+		}
+	}
+
+	return cipherTextVec;
+}
+
 vector<unsigned char> RSA::Encrypt(vector<unsigned char>& plainTextVec)
 {
 	vector<unsigned char> cipherTextVec;
@@ -84,6 +107,16 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 	}
 
 	return plainTextVec;
+}
+
+uint2048_t RSA::getPublicKey() const
+{
+	return this->E;
+}
+
+uint2048_t RSA::getProduct() const
+{
+	return this->N;
 }
 
 	

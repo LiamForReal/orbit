@@ -3,9 +3,11 @@
 #include <vector>
 #include <string>
 #include <WinSock2.h>
+#include <chrono>
 #include "Requestes.hpp"
 #include "RequestInfo.hpp"
-#include <chrono>
+#include "RSA.h"
+
 #define INC 1
 #define BYTES_TO_COPY 4
 
@@ -23,6 +25,8 @@ public:
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 	static RequestInfo buildRI(SOCKET socket, unsigned int statusCode);
 	static RequestInfo waitForResponse(SOCKET socket);
+	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& statusCode, RSA& rsa);
+	static RequestInfo waitForResponse_RSA(SOCKET socket, RSA& rsa);
 
 private:
 	static std::string getPartFromSocket(const SOCKET sc, const int bytesNum);

@@ -5,8 +5,6 @@ std::mutex mtx;
 
 Client::Client()
 {
-	std::cout << "Client is pregenerating RSA keys...\n";
-	this->rsa = RSA();
 	std::cout << "Client finished pregenerating RSA keys...\n";
 
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
@@ -37,6 +35,7 @@ void Client::connectToServer(std::string serverIP, int port)
 {
 
 	struct sockaddr_in sa = { 0 };
+	RequestInfo ri;
 
 	sa.sin_port = htons(port); // port that server will listen to
 	sa.sin_family = AF_INET;   // must be AF_INET
@@ -47,6 +46,24 @@ void Client::connectToServer(std::string serverIP, int port)
 
 	if (status == INVALID_SOCKET)
 		throw std::runtime_error("Cant connect to server");
+
+	RsaKeyExchangeRequest rkeRequest;
+	rkeRequest.public_key = this->rsa.getPublicKey();
+	rkeRequest.product = this->rsa.getProduct();
+
+	Helper::sendVector(_clientSocketWithDS, SerializerRequests::serializeRequest(rkeRequest));
+	ri = Helper::waitForResponse_RSA(_clientSocketWithDS, rsa);
+	if (RSA_KEY_EXCHANGE_STATUS == ri.id)
+	{
+		RsaKeyExchangeResponse rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
+		this->rsaServerPubkey = rkeResponse.public_key;
+		std::cout << "Got server's RSA public key: " << this->rsaServerPubkey << std::endl;
+	}
+	else
+	{
+		std::cerr << "Could not exchange RSA keys with server!\n";
+		exit(1);
+	}
 }
 
 void Client::nodeOpening()
@@ -104,7 +121,7 @@ void Client::listenToServerInfo()
 	catch (std::runtime_error& e)
 	{
 		std::cout << e.what() << std::endl;
-		if (e.what() == "the circuit is corrapted!")
+		if (e.what() == "the circuit is corrupted!")
 		{
 			throw std::runtime_error("adjust new circuit");
 		}

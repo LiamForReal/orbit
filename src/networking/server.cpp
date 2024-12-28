@@ -17,9 +17,7 @@ DockerManager dm = DockerManager();
 
 Server::Server()
 {
-	std::cout << "RSA is pregenerating RSA keys...\n";
-	this->rsa = RSA();
-	std::cout << "RSA finished pregenerating RSA keys...\n";
+	std::cout << "Server finished pregenerating RSA keys...\n";
 	
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
@@ -115,6 +113,41 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::string msg = "";
 		unsigned int circuitID = 0;
 		RequestResult rr = RequestResult();
+		std::vector<unsigned char> encryptedRSAKeyExchangeVec;
+		
+		uint2048_t rsaClientPubkey;
+		uint2048_t rsaClientProduct;
+
+		RsaKeyExchangeRequest rkeRequest;
+		RsaKeyExchangeResponse rkeResponse;
+
+		try
+		{
+			ri = Helper::waitForResponse(client_socket);
+
+			if (RSA_KEY_EXCHANGE_RC != ri.id)
+			{
+				throw std::runtime_error("Did not get RSA key exchange request!");
+			}
+
+			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(ri.buffer);
+			std::cout << "Got public RSA key from client: " << rkeRequest.public_key << std::endl;
+			rsaClientPubkey = rkeRequest.public_key;
+			rsaClientProduct = rkeRequest.product;
+
+			rkeResponse.public_key = this->rsa.getPublicKey();
+			rkeResponse.product = this->rsa.getProduct();
+			rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
+		}
+		catch (std::runtime_error e)
+		{
+			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
+		}
+
+		encryptedRSAKeyExchangeVec = RSA::Encrypt(SerializerResponses::serializeResponse(rkeResponse), rsaClientPubkey, rsaClientProduct);
+		Helper::sendVector(client_socket, encryptedRSAKeyExchangeVec);
+		encryptedRSAKeyExchangeVec.clear();
+
 		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
 		mutex.unlock(); 

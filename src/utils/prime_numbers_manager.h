@@ -4,6 +4,8 @@
 #include <random>
 #include <vector>
 
+#define MILLER_RABIN_ROUNDS 40
+
 class prime_numbers_manager
 {
 public:
@@ -125,7 +127,6 @@ private:
     template<typename T>
     static bool is_prime(const T& n) 
     {
-        int k = 60;
         if (n <= 1 || n == 4)  return false;
         if (n <= 3) return true;
         if (is_divisible_by_small_primes<T>(n))
@@ -138,10 +139,10 @@ private:
         while (d % 2 == 0)
             d /= 2;
 
-        // Iterate given number of 'k' times
-        for (int i = 0; i < k; i++)
+        // Iterate given number of MILLER_RABIN_ROUNDS times
+        for (int i = 0; i < MILLER_RABIN_ROUNDS; i++)
         {
-            std::cout << "PERFORMING ROUND " << (i+1) << "\n";
+            // std::cout << "PERFORMING ROUND " << (i+1) << "\n";
             if (!millerTest<T>(d, n))
                 return false;
         }

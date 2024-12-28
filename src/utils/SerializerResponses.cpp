@@ -6,12 +6,15 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const RsaKeyEx
     vec[0] = ((unsigned char)(rsaKeyExchangeResponse.status));
 
     unsigned int len = 0;
-    json publicKey = rsaKeyExchangeResponse.public_key.str(); 
+    json publicKey = rsaKeyExchangeResponse.public_key.str();
+    json product = rsaKeyExchangeResponse.product.str();
     std::cout << "public key: " << publicKey << std::endl;
     
-    json requestJson = {
+    json requestJson = 
+    {
         {"status", rsaKeyExchangeResponse.status},
         {"public_key", publicKey},
+        {"product", product},
     };
     
     std::string requestJsonStr = requestJson.dump();

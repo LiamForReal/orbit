@@ -12,8 +12,12 @@ class RSA
 {
 	public:
 		RSA();
+
+		static vector<unsigned char> Encrypt(vector<unsigned char> plainTextVec, const uint2048_t& pubkey, const uint2048_t& product);
 		vector<unsigned char> Encrypt(vector<unsigned char>& plainTextVec);
 		vector<unsigned char> Decrypt(vector<unsigned char>& cipherTextVec);
+		uint2048_t getPublicKey() const;
+		uint2048_t getProduct() const;
 
 	protected:
 		template <typename T>

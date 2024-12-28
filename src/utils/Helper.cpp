@@ -66,6 +66,7 @@ unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 	value = (value << 8) | static_cast<unsigned char>(data[0]);
 
 	delete[] data;
+	data = NULL;
 
 	return value;
 }
@@ -78,6 +79,7 @@ unsigned int Helper::getCircuitIdFromSocket(const SOCKET sc)
 	value = (value << 8) | static_cast<unsigned char>(data[0]);
 
 	delete[] data;
+	data = NULL;
 
 	return value;
 }
@@ -95,6 +97,7 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 	}
 
 	delete[] data;
+	data = NULL;
 
 	return value;
 }
@@ -140,6 +143,8 @@ std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum, const
 	data[bytesNum] = 0;
 	std::string received(data);
 	delete[] data;
+	data = NULL;
+
 	return received;
 }
 
@@ -222,4 +227,115 @@ RequestInfo Helper::waitForResponse(SOCKET socket)
 			return Helper::buildRI(socket, statusCode);
 		}
 	}
+}
+
+RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, RSA& rsa)
+{
+	RequestInfo ri = RequestInfo();
+	ri.buffer = std::vector<unsigned char>();
+	std::string msg = "";
+	unsigned int circuitId = 0;
+	size_t i = 0;
+	int j = 0;
+
+	std::vector<uint8_t> encryptedLengthVec;
+	// 4 * 256 bytes because our RSA is 2048 bits and length is 4
+	encryptedLengthVec.reserve(4 * 256);
+	unsigned int msgLengthValue = 0;
+
+	unsigned char* encryptedLength = getUnsignedCharPartFromSocket(socket, 4 * 256, 0);
+	for (short i = 0; i < 4 * 256; i++)
+	{
+		encryptedLengthVec.emplace_back(encryptedLength[i]);
+	}
+
+	free(encryptedLength);
+	encryptedLength = NULL;
+
+	std::vector<uint8_t> decryptedLengthVec = rsa.Decrypt(std::ref(encryptedLengthVec));
+
+	for (i = 0; i < 4; i++)
+	{
+		msgLengthValue |= (static_cast<unsigned int>(decryptedLengthVec[i]) << (i * 8));
+	}
+
+	encryptedLengthVec.clear();
+	decryptedLengthVec.clear();
+
+	ri.id = statusCode;
+
+	std::cout << "DEBUG: Status code: " << statusCode << std::endl;
+	ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
+
+	if (ri.id == ALIVE_MSG_RC) //request how has no data
+		return ri;
+
+	std::cout << "DEBUG: Length: " << msgLengthValue << std::endl;
+
+	for (j = 0; j < BYTES_TO_COPY; ++j) 
+	{
+		ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLengthValue >> (8 * j)) & 0xFF));
+	}
+
+	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
+	std::vector<uint8_t> encryptedMessageVec;
+	encryptedMessageVec.resize(msgLengthValue * 256);
+
+	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, msgLengthValue * 256, 0);
+	for (unsigned int i = 0; i < msgLengthValue * 256; i++)
+	{
+		encryptedMessageVec.emplace_back(encryptedMessage[i]);
+	}
+
+	free(encryptedMessage);
+	encryptedMessage = NULL;
+
+	std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(std::ref(encryptedMessageVec));
+
+	for (uint8_t byte : decryptedMessageVec)
+	{
+		msg += byte;
+	}
+
+	encryptedMessageVec.clear();
+	decryptedMessageVec.clear();
+
+	msg[msgLengthValue] = '\0';
+
+	for (i = 0; i < msgLengthValue; i++)
+	{
+		ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
+	}
+
+	std::cout << "DEBUG: The message is: " << msg << std::endl;
+
+	ri.id = statusCode;
+
+	return ri;
+}
+
+RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
+{
+	std::vector<uint8_t> encryptedStatusCodeVec;
+	// 256 bytes because our RSA is 2048 bits
+	encryptedStatusCodeVec.reserve(256);
+	unsigned int statusCode;
+
+	unsigned char* encryptedStatusCode = getUnsignedCharPartFromSocket(socket, 256, 0);
+	for (short i = 0; i < 256; i++)
+	{
+		encryptedStatusCodeVec.emplace_back(encryptedStatusCode[i]);
+	}
+
+	free(encryptedStatusCode);
+	encryptedStatusCode = NULL;
+
+	std::vector<uint8_t> decryptedStatusCodeVec = rsa.Decrypt(std::ref(encryptedStatusCodeVec));
+
+	statusCode = decryptedStatusCodeVec[0];
+
+	encryptedStatusCodeVec.clear();
+	decryptedStatusCodeVec.clear();
+
+	return Helper::buildRI_RSA(socket, statusCode, rsa);
 }

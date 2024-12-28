@@ -41,6 +41,7 @@ typedef struct RsaKeyExchangeResponse
 {
 	unsigned int status; 
 	uint2048_t public_key;
+	uint2048_t product;
 } RsaKeyExchangeResponse;
 
 typedef struct EcdheKeyExchangeResponse
