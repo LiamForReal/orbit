@@ -292,11 +292,12 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 	{
 		DeleteCircuitRequest dcr;
 		char buffer[100];
-		RequestInfo ri;
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
 		std::cout << "Enter to control with socket " << node_sock << std::endl;
+
+		bool globalCrashHandled = false; // Track if global actions are done
 
 		while (true)
 		{
@@ -309,53 +310,32 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 					{
 						for (unsigned int circuitId : circuits)
 						{
-							// Ensure only affected circuits for the current node are checked
 							if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
 							{
-								return true; // Break when a relevant notification is found
+								return true; // Relevant notification found
 							}
 						}
 						return false; // No relevant notifications
 					});
 
-				// Process circuit notifications if any
+				// Process circuit notifications
 				for (unsigned int circuitId : circuits)
 				{
 					if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
 					{
-						// Remove the node from the notifications
+						// Remove the node from notifications
 						_circuitsToNotify[circuitId].erase(nodeIp);
 						if (_circuitsToNotify[circuitId].empty())
 						{
 							_circuitsToNotify.erase(circuitId); // Clean up if no more nodes are affected
 						}
 
-						// Handle delete circuit logic
+						// Handle delete circuit (node-specific action)
 						dcr.circuit_id = circuitId;
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
 
-						// Notify the remaining nodes
-						Helper::sendVector(node_sock, deleteCircuitBuffer);
+						Helper::sendVector(node_sock, deleteCircuitBuffer); // Notify the node
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
-
-						std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
-						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
-						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
-
-						// Regenerate the circuit for the remaining nodes
-						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
-						_controlList[circuitId] = newCircuit;
-
-						CircuitConfirmationResponse ccr;
-						ccr.circuit_id = circuitId;
-						ccr.nodesPath = newCircuit;
-						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
-						std::vector<unsigned char> responseBuffer = SerializerResponses::serializeResponse(ccr);
-						Helper::sendVector(_clients[circuitId], responseBuffer);
-
-						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
-						return; // close this socket does not exist
 					}
 				}
 			}
@@ -380,8 +360,50 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						circuitCondition.notify_all();
 					}
 
-					timeout = SECONDS_TO_WAIT * 1000;
-					setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+					// Global actions (one-time)
+					if (!globalCrashHandled)
+					{
+						for (unsigned int circuitId : circuits)
+						{
+							// Notify the client
+							DeleteCircuitRequest dcr;
+							dcr.circuit_id = circuitId;
+							std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+							Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
+							std::cerr << "Client notified for circuit " << circuitId << ".\n";
+
+							// Rebuild the circuit
+							std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
+							_controlList[circuitId] = newCircuit;
+
+							CircuitConfirmationResponse ccr;
+							ccr.circuit_id = circuitId;
+							ccr.nodesPath = newCircuit;
+							ccr.status = CIRCUIT_CONFIRMATION_STATUS;
+							std::vector<unsigned char> responseBuffer = SerializerResponses::serializeResponse(ccr);
+							std::this_thread::sleep_for(std::chrono::milliseconds(100));
+							Helper::sendVector(_clients[circuitId], responseBuffer);
+
+							std::cerr << "Client " << _clients[circuitId] << " notified with updated circuit " << circuitId << ".\n";
+						}
+
+						globalCrashHandled = true; // Mark global actions as completed
+					}
+
+					// Node-specific action (delete circuit for this node)
+					for (unsigned int circuitId : circuits)
+					{
+						DeleteCircuitRequest dcr;
+						dcr.circuit_id = circuitId;
+						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+
+						Helper::sendVector(node_sock, deleteCircuitBuffer);
+						std::cerr << "Node " << nodeIp << " notified with delete circuit " << circuitId << ".\n";
+					}
+
+					closesocket(node_sock); // Close the socket
+					std::cerr << "Socket " << node_sock << " for node " << nodeIp << " closed.\n";
+					break; // Exit the loop after handling the crash
 				}
 				else
 				{
@@ -396,6 +418,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
 			}
+
 			// Commit: Reset timeout after successful receive
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));

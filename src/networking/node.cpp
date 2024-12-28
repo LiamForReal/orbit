@@ -82,12 +82,10 @@ void Node::controlReceiver(SOCKET& serverSock)
 		while (true)
 		{
 			ri = Helper::waitForResponse(serverSock);
-
-			
-			std::cout << "\n\ndelete sended! with id " << ri.id << "\n\n";
 			
 			if (ri.id == DELETE_CIRCUIT_RC)
 			{
+				std::cout << "\n\ndelete sended! with id " << ri.id << "\n\n";
 				mutex.lock();
 				rr = nodeRequestHandler.directMsg(ri);
 				mutex.unlock();
@@ -156,17 +154,16 @@ void Node::serveControl()
 {
 	try
 	{
-		//SOCKET serverSockRecver = createSocketWithServer();
-		SOCKET serverSockSender = createSocketWithServer();
+		SOCKET serverSock = createSocketWithServer();
 
 		//unsigned long l;
 		//ioctlsocket(serverSock, FIONREAD, &l);
 
-		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSockSender));
-		//std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSockRecver));
+		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
+		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
 
 		controlSenderThread.join();
-		//controlReceiverThread.join();
+		controlReceiverThread.join();
 	}
 	catch (std::runtime_error& e)
 	{
