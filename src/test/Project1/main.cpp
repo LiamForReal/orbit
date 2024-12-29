@@ -21,17 +21,17 @@ int main()
 	vector<unsigned char> cipher = rsa.Encrypt(text);
 	timeElapsed = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start).count();
 
-	std::cout << "finished computation at " << timeElapsed << std::endl;
+	std::cout << "finished encription at " << timeElapsed << "total." << std::endl;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 
 
-	std::string text_to_print(cipher.begin(), cipher.end());
-	std::cout << "cypher text: " << text_to_print << std::endl;
+	//std::string text_to_print(cipher.begin(), cipher.end());
+	//std::cout << "cypher text: " << text_to_print << std::endl;
 	
 	start = std::chrono::system_clock::now();
 	vector<unsigned char> plain = rsa.Decrypt(cipher);
 	timeElapsed = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::system_clock::now() - start).count();
 
-	std::cout << "finished computation at " << timeElapsed << std::endl;
+	std::cout << "finished decription at " << timeElapsed << "total." << std::endl;
 
 
 	std::string text_to_print2(plain.begin(), plain.end());

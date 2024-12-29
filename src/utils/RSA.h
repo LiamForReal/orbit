@@ -24,6 +24,7 @@ class RSA
 			return prime_numbers_manager::getRandomPrimeNumber<T>(lowerBond, upperBond);
 		}
 
+
 	private:
 		cpp_int euclideanMod(const cpp_int& num, const cpp_int& mod);
 		void generateP(std::promise<uint1024_t>&& promiseP);
@@ -32,6 +33,8 @@ class RSA
 		uint2048_t calcTotient(const uint1024_t& q, const uint1024_t& p);
 		void selectPublicKey();
 		void selectPrivateKey(); 
+		uint2048_t CRTDecrypt(uint2048_t& encryptedBlock);
+		
 
 		uint2048_t P;
 		uint2048_t Q;

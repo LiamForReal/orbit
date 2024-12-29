@@ -38,13 +38,12 @@ RSA::RSA()
 	selectPrivateKey();
 	std::cout << "D (private key) = " << this->D << std::endl;
 	std::cout << "done making public and private keys!!!\n";
-
-	this->P = uint2048_t(p);
-	this->Q = uint2048_t(q);
+	this->P = p;
+	this->Q = q;
 	this->DP = this->D % (this->P - 1);
 	this->DQ = this->D % (this->Q - 1);
-	cpp_int pcopy = cpp_int(this->P);
-	cpp_int qcopy = cpp_int(this->Q);
+	cpp_int pcopy = this->P;
+	cpp_int qcopy = this->Q;
 
 	cpp_int x0 = 1;
 	cpp_int y0 = 0;
@@ -78,15 +77,16 @@ RSA::RSA()
 			pcopy = remainder;
 		}
 	} while (pcopy > 0 && qcopy > 0);
-
 	if (pcopy == 0)
 	{
 		// x0 is equals to totient, x1 is equals to private key
+		std::cout << "4.1";
 		this->QINV = (uint2048_t)(euclideanMod(x1, qcopy));
 	}
 	if (qcopy == 0)
 	{
 		// x0 is equals to private key, x1 is equals to -totient
+		std::cout << "4.2";
 		this->QINV = (uint2048_t)(euclideanMod(x0, qcopy));
 	}
 
@@ -117,40 +117,70 @@ vector<unsigned char> RSA::Encrypt(vector<unsigned char>& plainTextVec)
 	return cipherTextVec;
 }
 
-vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec) {
+vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
+{
+	if (cipherTextVec.size() % 256 != 0)
+	{
+		throw std::invalid_argument("Ciphertext size is not a multiple of block size (256 bytes).");
+	}
+
+	size_t numBlocks = cipherTextVec.size() / 256;
 	vector<unsigned char> plainTextVec;
-	plainTextVec.reserve(cipherTextVec.size() / 256);
-	uint2048_t encryptedCh, decryptedCh;
-
-	for (size_t i = 0; i < cipherTextVec.size(); i += 256) {
-		encryptedCh = 0;
-
-		// Rebuild the encrypted message (uint2048_t) from 256 bytes
-		for (short j = 255; j != 0; --j) {
-			encryptedCh = (encryptedCh << 8) | cipherTextVec[i + j];
+	plainTextVec.reserve(numBlocks);
+	uint2048_t encryptedBlock = 0;
+	uint2048_t decryptedBlock = 0;
+	for (size_t i = 0; i < numBlocks; ++i)
+	{
+		// Reassemble the 256-byte block into a uint2048_t value
+		for (short j = 255; j >= 0; --j)
+		{
+			encryptedBlock = (encryptedBlock << 8) | cipherTextVec[(i * 256) + j];
 		}
 
-		// Compute m1 and m2
-		uint2048_t m1 = mod_exp<uint2048_t>(encryptedCh, this->DP, this->P);
-		uint2048_t m2 = mod_exp<uint2048_t>(encryptedCh, this->DQ, this->Q);
+		// Decrypt the block using CRT
+		decryptedBlock = CRTDecrypt(encryptedBlock);
 
-		// Combine m1 and m2 using CRT
-		uint2048_t h = (this->QINV * (m1 - m2 + this->P)) % this->P;
-		decryptedCh = m2 + h * this->Q;
-
-		// Decrypted value is expected to be a single byte
-		unsigned char decryptedByte = (unsigned char)(decryptedCh & 0xFF);
-		plainTextVec.emplace_back(decryptedByte);
+		// Append decrypted byte to output
+		if (decryptedBlock > 255)
+		{
+			throw std::runtime_error("Decrypted value exceeds valid byte range.");
+		}
+		plainTextVec.emplace_back(static_cast<unsigned char>(decryptedBlock));
 	}
 
 	return plainTextVec;
 }
 
+uint2048_t RSA::CRTDecrypt(uint2048_t& encryptedBlock)
+{
+	// Decrypt modulo P
+	uint2048_t m1 = mod_exp<uint2048_t>(encryptedBlock, this->DP, this->P);
+
+	// Decrypt modulo Q
+	uint2048_t m2 = mod_exp<uint2048_t>(encryptedBlock, this->DQ, this->Q);
+
+	// Combine results using CRT
+	uint2048_t h = (this->QINV * (m1 - m2 + this->P)) % this->P;
+	uint2048_t decryptedBlock = m2 + h * this->Q;
+
+	return decryptedBlock;
+}
+
 
 	
-cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod)
+cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod) 
 {
-	return ((num % mod + mod) % mod);
+	std::cout << "4.2.1";
+	cpp_int result = num % mod;
+	std::cout << "4.2.2";
+	if (result < 0) 
+	{
+		result += mod; 
+	}
+	std::cout << "4.2.3";
+	cpp_int finalResult = result % mod;
+	std::cout << "4.2.4";
+	return finalResult;
 }
 
 void RSA::generateP(std::promise<uint1024_t>&& promiseP)

@@ -34,3 +34,31 @@ static T mod_exp(T inputBase, T inputPower, T inputMod)
 
     return (T)result;
 }
+
+template <typename T>
+static T mod_exp_de(T inputBase, T inputPower, T inputMod)
+{
+    // Use the result, base, power, and mod variables for clarity and optimization
+    T result = 1;
+    T base = inputBase % inputMod; // Reduce base modulo inputMod immediately
+    T power = inputPower;
+
+    if (base == 0) return 0; // Shortcut for zero base
+
+    while (power > 0)
+    {
+        // If the current power is odd, multiply result by the current base
+        if (power & 1)
+        {
+            result = (result * base) % inputMod;
+        }
+
+        // Square the base and reduce it modulo inputMod
+        base = (base * base) % inputMod;
+
+        // Divide the power by 2
+        power >>= 1;
+    }
+
+    return result;
+}
