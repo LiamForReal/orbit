@@ -10,7 +10,7 @@ using uint256_t = boost::multiprecision::number<boost::multiprecision::cpp_int_b
 using boost::multiprecision::cpp_int;
 
 template <typename T>
-cpp_int mod_exp(cpp_int inputBase, T inputPower, T inputMod)
+T mod_exp(cpp_int inputBase, T inputPower, T inputMod)
 {
 	cpp_int result = 1;
 	cpp_int base = inputBase;
@@ -32,5 +32,5 @@ cpp_int mod_exp(cpp_int inputBase, T inputPower, T inputMod)
 		base = (base * base) % mod;
 	}
 
-	return result;
+	return (T)result;
 }
