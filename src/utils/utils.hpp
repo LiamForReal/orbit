@@ -10,27 +10,27 @@ using uint256_t = boost::multiprecision::number<boost::multiprecision::cpp_int_b
 using boost::multiprecision::cpp_int;
 
 template <typename T>
-cpp_int mod_exp(cpp_int inputBase, T inputPower, T inputMod)
+static T mod_exp(T inputBase, T inputPower, T inputMod)
 {
-	cpp_int result = 1;
-	cpp_int base = inputBase;
-	cpp_int power = inputPower;
-	cpp_int mod = inputMod;
+    cpp_int result = 1;
+    cpp_int base = inputBase;
+    cpp_int power = inputPower;
+    cpp_int mod = inputMod;
 
-	base = base % mod;
+    base = base % mod;
 
-	if (base == 0) return 0;
+    if (base == 0) return 0;
 
-	while (power > 0)
-	{
-		if (power & 1) // check if power is odd
-		{
-			result = (result * base) % mod;
-		}
+    while (power > 0)
+    {
+        if (power & 1) // check if power is odd
+        {
+            result = (result * base) % mod;
+        }
 
-		power >>= 1; // divide power by 2 (efficient bitwise way)
-		base = (base * base) % mod;
-	}
+        power >>= 1; // divide power by 2 (efficient bitwise way)
+        base = (base * base) % mod;
+    }
 
-	return result;
+    return (T)result;
 }

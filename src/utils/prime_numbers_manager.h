@@ -54,32 +54,6 @@ public:
     }
 
 private:
-    template <typename T>
-    static T mod_exp(T inputBase, T inputPower, T inputMod)
-    {
-        cpp_int result = 1;
-        cpp_int base = inputBase;
-        cpp_int power = inputPower;
-        cpp_int mod = inputMod;
-
-        base = base % mod;
-
-        if (base == 0) return 0;
-
-        while (power > 0)
-        {
-            if (power & 1) // check if power is odd
-            {
-                result = (result * base) % mod;
-            }
-
-            power >>= 1; // divide power by 2 (efficient bitwise way)
-            base = (base * base) % mod;
-        }
-
-        return (T)result;
-    }
-
     template<typename T>
     static bool millerTest(T d, T n)
     {
@@ -125,7 +99,7 @@ private:
     template<typename T>
     static bool is_prime(const T& n) 
     {
-        int k = 60;
+        int k = 20;
         if (n <= 1 || n == 4)  return false;
         if (n <= 3) return true;
         if (is_divisible_by_small_primes<T>(n))
@@ -141,7 +115,7 @@ private:
         // Iterate given number of 'k' times
         for (int i = 0; i < k; i++)
         {
-            std::cout << "PERFORMING ROUND " << (i+1) << "\n";
+            //std::cout << "PERFORMING ROUND " << (i+1) << "\n";
             if (!millerTest<T>(d, n))
                 return false;
         }

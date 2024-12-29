@@ -33,10 +33,15 @@ class RSA
 		void selectPublicKey();
 		void selectPrivateKey(); 
 
+		uint2048_t P;
+		uint2048_t Q;
 		uint2048_t E; //public_key;
 		uint2048_t D; //private_key;
 		uint2048_t T; //Totioent
 		uint2048_t N; //Product
+		uint2048_t DP;
+		uint2048_t DQ;
+		uint2048_t QINV;
 
 		bool _generatedP;
 		bool _generatedQ;

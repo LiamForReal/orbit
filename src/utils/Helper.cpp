@@ -217,7 +217,7 @@ RequestInfo Helper::waitForResponse(SOCKET socket)
 	while(true)
 	{
 		statusCode = Helper::socketHasData(socket);
-		if(statusCode != 0 && statusCode != -1)
+		if (statusCode != 0 && statusCode != -1)
 		{
 			return Helper::buildRI(socket, statusCode);
 		}
