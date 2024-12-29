@@ -78,11 +78,15 @@ void Node::controlReceiver(SOCKET& serverSock)
 		RequestInfo ri;
 		RequestResult rr;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), serverSock);
-
+		int bytesReceived = 0;
+		char* buffer = NULL;
+		buffer = new char[1];
 		while (true)
 		{
-			ri = Helper::waitForResponse(serverSock);
-			
+			//ri = Helper::waitForResponse(serverSock);
+			bytesReceived = recv(serverSock, buffer, 1, 0);
+			std::cout << "circuit id is = " << (int)(buffer[0]) << std::endl; 
+			ri = Helper::buildRI(serverSock, *buffer);
 			if (ri.id == DELETE_CIRCUIT_RC)
 			{
 				std::cout << "\n\ndelete sended! with id " << ri.id << "\n\n";
