@@ -99,7 +99,7 @@ vector<unsigned char> RSA::Encrypt(vector<unsigned char> plainTextVec, const uin
 	{
 		unsigned char ch = plainTextVec[i];
 
-		uint2048_t encryptedCh = (uint2048_t)mod_exp<uint2048_t>(ch, pubkey, product);
+		uint2048_t encryptedCh = mod_exp<uint2048_t>(ch, pubkey, product);
 
 		// Split the encrypted value into 256-byte chunks
 		for (short j = 0; j < 256; j++)
@@ -123,7 +123,7 @@ vector<unsigned char> RSA::Encrypt(vector<unsigned char>& plainTextVec)
 	{
 		unsigned char ch = plainTextVec[i];
 
-		uint2048_t encryptedCh = (uint2048_t)mod_exp<uint2048_t>(ch, this->E, this->N);
+		uint2048_t encryptedCh = mod_exp<uint2048_t>(ch, this->E, this->N);
 
 		// Split the encrypted value into 256-byte chunks
 		for (short j = 0; j < 256; j++)
@@ -151,6 +151,8 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 	uint2048_t decryptedBlock = 0;
 	for (size_t i = 0; i < numBlocks; ++i)
 	{
+		encryptedBlock = 0;
+
 		// Reassemble the 256-byte block into a uint2048_t value
 		for (short j = 255; j >= 0; --j)
 		{

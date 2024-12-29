@@ -22,6 +22,7 @@ std::vector<unsigned char> SerializerResponses::serializeResponse(const RsaKeyEx
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
+    std::cout << "Length of data of key exchange: " << len << std::endl;
 	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
 
 	// Insert Message Into Vector

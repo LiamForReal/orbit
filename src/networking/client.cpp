@@ -51,12 +51,20 @@ void Client::connectToServer(std::string serverIP, int port)
 	rkeRequest.public_key = this->rsa.getPublicKey();
 	rkeRequest.product = this->rsa.getProduct();
 
-	Helper::sendVector(_clientSocketWithDS, SerializerRequests::serializeRequest(rkeRequest));
-	ri = Helper::waitForResponse_RSA(_clientSocketWithDS, rsa);
+	try
+	{
+		Helper::sendVector(_clientSocketWithDS, SerializerRequests::serializeRequest(rkeRequest));
+		ri = Helper::waitForResponse_RSA(_clientSocketWithDS, rsa);
+	}
+	catch (...)
+	{
+		std::cerr << "Problem with RSA\n";
+	}
 	if (RSA_KEY_EXCHANGE_STATUS == ri.id)
 	{
 		RsaKeyExchangeResponse rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
 		this->rsaServerPubkey = rkeResponse.public_key;
+		this->rsaServerProduct = rkeResponse.product;
 		std::cout << "Got server's RSA public key: " << this->rsaServerPubkey << std::endl;
 	}
 	else

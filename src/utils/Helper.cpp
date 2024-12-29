@@ -279,7 +279,7 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, R
 
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
 	std::vector<uint8_t> encryptedMessageVec;
-	encryptedMessageVec.resize(msgLengthValue * 256);
+	encryptedMessageVec.reserve(msgLengthValue * 256);
 
 	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, msgLengthValue * 256, 0);
 	for (unsigned int i = 0; i < msgLengthValue * 256; i++)
@@ -294,6 +294,7 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, R
 
 	for (uint8_t byte : decryptedMessageVec)
 	{
+		std::cout << static_cast<int>(byte) << " ";
 		msg += byte;
 	}
 
@@ -331,11 +332,12 @@ RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 	encryptedStatusCode = NULL;
 
 	std::vector<uint8_t> decryptedStatusCodeVec = rsa.Decrypt(std::ref(encryptedStatusCodeVec));
+	std::cout << "Dec status code vec size: " << decryptedStatusCodeVec.size() << std::endl;
 
 	statusCode = decryptedStatusCodeVec[0];
 
 	encryptedStatusCodeVec.clear();
 	decryptedStatusCodeVec.clear();
 
-	return Helper::buildRI_RSA(socket, statusCode, rsa);
+	return Helper::buildRI_RSA(socket, statusCode, std::ref(rsa));
 }

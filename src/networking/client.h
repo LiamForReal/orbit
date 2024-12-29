@@ -55,5 +55,7 @@ private:
 
 	RSA rsa;
 	uint2048_t rsaServerPubkey;
+	uint2048_t rsaServerProduct;
 	uint2048_t rsaFirstNodePubkey;
+	uint2048_t rsaFirstNodeProduct;
 };
