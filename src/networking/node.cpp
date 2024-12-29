@@ -84,13 +84,18 @@ void Node::controlReceiver(SOCKET& serverSock)
 		while (true)
 		{
 			//ri = Helper::waitForResponse(serverSock);
+			std::cout << "\n\nstart recving from server\n\n";
 			bytesReceived = recv(serverSock, buffer, 1, 0);
 			std::cout << "circuit id is = " << (int)(buffer[0]) << std::endl; 
-			ri = Helper::buildRI(serverSock, *buffer);
-			if (ri.id == DELETE_CIRCUIT_RC)
+			//ri = Helper::buildRI(serverSock, *buffer);
+			if (/*/ri.id == DELETE_CIRCUIT_RC*/true)
 			{
-				std::cout << "\n\ndelete sended! with id " << ri.id << "\n\n";
+				std::cout << "\n\ndelete sended!" << "\n\n";
 				mutex.lock();
+				ri.id = 100;
+				DeleteCircuitRequest dcr;
+				dcr.circuit_id = circuits.begin()->first;
+				ri.buffer = SerializerRequests::serializeRequest(dcr);
 				rr = nodeRequestHandler.directMsg(ri);
 				mutex.unlock();
 
@@ -263,32 +268,33 @@ void Node::clientHandler(const SOCKET client_socket)
 		RequestResult rr;
 		rr.circuit_id = 0;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), client_socket);
+		
 		while (true)
 		{
-			//wait for msg from main
-			ri = Helper::waitForResponse(client_socket);
-			mutex.lock();
-			rr = nodeRequestHandler.directMsg(ri);
-			mutex.unlock();
-			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
+			try
 			{
-				std::cout << "sending beckward!\n";
-				Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);
-			}
+				ri = Helper::waitForResponse(client_socket);
+				mutex.lock();
+				rr = nodeRequestHandler.directMsg(ri);
+				mutex.unlock();
+				if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
+				{
+					std::cout << "sending beckward!\n";
+					Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);
+				}
 
-			if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
+				if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
+				{
+					//add notes
+					std::cout << "listening foward\n";
+					ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
+					Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
+				}
+			}
+			catch (...)
 			{
-				//client -> 1 
-				//clint <- next updated!!
-				//client -> 1 -> 2
-				//clint <- 1 <- next updated!!
-				//client -> ask for domain 
-				//client -> 1 -> 2 -> web serever (curl)
-				//client <- 1 <- 2 <- web server
-				//add notes
- 				std::cout << "listening foward\n";//client -> 1 -> 2 -> 3 -> 4 -> web server 
-				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
-				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
+				std::cout << "client problem cought!, keep running with delay of 20 sec\n";
+				std::this_thread::sleep_for(std::chrono::seconds(20));
 			}
 		}
 	}

@@ -394,9 +394,9 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 					for (unsigned int circuitId : circuits)
 					{
 						DeleteCircuitRequest dcr;
-						dcr.circuit_id = circuitId;
+						dcr.circuit_id = circuitId; //the opiset
 						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
-
+						std::cout << "sending node crush! to " << nodeIp << std::endl;
 						Helper::sendVector(node_sock, deleteCircuitBuffer);
 						std::cerr << "Node " << nodeIp << " notified with delete circuit " << circuitId << ".\n";
 					}
