@@ -80,14 +80,12 @@ RSA::RSA()
 	if (pcopy == 0)
 	{
 		// x0 is equals to totient, x1 is equals to private key
-		std::cout << "4.1";
-		this->QINV = (uint2048_t)(euclideanMod(x1, qcopy));
+		this->QINV = (uint2048_t)(euclideanMod(x1, this->Q));
 	}
 	if (qcopy == 0)
 	{
 		// x0 is equals to private key, x1 is equals to -totient
-		std::cout << "4.2";
-		this->QINV = (uint2048_t)(euclideanMod(x0, qcopy));
+		this->QINV = (uint2048_t)(euclideanMod(x0, this->Q));
 	}
 
 	std::cout << "Generated CRT params\n";
@@ -170,16 +168,12 @@ uint2048_t RSA::CRTDecrypt(uint2048_t& encryptedBlock)
 	
 cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod) 
 {
-	std::cout << "4.2.1";
 	cpp_int result = num % mod;
-	std::cout << "4.2.2";
 	if (result < 0) 
 	{
 		result += mod; 
 	}
-	std::cout << "4.2.3";
 	cpp_int finalResult = result % mod;
-	std::cout << "4.2.4";
 	return finalResult;
 }
 
