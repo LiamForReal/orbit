@@ -15,6 +15,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
     json requestJson = {
         {"public_key", public_key},
         {"product", product},
+        {"circuit_id", rsaKeyExchangeRequest.circuit_id},
     };
     
     std::string requestJsonStr = requestJson.dump();

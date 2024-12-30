@@ -25,6 +25,7 @@ Client::~Client()
 	{
 		// the only use of the destructor should be for freeing 
 		// resources that was allocated in the constructor
+		this->rsaCircuitData.clear();
 		closesocket(_clientSocketWithFirstNode);
 		closesocket(_clientSocketWithDS);
 	}
@@ -191,6 +192,8 @@ void Client::startConversation(const bool& openNodes)
 
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
 
+	this->rsaCircuitData.reserve(ccr.nodesPath.size());
+
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 	{
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
@@ -214,6 +217,12 @@ void Client::startConversation(const bool& openNodes)
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
 	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
+	LinkRequest linkRequest;
+	RsaKeyExchangeRequest rkeRequest;
+	RsaKeyExchangeResponse rkeResponse;
+	rkeRequest.public_key = rsa.getPublicKey();
+	rkeRequest.product = rsa.getProduct();
+	std::vector<unsigned char> rkeRequestVec = SerializerRequests::serializeRequest(rkeRequest);
 
 	if (status == INVALID_SOCKET)
 	{
@@ -222,6 +231,25 @@ void Client::startConversation(const bool& openNodes)
 		throw std::runtime_error("Could not open socket with first node");
 	}
 	else std::cout << "connected successfully to the first node\n";
+
+	Helper::sendVector(_clientSocketWithFirstNode, rkeRequestVec);
+	std::cout << "sent RSA msg\n";
+
+	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+	rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
+
+	if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
+	{
+		std::cout << "Got FIRST NODE public_key: " << rkeResponse.public_key << std::endl;
+		this->rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
+		std::cout << "Saved FIRST NODE pubkey\n";
+	}
+	else
+	{
+		throw std::runtime_error("Could not exchange RSA keys, thus could not build circuit.");
+	}
+	ri.buffer.clear();
+
     //headers of client sock end
 	if (ccr.nodesPath.size() > 1)
 	{
@@ -229,18 +257,38 @@ void Client::startConversation(const bool& openNodes)
 		{
 			if (it == ccr.nodesPath.begin())
 				it++;
-			LinkRequest linkRequest;
+
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 			linkRequest.circuit_id = ccr.circuit_id;
 
-			std::cout << "sended link msg\n";
 			Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
+			std::cout << "sent link msg\n";
 
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			if (Errors::LINK_ERROR == ri.id)
 			{
 				throw std::runtime_error("Could not build circuit.");
 			}
+			ri.buffer.clear();
+
+
+			Helper::sendVector(_clientSocketWithFirstNode, rkeRequestVec);
+			std::cout << "sent RSA msg\n";
+
+			ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
+			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
+
+			if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
+			{
+				std::cout << "Got NODE public_key: " << rkeResponse.public_key << std::endl;
+				this->rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
+				std::cout << "Saved NODE pubkey\n";
+			}
+			else
+			{
+				throw std::runtime_error("Could not exchange RSA keys, thus could not build circuit.");
+			}
+			ri.buffer.clear();
 		}
 	}
 

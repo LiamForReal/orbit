@@ -56,6 +56,5 @@ private:
 	RSA rsa;
 	uint2048_t rsaServerPubkey;
 	uint2048_t rsaServerProduct;
-	uint2048_t rsaFirstNodePubkey;
-	uint2048_t rsaFirstNodeProduct;
+	std::vector<std::pair<uint2048_t, uint2048_t>> rsaCircuitData;
 };
