@@ -82,6 +82,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		}
 		else if (cd[lr.circuit_id].second == _socket)
 		{
+			std::cout << "Got to the part that Liam is confused about\n";
 			Helper::sendVector(cd[lr.circuit_id].first, requestInfo.buffer);
 			std::cout << "sends to the prev node!\n";
 

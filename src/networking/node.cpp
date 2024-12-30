@@ -77,7 +77,7 @@ void Node::controlReceiver(SOCKET& serverSock)
 	{
 		RequestInfo ri;
 		RequestResult rr;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), serverSock);
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), serverSock);
 
 		while (true)
 		{
@@ -256,13 +256,13 @@ void Node::clientHandler(const SOCKET client_socket)
 		LinkRequest lr;
 		RequestResult rr;
 		rr.circuit_id = 0;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), client_socket);
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), client_socket);
 		while (true)
 		{
 			//wait for msg from main
 			ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.directMsg(ri);
-			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == RSA_KEY_EXCHANGE_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
+			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
 			{
 				std::cout << "sending backwards!\n";
 				Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);

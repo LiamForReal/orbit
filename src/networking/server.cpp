@@ -17,6 +17,7 @@ DockerManager dm = DockerManager();
 
 Server::Server()
 {
+	this->rsa.pregenerateKeys();
 	std::cout << "Server finished pregenerating RSA keys...\n";
 	
 	// notice that we step out to the global namespace
@@ -113,7 +114,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::string msg = "";
 		unsigned int circuitID = 0;
 		RequestResult rr = RequestResult();
-		std::vector<unsigned char> encryptedRSAKeyExchangeVec;
+		std::vector<unsigned char> RSAKeyExchangeVec;
 		
 		uint2048_t rsaClientPubkey;
 		uint2048_t rsaClientProduct;
@@ -144,9 +145,9 @@ void Server::clientHandler(const SOCKET client_socket)
 			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
 		}
 
-		encryptedRSAKeyExchangeVec = RSA::Encrypt(SerializerResponses::serializeResponse(rkeResponse), rsaClientPubkey, rsaClientProduct);
-		Helper::sendVector(client_socket, encryptedRSAKeyExchangeVec);
-		encryptedRSAKeyExchangeVec.clear();
+		RSAKeyExchangeVec = SerializerResponses::serializeResponse(rkeResponse), rsaClientPubkey, rsaClientProduct;
+		Helper::sendVector(client_socket, RSAKeyExchangeVec);
+		RSAKeyExchangeVec.clear();
 
 		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 

@@ -11,13 +11,13 @@
 #include <list>
 #include <map>
 #include <utility>
+#include <mutex>
+#include <set>
+#include <condition_variable>
 #include <ws2tcpip.h>
 #include "WSAInitializer.h"
 #include "docker_manager.h"
 #include "../utils/Helper.h"
-#include <mutex>
-#include<set>
-#include<condition_variable>
 #include "handlers/TorRequestHandler.h"
 #include "../utils/RSA.h"
 

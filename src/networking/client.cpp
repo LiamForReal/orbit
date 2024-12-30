@@ -5,6 +5,7 @@ std::mutex mtx;
 
 Client::Client()
 {
+	this->rsa.pregenerateKeys();
 	std::cout << "Client finished pregenerating RSA keys...\n";
 
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
@@ -55,7 +56,7 @@ void Client::connectToServer(std::string serverIP, int port)
 	try
 	{
 		Helper::sendVector(_clientSocketWithDS, SerializerRequests::serializeRequest(rkeRequest));
-		ri = Helper::waitForResponse_RSA(_clientSocketWithDS, rsa);
+		ri = Helper::waitForResponse(_clientSocketWithDS);
 	}
 	catch (...)
 	{

@@ -4,7 +4,10 @@ RSA::RSA()
 {
 	this->_generatedP = false;
 	this->_generatedQ = false;
+}
 
+void RSA::pregenerateKeys(void)
+{
 	std::promise<uint1024_t> promiseQ;
 	std::promise<uint1024_t> promiseP;
 

@@ -66,6 +66,9 @@
     <ClInclude Include="..\networking\handlers\DeleteCircuitRequestHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils\RSA.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\networking\node.cpp">
@@ -102,6 +105,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\networking\handlers\DeleteCircuitRequestHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\RSA.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
