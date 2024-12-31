@@ -34,7 +34,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 	std::cout << "socket to send: " << sc << std::endl;
 	while (totalBytesSent < dataSize)
 	{
-		std::cout << "1";
 		int bytesSent = send(sc, dataPtr + totalBytesSent, dataSize - totalBytesSent, 0);
 
 		if (bytesSent == SOCKET_ERROR)

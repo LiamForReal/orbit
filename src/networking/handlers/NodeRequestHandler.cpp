@@ -59,7 +59,6 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 					ri = Helper::waitForResponse(circuitData[rr.circuit_id].second);//sends rr but I put that on ri
 					std::cout << "[RSA] sending backwards\n";
 					Helper::sendVector(circuitData[rr.circuit_id].first, ri.buffer);
-					std::cout << "aaaaaaa";
 				}
 				else
 				{
@@ -96,6 +95,7 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 		{
 			std::cout << "unecpected error!!!";
 		}
+		std::cout << "[RSA] - " << unsigned int(rr.buffer[0]) << std::endl;
 		return rr;
 	}
 	else
