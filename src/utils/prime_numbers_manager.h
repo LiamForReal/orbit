@@ -22,7 +22,6 @@ public:
 
         if (std::is_same<T, uint1024_t>::value)
         {
-            std::cout << "is 1024\n";
             if (lowerBond == 1)
                 lower_bound = T(1) << 512;
             if (upperBond == 1)
@@ -30,16 +29,11 @@ public:
         }
         else if (std::is_same<T, uint2048_t>::value)
         {
-            std::cout << "is 2048\n";
             if (lowerBond == 1)
                 lower_bound = T(1) << 1024;
             if (upperBond == 1)
                 upper_bound = (T(1) << 2048) - 1;
         }
-
-        std::cout << "lower_bound is " << lower_bound << std::endl;
-        std::cout << "upper_bound is " << upper_bound << std::endl;
-
 
         boost::random::mt19937 rng(std::random_device{}());
         boost::random::uniform_int_distribution<T> dist(lower_bound, upper_bound);

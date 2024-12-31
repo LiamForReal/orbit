@@ -45,8 +45,6 @@ private:
 
     std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits;
     SOCKET _socket;
-
-    uint2048_t rsaServerPubkey;
     //                                  clients RSA public_key and product
     std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>> rsaCircuits;
 };

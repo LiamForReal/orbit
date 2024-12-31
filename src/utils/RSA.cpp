@@ -20,25 +20,19 @@ void RSA::pregenerateKeys(void)
 	generateQThread.join();
 	generatePThread.join();
 
-	while (!this->_generatedP || !this->_generatedQ)
-	{
-		// wait until the P & Q generation threads end.
-	}
-
 	uint1024_t q = futurePromiseQ.get();
 	uint1024_t p = futurePromiseP.get();
 
-	std::cout << "q = " << q << std::endl << "p = " << p << std::endl;
-	std::cout << "p and q generated successfully\n";
-
+	//std::cout << "Q = " << q << std::endl << "P = " << p << std::endl;
 	this->N = calcProduct(q, p);
-	std::cout << "N (product) = " << this->N << std::endl;
+	//std::cout << "N (product) = " << this->N << std::endl;
 	this->T = calcTotient(q, p);
-	std::cout << "T (totient) = " << this->T << std::endl;
+	std::cout << "N and T created sucessfully!\n";
+	//std::cout << "T (totient) = " << this->T << std::endl;
 	selectPublicKey();
-	std::cout << "E (public key) = " << this->E << std::endl;
+	//std::cout << "E (public key) = " << this->E << std::endl;
 	selectPrivateKey();
-	std::cout << "D (private key) = " << this->D << std::endl;
+	//std::cout << "D (private key) = " << this->D << std::endl;
 	std::cout << "done making public and private keys!!!\n";
 	this->P = p;
 	this->Q = q;
@@ -89,8 +83,6 @@ void RSA::pregenerateKeys(void)
 		// x0 is equals to private key, x1 is equals to -totient
 		this->QINV = (uint2048_t)(euclideanMod(x0, this->Q));
 	}
-
-	std::cout << "Generated CRT params\n";
 }
 
 vector<unsigned char> RSA::Encrypt(vector<unsigned char> plainTextVec, const uint2048_t& pubkey, const uint2048_t& product)
@@ -240,10 +232,8 @@ uint2048_t RSA::calcTotient(const uint1024_t& q, const uint1024_t& p)
 
 void RSA::selectPublicKey()
 {
-	std::cout << "starting to generate pubkey\n";
-
-	uint2048_t lb = uint2048_t("65000");
-	uint2048_t ub = uint2048_t("500000");
+	uint2048_t lb = uint2048_t(MIN_PUBLIC_KEY_VALUE);
+	uint2048_t ub = uint2048_t(MAX_PUBLIC_KEY_VALUE);
 
 	while (true)
 	{
@@ -259,8 +249,6 @@ void RSA::selectPublicKey()
 
 void RSA::selectPrivateKey()
 {
-	std::cout << "starting to generate privatekey\n";
-
 	cpp_int E = this->E;
 	cpp_int T = this->T;
 
@@ -297,8 +285,6 @@ void RSA::selectPrivateKey()
 		}
 	} while (E > 0 && T > 0);
 
-	std::cout << "E is 0\n";
-
 	if (E == 0)
 	{
 		// x0 is equals to totient, x1 is equals to private key
@@ -314,5 +300,4 @@ void RSA::selectPrivateKey()
 	// cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
 	// std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;
 
-	std::cout << "Finished to generate private key\n";
 }

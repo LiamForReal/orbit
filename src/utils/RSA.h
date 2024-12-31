@@ -5,7 +5,8 @@
 #include "utils.hpp"
 #include <thread>
 #include <future>
-
+#define MIN_PUBLIC_KEY_VALUE "65000"
+#define MAX_PUBLIC_KEY_VALUE "500000"
 using std::vector;
 
 class RSA
@@ -26,7 +27,6 @@ class RSA
         template <typename T>
         T getRandomPrimeNumber(T lowerBond = 1, T upperBond = 1)
         {
-            std::cout << "lower_bond = " << lowerBond << "\n";
             return prime_numbers_manager::getRandomPrimeNumber<T>(lowerBond, upperBond);
         }
 

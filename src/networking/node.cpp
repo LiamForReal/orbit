@@ -158,10 +158,10 @@ void Node::serveControl()
 		ioctlsocket(serverSock, FIONREAD, &l);
 
 		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
-		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
+		//std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
 
 		controlSenderThread.join();
-		controlReceiverThread.join();
+		//controlReceiverThread.join();
 	}
 	catch (std::runtime_error& e)
 	{

@@ -50,10 +50,6 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	try
 	{
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
-		if (this->cd.find(lr.circuit_id) == cd.end())
-		{
-			cd[lr.circuit_id].first = _socket;
-		}
 
 		rr.circuit_id = lr.circuit_id;
 

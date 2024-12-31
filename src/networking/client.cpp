@@ -223,6 +223,7 @@ void Client::startConversation(const bool& openNodes)
 	RsaKeyExchangeResponse rkeResponse;
 	rkeRequest.public_key = rsa.getPublicKey();
 	rkeRequest.product = rsa.getProduct();
+	rkeRequest.circuit_id = ccr.circuit_id;
 	std::vector<unsigned char> rkeRequestVec = SerializerRequests::serializeRequest(rkeRequest);
 
 	if (status == INVALID_SOCKET)
@@ -261,7 +262,6 @@ void Client::startConversation(const bool& openNodes)
 
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 			linkRequest.circuit_id = ccr.circuit_id;
-
 			Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
 			std::cout << "sent link msg\n";
 
@@ -275,8 +275,8 @@ void Client::startConversation(const bool& openNodes)
 
 			Helper::sendVector(_clientSocketWithFirstNode, rkeRequestVec);
 			std::cout << "sent RSA msg\n";
-
-			ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
+			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+			//ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
 			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
 
 			if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
@@ -303,9 +303,8 @@ void Client::startConversation(const bool& openNodes)
 	httpGetRequest.circuit_id = ccr.circuit_id;
 	httpGetRequest.domain = domain;
 
-	std::cout << "sends httpGet Request:\n";
 	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
-
+	std::cout << "sends httpGet Request:\n";
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 
 	HttpGetResponse httpGetResponse;

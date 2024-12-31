@@ -8,7 +8,7 @@ NodeRequestHandler::~NodeRequestHandler()
 }
 
 NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& rsaCircuits, SOCKET cs) :
-	circuitData(circuits), rsaCircuits(rsaCircuits)
+	circuitData(circuits), rsaCircuits(rsaCircuits), _socket(cs)
 {
 	this->lrh = new LinkRequestHandler(circuitData, _socket);
 	this->hgrh = new HttpGetRequestHandler(circuitData, _socket);
@@ -43,6 +43,11 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 			
 			rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
 
+			if (this->circuitData.find(rr.circuit_id) == this->circuitData.end())
+			{
+				this->circuitData[rr.circuit_id].first = _socket;
+			}
+
 			if (circuitData[rr.circuit_id].first == _socket)
 			{
 				if (circuitData[rr.circuit_id].second != INVALID_SOCKET && circuitData[rr.circuit_id].second != NULL)
@@ -54,6 +59,7 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 					ri = Helper::waitForResponse(circuitData[rr.circuit_id].second);//sends rr but I put that on ri
 					std::cout << "[RSA] sending backwards\n";
 					Helper::sendVector(circuitData[rr.circuit_id].first, ri.buffer);
+					std::cout << "aaaaaaa";
 				}
 				else
 				{
@@ -63,10 +69,12 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 					// TODO: HERE CREATE THE RSA OF THE NODE
 					RSA rsa;
 					rsa.pregenerateKeys();
+					std::cout << "RSA created for circuit " << rr.circuit_id << std::endl;
 					rsaCircuits[rr.circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
-					rkeResponse.public_key = rsaCircuits[rr.circuit_id].second.first;
-					rkeResponse.product = rsaCircuits[rr.circuit_id].second.second;
-					Helper::sendVector(circuitData[rr.circuit_id].first, SerializerResponses::serializeResponse(rkeResponse));
+					rkeResponse.public_key = rsaCircuits[rr.circuit_id].first.getPublicKey();
+					rkeResponse.product = rsaCircuits[rr.circuit_id].first.getProduct();
+					rr.buffer = SerializerResponses::serializeResponse(rkeResponse);
+					Helper::sendVector(circuitData[rr.circuit_id].first, rr.buffer);
 				}
 			}
 			else if (circuitData[rr.circuit_id].second == _socket)
@@ -84,8 +92,10 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
 			std::cout << e.what() << std::endl;
 		}
-		rr.buffer = SerializerResponses::serializeResponse(rkeResponse);
-		
+		catch (...)
+		{
+			std::cout << "unecpected error!!!";
+		}
 		return rr;
 	}
 	else
