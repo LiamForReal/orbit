@@ -43,7 +43,7 @@ bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 
 RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
-	this->rr.buffer.clear();
+	rr.buffer.clear();
 	LinkRequest lr;
 	LinkResponse lre;
 	RequestInfo ri;
@@ -59,29 +59,28 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		{
 			if (_circuitData[lr.circuit_id].second != INVALID_SOCKET && _circuitData[lr.circuit_id].second != NULL)
 			{
-				std::cout << "seconed is exisist and trying to connenct" << std::endl;
+				std::cout << "[LINK] seconed is exisist and trying to connenct" << std::endl;
 				Helper::sendVector(_circuitData[lr.circuit_id].second, requestInfo.buffer);
 				ri = Helper::waitForResponse(_circuitData[lr.circuit_id].second);//sends rr but I put that on ri
 				if (ri.id == LINK_STATUS)
 					lre.status = LINK_STATUS;
-				else throw std::runtime_error("problem occurred while linking the next node");
-				std::cout << "sends to the next node!\n";
+				else throw std::runtime_error("[LINK] problem occurred while linking the next node");
+				std::cout << "[LINK] sends to the next node!\n";
+				rr.buffer = SerializerResponses::serializeResponse(lre);
+				std::cout << "[LINK] sending backwards!\n";
+				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
 			}
 			else
 			{
-				std::cout << "seconed is new and now generating\n";
+				std::cout << "[LINK] seconed is new and now generating\n";
 				_circuitData[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
 				if (_circuitData[lr.circuit_id].second == INVALID_SOCKET)
-					throw std::runtime_error("socket creation failed");
-				std::cout << "next created";
+					throw std::runtime_error("[LINK] socket creation failed");
+				std::cout << "[LINK] next created";
+				rr.buffer = SerializerResponses::serializeResponse(lre);
+				std::cout << "[LINK] sending backwards!\n";
+				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
 			}
-		}
-		else if (_circuitData[lr.circuit_id].second == _socket)
-		{
-			std::cout << "Got to the part that Liam is confused about\n";
-			Helper::sendVector(_circuitData[lr.circuit_id].first, requestInfo.buffer);
-			std::cout << "sends to the prev node!\n";
-
 		}
 		else throw std::runtime_error("the socket given is corrupted");
 
@@ -90,7 +89,5 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	{
 		lre.status = LINK_ERROR;
 	}
-
-	rr.buffer = SerializerResponses::serializeResponse(lre);
 	return rr;
 }

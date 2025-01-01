@@ -262,18 +262,6 @@ void Node::clientHandler(const SOCKET client_socket)
 			//wait for msg from main
 			ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.directMsg(ri);
-			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
-			{
-				std::cout << "sending backwards!\n";
-				Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);
-			}
-
-			if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
-			{
- 				std::cout << "listening forward\n";//client -> 1 -> 2 -> 3 -> 4 -> web server 
-				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second); //make the main function to manager the circuits and every new circuit run thread on this function
-				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
-			}
 		}
 	}
 	catch (const std::runtime_error& e)

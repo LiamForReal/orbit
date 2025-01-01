@@ -94,6 +94,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 
 	HttpGetRequest hgRequest;
 	HttpGetResponse hgResponse;
+    RequestInfo ri;
 
 	try
 	{
@@ -106,6 +107,10 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
 			Helper::sendVector(_circuitsData[hgRequest.circuit_id].second, buffer);
+            std::cout << "[HTTP GET] listening forward\n";
+            ri = Helper::waitForResponse(_circuitsData[rr.circuit_id].second);
+            std::cout << "[HTTP GET] sending backwards!\n";
+            Helper::sendVector(_circuitsData[rr.circuit_id].first, ri.buffer);
 		}
 		else
 		{
@@ -118,6 +123,9 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
+            std::cout << "[HTTP GET] sending backwards!\n";
+            this->rr.buffer = SerializerResponses::serializeResponse(hgResponse);
+            Helper::sendVector(_circuitsData[rr.circuit_id].first, rr.buffer);
 		}
 	}
 	catch (std::runtime_error e)
@@ -125,7 +133,5 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		hgResponse.status = Errors::HTTP_MSG_ERROR;
 		hgResponse.content = "";
 	}
-
-	this->rr.buffer = SerializerResponses::serializeResponse(hgResponse);
 	return this->rr;
 }
