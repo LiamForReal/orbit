@@ -85,7 +85,7 @@ void Node::controlReceiver(SOCKET& serverSock)
 
 			mutex.lock();
 			std::cout << "delete sended!\n\n";
-			rr = nodeRequestHandler.directMsg(ri);
+			rr = nodeRequestHandler.handleMsg(ri);
 
 			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
 			{
@@ -261,7 +261,7 @@ void Node::clientHandler(const SOCKET client_socket)
 		{
 			//wait for msg from main
 			ri = Helper::waitForResponse(client_socket);
-			rr = nodeRequestHandler.directMsg(ri);
+			rr = nodeRequestHandler.handleMsg(ri);
 		}
 	}
 	catch (const std::runtime_error& e)

@@ -17,7 +17,7 @@ NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, 
 	this->rkerh = new RsaKeyExchangeRequestHandler(_circuitData, _socket, _rsaCircuits);
 }
 
-RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
+RequestResult NodeRequestHandler::handleMsg(const RequestInfo& requestInfo)
 {
 	if (lrh->isRequestRelevant(requestInfo))
 	{
