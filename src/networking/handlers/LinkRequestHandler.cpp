@@ -1,6 +1,6 @@
 #include "LinkRequestHandler.h"
 
-LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : cd(circuitData), _socket(s)
+LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : _circuitData(circuitData), _socket(s)
 {
 	this->rr = RequestResult();
 }
@@ -55,13 +55,13 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 
 		lre.status = LINK_STATUS;
 
-		if (cd[lr.circuit_id].first == _socket)
+		if (_circuitData[lr.circuit_id].first == _socket)
 		{
-			if (cd[lr.circuit_id].second != INVALID_SOCKET && cd[lr.circuit_id].second != NULL)
+			if (_circuitData[lr.circuit_id].second != INVALID_SOCKET && _circuitData[lr.circuit_id].second != NULL)
 			{
 				std::cout << "seconed is exisist and trying to connenct" << std::endl;
-				Helper::sendVector(cd[lr.circuit_id].second, requestInfo.buffer);
-				ri = Helper::waitForResponse(cd[lr.circuit_id].second);//sends rr but I put that on ri
+				Helper::sendVector(_circuitData[lr.circuit_id].second, requestInfo.buffer);
+				ri = Helper::waitForResponse(_circuitData[lr.circuit_id].second);//sends rr but I put that on ri
 				if (ri.id == LINK_STATUS)
 					lre.status = LINK_STATUS;
 				else throw std::runtime_error("problem occurred while linking the next node");
@@ -70,16 +70,16 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			else
 			{
 				std::cout << "seconed is new and now generating\n";
-				cd[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
-				if (cd[lr.circuit_id].second == INVALID_SOCKET)
+				_circuitData[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
+				if (_circuitData[lr.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("socket creation failed");
 				std::cout << "next created";
 			}
 		}
-		else if (cd[lr.circuit_id].second == _socket)
+		else if (_circuitData[lr.circuit_id].second == _socket)
 		{
 			std::cout << "Got to the part that Liam is confused about\n";
-			Helper::sendVector(cd[lr.circuit_id].first, requestInfo.buffer);
+			Helper::sendVector(_circuitData[lr.circuit_id].first, requestInfo.buffer);
 			std::cout << "sends to the prev node!\n";
 
 		}

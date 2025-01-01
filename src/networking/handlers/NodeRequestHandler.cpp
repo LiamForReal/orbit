@@ -5,14 +5,16 @@ NodeRequestHandler::~NodeRequestHandler()
 	delete lrh;
 	delete hgrh;
 	delete dcrh;
+	delete rkerh;
 }
 
 NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& rsaCircuits, SOCKET cs) :
-	circuitData(circuits), rsaCircuits(rsaCircuits), _socket(cs)
+	_circuitData(circuits), _rsaCircuits(rsaCircuits), _socket(cs)
 {
-	this->lrh = new LinkRequestHandler(circuitData, _socket);
-	this->hgrh = new HttpGetRequestHandler(circuitData, _socket);
-	this->dcrh = new DeleteCircuitRequestHandler(circuitData, _socket);
+	this->lrh = new LinkRequestHandler(_circuitData, _socket);
+	this->hgrh = new HttpGetRequestHandler(_circuitData, _socket);
+	this->dcrh = new DeleteCircuitRequestHandler(_circuitData, _socket);
+	this->rkerh = new RsaKeyExchangeRequestHandler(_circuitData, _socket, _rsaCircuits);
 }
 
 RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
@@ -29,75 +31,9 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 	{
 		return dcrh->handleRequest(requestInfo);
 	}
-	else if (RequestCode::RSA_KEY_EXCHANGE_RC == requestInfo.id)
+	else if (rkerh->isRequestRelevant(requestInfo))
 	{
-		RequestResult rr;
-		RequestInfo ri;
-		RsaKeyExchangeRequest rkeRequest;
-		RsaKeyExchangeResponse rkeResponse;
-
-		try
-		{
-			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
-			rr.circuit_id = rkeRequest.circuit_id;
-			
-			rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
-
-			if (this->circuitData.find(rr.circuit_id) == this->circuitData.end())
-			{
-				this->circuitData[rr.circuit_id].first = _socket;
-			}
-
-			if (circuitData[rr.circuit_id].first == _socket)
-			{
-				if (circuitData[rr.circuit_id].second != INVALID_SOCKET && circuitData[rr.circuit_id].second != NULL)
-				{
-					// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NEXT
-					// SEND TO NEXT AND WAIT FOR RESPONSE AND THEN SEND BACKWARDS
-					std::cout << "[RSA] Got from prev, there is next, sending and listening forward\n";
-					Helper::sendVector(circuitData[rr.circuit_id].second, requestInfo.buffer);
-					ri = Helper::waitForResponse(circuitData[rr.circuit_id].second);//sends rr but I put that on ri
-					//std::cout << "[RSA] sending backwards\n";
-					rr.buffer = ri.buffer;
-					Helper::sendVector(circuitData[rr.circuit_id].first, rr.buffer);
-				}
-				else
-				{
-					// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
-					// SAVE RSA AND SEND BACKWARDS
-					std::cout << "[RSA] Got from prev, there is no next, saving and sending backwards\n";
-					// TODO: HERE CREATE THE RSA OF THE NODE
-					RSA rsa;
-					rsa.pregenerateKeys();
-					std::cout << "RSA created for circuit " << rr.circuit_id << std::endl;
-					rsaCircuits[rr.circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
-					rkeResponse.public_key = rsaCircuits[rr.circuit_id].first.getPublicKey();
-					rkeResponse.product = rsaCircuits[rr.circuit_id].first.getProduct();
-					rr.buffer = SerializerResponses::serializeResponse(rkeResponse);
-					Helper::sendVector(circuitData[rr.circuit_id].first, rr.buffer);
-				}
-			}
-			else if (circuitData[rr.circuit_id].second == _socket)
-			{
-				// RSA HANDLING IF GOT MSG FROM NEXT
-				// SEND BACKWARDS
-				std::cout << "[RSA] Got to the part that Liam is confused about\n";
-				std::cout << "[RSA] Got from next, sending backwards\n";
-				Helper::sendVector(circuitData[rr.circuit_id].first, requestInfo.buffer);
-			}
-			else throw std::runtime_error("There is an error with the key exchanges, got from unknown socket");
-		}
-		catch (std::runtime_error& e)
-		{
-			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
-			std::cout << e.what() << std::endl;
-		}
-		catch (...)
-		{
-			std::cout << "unecpected error!!!";
-		}
-		std::cout << "[RSA] - " << unsigned int(rr.buffer[0]) << std::endl;
-		return rr;
+		return rkerh->handleRequest(requestInfo);
 	}
 	else
 	{

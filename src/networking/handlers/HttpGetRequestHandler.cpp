@@ -3,7 +3,7 @@
 #include <curl/curl.h>
 #include <string>
 
-HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : cd(circuitsData), _socket(clientSock)
+HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : _circuitsData(circuitsData), _socket(clientSock)
 {
 	this->rr = RequestResult();
 }
@@ -101,18 +101,18 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		
         rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
-		if (this->cd[hgRequest.circuit_id].second != INVALID_SOCKET && cd[hgRequest.circuit_id].second != NULL)
+		if (_circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET && _circuitsData[hgRequest.circuit_id].second != NULL)
 		{
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-			Helper::sendVector(this->cd[hgRequest.circuit_id].second, buffer);
+			Helper::sendVector(_circuitsData[hgRequest.circuit_id].second, buffer);
 		}
 		else
 		{
             //if (this->cd.find(hgRequest.circuit_id) == cd.end())
             //{
                 //std::cout << "4";
-            cd[hgRequest.circuit_id].first = _socket;
+            _circuitsData[hgRequest.circuit_id].first = _socket;
             //}
             //else throw std::runtime_error("this circuit first already taken");
 			// send HTTP GET (hgRequest.msg) to Web Server

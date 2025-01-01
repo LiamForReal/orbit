@@ -132,6 +132,7 @@
     <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\LinkRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\NodeRequestHandler.h" />
+    <ClInclude Include="..\networking\handlers\RsaKeyExchangeRequestHandler.h" />
     <ClInclude Include="..\networking\node.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
@@ -151,6 +152,7 @@
     <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\LinkRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\NodeRequestHandler.cpp" />
+    <ClCompile Include="..\networking\handlers\RsaKeyExchangeRequestHandler.cpp" />
     <ClCompile Include="..\networking\node.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />
