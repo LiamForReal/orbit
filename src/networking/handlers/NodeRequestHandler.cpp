@@ -57,8 +57,9 @@ RequestResult NodeRequestHandler::directMsg(const RequestInfo& requestInfo)
 					std::cout << "[RSA] Got from prev, there is next, sending and listening forward\n";
 					Helper::sendVector(circuitData[rr.circuit_id].second, requestInfo.buffer);
 					ri = Helper::waitForResponse(circuitData[rr.circuit_id].second);//sends rr but I put that on ri
-					std::cout << "[RSA] sending backwards\n";
-					Helper::sendVector(circuitData[rr.circuit_id].first, ri.buffer);
+					//std::cout << "[RSA] sending backwards\n";
+					rr.buffer = ri.buffer;
+					Helper::sendVector(circuitData[rr.circuit_id].first, rr.buffer);
 				}
 				else
 				{
