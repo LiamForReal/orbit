@@ -1,5 +1,54 @@
 #include "AES.h"
 
+AES::~AES()
+{
+    this->_roundKeys.clear();
+}
+
+void AES::generateRoundKeys()
+{
+    uint256_t keyCopy = this->_key;
+
+    for (uint8_t i = 0; i < 8; i++)
+    {
+        keyCopy += i;
+        keyCopy <<= 8;
+    }
+
+    std::cout << "The key copy value is " << keyCopy << std::endl;
+
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_COLS; i++)
+    {
+        for (uint8_t j = 0; j < AES_ROUND_KEYS_ROWS; j++)
+        {
+            // std::cout << std::hex << ((uint8_t)(keyCopy) & 0xFF) << std::endl;
+            this->_roundKeys[0][j][i] = (uint8_t)(keyCopy) & 0xFF;
+            keyCopy >>= 8;
+        }
+    }
+
+    std::cout << "<=== ROUND KEY START ===>\n";
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
+    {
+        for (uint8_t j = 0; j < AES_ROUND_KEYS_COLS; j++)
+        {
+            std::cout << std::hex << int(this->_roundKeys[0][i][j]) << "      ";
+        }
+        std::cout << std::endl;
+    }
+    std::cout << "<=== ROUND KEY END ===>\n";
+}
+
+void AES::rotWord(const uint8_t& key, const uint8_t& col)
+{
+    for (uint8_t i = 0; i < 3; i++)
+    {
+        this->_roundKeys[key][i][col] ^= this->_roundKeys[key][i + INC][col];
+        this->_roundKeys[key][i + INC][col] ^= this->_roundKeys[key][i][col];
+        this->_roundKeys[key][i][col] ^= this->_roundKeys[key][i + INC][col];
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;

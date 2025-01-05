@@ -14,7 +14,8 @@ int main()
     }
 
     AES aes;
-    aes.encrypt(vec);
+    aes.generateRoundKeys();
+    //aes.encrypt(vec);
 
     system("pause");
     return 0;
