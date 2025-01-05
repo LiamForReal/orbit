@@ -41,11 +41,19 @@ void AES::generateRoundKeys()
 
 void AES::rotWord(const uint8_t& key, const uint8_t& col)
 {
-    for (uint8_t i = 0; i < 3; i++)
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS - DEC; i++)
     {
         this->_roundKeys[key][i][col] ^= this->_roundKeys[key][i + INC][col];
         this->_roundKeys[key][i + INC][col] ^= this->_roundKeys[key][i][col];
         this->_roundKeys[key][i][col] ^= this->_roundKeys[key][i + INC][col];
+    }
+}
+
+void AES::subWord(const uint8_t& key, const uint8_t& col)
+{
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
+    {
+        this->_roundKeys[key][i][col] = this->SBOX[(this->_roundKeys[key][i][col] >> 4) & 0x0F][this->_roundKeys[key][i][col] & 0x0F];
     }
 }
 
