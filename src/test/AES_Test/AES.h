@@ -28,6 +28,7 @@ class AES
 	private:
 		void rotWord(const uint8_t& key, const uint8_t& col);
 		void subWord(const uint8_t& key, const uint8_t& col);
+		uint8_t roundConstant(const uint8_t& i);
 
 
 		void addRoundKey();

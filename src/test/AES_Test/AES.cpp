@@ -57,6 +57,19 @@ void AES::subWord(const uint8_t& key, const uint8_t& col)
     }
 }
 
+uint8_t AES::roundConstant(const uint8_t& i)
+{
+    if (i <= 1)
+    {
+        return 1;
+    }
+    else if (roundConstant(i - DEC) < 0x80)
+    {
+        return 2 * roundConstant(i - DEC);
+    }
+    return ((2 * roundConstant(i - DEC)) ^ 0x11B);
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
