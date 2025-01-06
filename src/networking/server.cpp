@@ -11,16 +11,20 @@ using std::string;
 using std::vector;
 
 std::mutex mutex;
-
+std::condition_variable circuitCondition;
+std::mutex circuitMutex;
 DockerManager dm = DockerManager();
 
 Server::Server()
 {
+	this->rsa.pregenerateKeys();
+	std::cout << "Server finished pregenerating RSA keys...\n";
+	
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
 	//this->dm = DockerManager();
-
-	_controlList = std::map<unsigned int, std::list<std::pair<std::string, std::string>>>();
+	this->_circuitsToNotify = std::map<unsigned int, std::set<string>>();
+	_controlList = std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>();
 
 	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
 	if (_socket == INVALID_SOCKET)
@@ -108,30 +112,73 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
+		unsigned int circuitID = 0;
 		RequestResult rr = RequestResult();
+		std::vector<unsigned char> RSAKeyExchangeVec;
+		
+		uint2048_t rsaClientPubkey;
+		uint2048_t rsaClientProduct;
+
+		RsaKeyExchangeRequest rkeRequest;
+		RsaKeyExchangeResponse rkeResponse;
+
+		try
+		{
+			ri = Helper::waitForResponse(client_socket);
+
+			if (RSA_KEY_EXCHANGE_RC != ri.id)
+			{
+				throw std::runtime_error("Did not get RSA key exchange request!");
+			}
+
+			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(ri.buffer);
+			std::cout << "Got public RSA key from client: " << rkeRequest.public_key << std::endl;
+			rsaClientPubkey = rkeRequest.public_key;
+			rsaClientProduct = rkeRequest.product;
+
+			rkeResponse.public_key = this->rsa.getPublicKey();
+			rkeResponse.product = this->rsa.getProduct();
+			rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
+		}
+		catch (std::runtime_error e)
+		{
+			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
+		}
+
+		RSAKeyExchangeVec = SerializerResponses::serializeResponse(rkeResponse), rsaClientPubkey, rsaClientProduct;
+		Helper::sendVector(client_socket, RSAKeyExchangeVec);
+		RSAKeyExchangeVec.clear();
+
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList));//you can delete and call to the handler from here
-		mutex.unlock();
-		char recvMsg[100];
-		char buffer[128];
-		std::string containerID;
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
+		mutex.unlock(); 
 
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
 
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
-		//can help -dm.GetControlInfo(amountToOpen); 
-		// //here you get list of control settings to reach from server to node
-		//in addition you want to get map<unsigned int, list<pair<string, string>>>
-		// 
-		// 	WE DONT DO THiS =>	//dont forget you need to call from here to serveControl only one time!!!
-		// 
-		//DONT FORGET HERE YOU ARE ONLY UPDATING THE LIST OF CIRCUIT THE CONTROL SERVER RUNS IN THE START
+		mutex.lock();
+		for (auto it : _clients)
+		{
+			if (it.second == INVALID_SOCKET)
+			{
+				_clients[it.first] = client_socket;
+
+				std::cout << "new client allocated\n\n";
+				break;
+			}
+		}
+		mutex.unlock();
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
+		if (static_cast<unsigned int>(rr.buffer[0]) == CIRCUIT_CONFIRMATION_ERROR)
+		{
+			throw std::runtime_error("failed to get nodes details");
+		}
 	}
 	catch (const std::runtime_error& e)
 	{
+		std::cout << "client handler crushes!!!";
 		std::cerr << e.what() << std::endl;
 	}
 }
@@ -143,29 +190,25 @@ void Server::serveControl() //check if its one of the nodes
 	try
 	{
 		bindAndListenControl();
-		std::string input_string;
-		std::list<string> clientsAlowde;
+		int clientsAmount = 0; 
 		while (true)
 		{
 			// the main thread is only accepting clients 
 			// and add then to the list of handlers
-			
-			
+			//client -> nodes 
 			if (!_controlList.empty())
 			{
-				std::cout << "accepting node for control...\n";
-				mutex.lock();
-				for (auto it = _controlList.begin(); it != _controlList.end(); it++)
-				{
-					for (auto it2 = it->second.begin(); it2 != it->second.end(); ++it2)
-					{
-						clientsAlowde.emplace_back(it2->first);
-					}
-				}
-				mutex.unlock();
-				this->acceptControlClient(clientsAlowde);
+				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
+				this->acceptControlClient(); //give all the exisiting nodes
 			}
 			
+			// IMPORTANT NOTE FOR FUTURE DEBUGGING [25.12.2024]:
+			// THE ASSIGNMENTS OF CLIENTS ALLOWED COULD AND HAPPENING
+			// AFTER _CONTROL_LIST IS UPDATED, AND IT FORGETS THE NEW NODES IN THE CIRCUIT,
+			// OR IN OUR CASE THE NEW NODE'S IP.
+			// * TO FIX THAT - TO GIVE ACCEPTCONTROLCLIENT NOTHING (VOID) AND MAKE THIS FUNCTION
+			// AFTER ACCEPTING CLIENTS AND BEFORE CHECK ITS VALIDATION,
+			// TO CREATE THIS STRUCTURE OF CLIENTS ALLOWED.
 		}
 	}
 	catch (std::runtime_error& e)
@@ -189,28 +232,41 @@ void Server::bindAndListenControl()
 	std::cout << "listening control...\n";
 }
 
-void Server::acceptControlClient(const std::list<string>& allowedClients)
+void Server::acceptControlClient()
 {
 	sockaddr_in nodeAddr;
+	std::vector<string> AlowdeNodes;
 	int nodeAddrLen = sizeof(nodeAddr);
-
+	std::vector<unsigned int> circuits;
 	// Accept the client connection
-	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);
+	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);//wait here
 	if (nodeSocket == INVALID_SOCKET)
 	{
 		throw std::runtime_error("Failed to accept client connection.");
 	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	mutex.lock(); // update
+	for (auto it : _controlList)
+	{
+		for (auto it2 : it.second)
+		{
+			AlowdeNodes.emplace_back(it2.first);
+		}
+	}
+	mutex.unlock();
 
 	// Get the client's IP and port
 	char nodeIP[INET_ADDRSTRLEN + INC] = { 0 };
 	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
 	nodeIP[INET_ADDRSTRLEN] = NULL;
-	std::string clientIPStr(nodeIP);
+	std::string nodeIPStr(nodeIP);
 
 	// Check if the client is in the allowed list
 	bool isAllowed = false;
-	for (const auto& allowedClient : allowedClients) {
-		if (allowedClient == clientIPStr) {
+	for (auto allowedClient : AlowdeNodes) 
+	{
+		if (allowedClient == nodeIPStr) 
+		{
 			isAllowed = true;
 			break;
 		}
@@ -218,43 +274,162 @@ void Server::acceptControlClient(const std::list<string>& allowedClients)
 
 	if (isAllowed)
 	{
-		std::cout << "Node " << clientIPStr << " accepted." << std::endl;
-		std::thread tr(&Server::clientControlHandler, this, nodeSocket);
+		mutex.lock();
+		std::cout << "Node " << nodeIPStr << " accepted." << std::endl;
+		mutex.unlock();
+		for (auto it : _controlList)
+		{
+			for (auto it2 : it.second)
+			{
+				if (it2.first == nodeIPStr)
+				{
+					circuits.emplace_back(it.first); //take all the circuits this node is part of 
+					break;
+				}
+			}
+		}
+		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuits, nodeIPStr);
 		tr.detach();
 	}
 	else
 	{
-		std::cout << "Node " << clientIPStr << " is not allowed. Closing connection." << std::endl;
+		mutex.lock();
+		std::cout << "Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
+		mutex.unlock();
 		closesocket(nodeSocket);
 	}
 
 }
 
-void Server::clientControlHandler(const SOCKET node_sock)
+SOCKET Server::createSocket(const std::string& ip, unsigned int port)
+{
+	SOCKET sock = INVALID_SOCKET;
+
+	// Create the socket
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (sock == INVALID_SOCKET) {
+		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
+		return INVALID_SOCKET;
+	}
+
+	// Set up the sockaddr_in structure
+	sockaddr_in serverAddr;
+	serverAddr.sin_family = AF_INET;
+	serverAddr.sin_port = htons(port); // Convert to network byte order
+	if (inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr) <= 0) {
+		std::cerr << "Invalid IP address format" << std::endl;
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	// Connect to the server
+	if (::connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+		std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
+		closesocket(sock);
+		return INVALID_SOCKET;
+	}
+
+	return sock;
+}
+
+void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp)
 {
 	try
 	{
-		RequestInfo ri;
+		DeleteCircuitRequest dcr;
 		char buffer[100];
+		RequestInfo ri;
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
-
-		/*
-		* GUVRIEL IT IS FOR U SEARCH WHAT THIS FUNCTION DO BC 
-		* I DONT HAVE STRANGHT TO EXPLAIN 
-		* AND IN LINE 255 YOU SEE TIMEOUT ERROR BY THAT YOU DONT EAVEN NEED A TIMER
-		* BC setsockopt BUTIFUL FUNCTION!!!
-		*/
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+
+		std::cout << "Enter to control with socket " << node_sock << std::endl;
 
 		while (true)
 		{
+			// Wait for notifications or timeout
+			{
+				std::unique_lock<std::mutex> lock(circuitMutex);
+
+				// Check circuit-specific notifications for the current node
+				circuitCondition.wait_for(lock, std::chrono::milliseconds(SECONDS_TO_WAIT * 500), [&]()
+					{
+						for (unsigned int circuitId : circuits)
+						{
+							// Ensure only affected circuits for the current node are checked
+							if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
+							{
+								return true; // Break when a relevant notification is found
+							}
+						}
+						return false; // No relevant notifications
+					});
+
+				// Process circuit notifications if any
+				for (unsigned int circuitId : circuits)
+				{
+					if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
+					{
+						// Remove the node from the notifications
+						_circuitsToNotify[circuitId].erase(nodeIp);
+						if (_circuitsToNotify[circuitId].empty())
+						{
+							_circuitsToNotify.erase(circuitId); // Clean up if no more nodes are affected
+						}
+
+						// Handle delete circuit logic
+						dcr.circuit_id = circuitId;
+						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
+
+						// Notify the remaining nodes
+						Helper::sendVector(node_sock, deleteCircuitBuffer);
+						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
+
+						std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
+						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
+
+						// Regenerate the circuit for the remaining nodes
+						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
+						_controlList[circuitId] = newCircuit;
+
+						CircuitConfirmationResponse ccr;
+						ccr.circuit_id = circuitId;
+						ccr.nodesPath = newCircuit;
+						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
+						std::vector<unsigned char> responseBuffer = SerializerResponses::serializeResponse(ccr);
+						Helper::sendVector(_clients[circuitId], responseBuffer);
+
+						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
+						return; //close this socket does not exsist
+					}
+				}
+			}
+
+			// Receive alive message
+			mutex.lock();
 			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-			if (bytesRead <= 0 /* || buffer[0] == '\0'*/)
+			mutex.unlock();
+
+			if (bytesRead <= 0)
 			{
 				if (WSAGetLastError() == WSAETIMEDOUT)
 				{
-					std::cerr << "TIMEOUT: Node did not send alive message.\n";
-					throw std::runtime_error("Timed out waiting for alive message.");
+					std::cerr << "TIMEOUT: Node " << nodeIp << " did not send alive message.\n";
+
+					for (unsigned int circuitId : circuits)
+					{
+						std::unique_lock<std::mutex> lock(circuitMutex);
+
+						// Add the failed node to the notification list
+						_circuitsToNotify[circuitId].insert(nodeIp);
+
+						// Notify all threads handling this circuit
+						circuitCondition.notify_all();
+					}
+
+					timeout = SECONDS_TO_WAIT * 1000;
+					setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 				}
 				else
 				{
@@ -263,13 +438,15 @@ void Server::clientControlHandler(const SOCKET node_sock)
 				}
 			}
 
-			// Check if the received message is the alive message code
+			// Validate the received message
 			if (static_cast<unsigned int>(buffer[0]) != ALIVE_MSG_RC)
 			{
 				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
 				throw std::runtime_error("Unexpected message code received.");
 			}
-			// Reset the timer for next alive check
+
+			//std::cout << "Alive sent (" << nodeIp << ")\n";
+
 			timeout = SECONDS_TO_WAIT * 1000;
 			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		}
@@ -277,16 +454,18 @@ void Server::clientControlHandler(const SOCKET node_sock)
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << std::endl;
-
-		// Close the socket and remove from control list if necessary
 		closesocket(node_sock);
-		// Optionally update control list to mark the node as inactive or remove it
+	}
+	catch (...)
+	{
+		std::cout << "Unexpected problem caught!\n";
 	}
 }
 
-
 int main()
 {
+	srand(time(NULL));
+
     try
     {
         WSAInitializer wsa = WSAInitializer();

@@ -14,11 +14,15 @@ RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(con
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
-    try {
+    try 
+	{
 		
-        request.public_key = uint2048_t{ std::string(jsonData["public_key"]) };
+        request.public_key = uint2048_t { std::string(jsonData["public_key"]) };
+		request.product = uint2048_t { std::string(jsonData["product"]) };
+		request.circuit_id = jsonData["circuit_id"];
     }
-    catch (...) {
+    catch (...) 
+	{
         throw std::runtime_error("Invalid JSON structure passed");
     }
 

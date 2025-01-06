@@ -9,6 +9,7 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
+std::mutex mutex;
 
 Node::Node()
 {
@@ -47,18 +48,6 @@ SOCKET Node::createSocketWithServer()
 	hints.ai_family = AF_INET;      // IPv4
 	hints.ai_socktype = SOCK_STREAM; // TCP
 
-	
-	/*
-	* addrinfo* result = nullptr;
-	* if (getaddrinfo("host.docker.internal", nullptr, &hints, &result) != 0) 
-	{
-
-		closesocket(sock);
-		throw std::runtime_error("Failed to resolve host.docker.internal: " + std::to_string(WSAGetLastError()));
-	}
-	*/
-	
-
 	// Set up the sockaddr_in structure
 	sockaddr_in serverAddr = {};
 	serverAddr.sin_family = AF_INET;
@@ -73,7 +62,8 @@ SOCKET Node::createSocketWithServer()
 	//freeaddrinfo(result); // Free the addrinfo structure
 
 	// Connect to the server
-	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
+	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) 
+	{
 		closesocket(sock);
 		throw std::runtime_error("Connection failed: " + std::to_string(WSAGetLastError()));
 	}
@@ -81,30 +71,106 @@ SOCKET Node::createSocketWithServer()
 	return sock;
 }
 
-void Node::serveControl()
+void Node::controlReceiver(SOCKET& serverSock)
 {
-	// ADD HERE TRY CATCH CLAUSE
 	try
 	{
-		char* data = new char[1];
-		data[0] = (char)(ALIVE_MSG_RC);
-		SOCKET serverSock = createSocketWithServer();
+		RequestInfo ri;
+		RequestResult rr;
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), serverSock);
+
 		while (true)
 		{
-			int bytesSent = send(serverSock, data, sizeof(data), 0);
-			if (bytesSent == -1 || bytesSent == 0)
+			ri = Helper::waitForResponse(serverSock);
+
+			mutex.lock();
+			std::cout << "delete sended!\n\n";
+			rr = nodeRequestHandler.handleMsg(ri);
+
+			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
+			{
+				std::cout << "Delete successfully done!\n";
+			}
+			else
+			{
+				std::cerr << "Failed to delete circuit!\n";
+			}
+			mutex.unlock();
+
+		}
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << "[RECEIVER] Control manganon problem!\n";
+		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "[RECEIVER] An unexpected error occurred!\n";
+	}
+}
+
+void Node::controlSender(SOCKET& serverSock)
+{
+	char* data = NULL;
+
+	try
+	{
+		data = new char[1];
+		data[0] = (char)(ALIVE_MSG_RC);
+
+		int bytesSent = 0;
+
+		while (true)
+		{
+			mutex.lock();
+			bytesSent = send(serverSock, data, sizeof(data), 0);
+			mutex.unlock();
+			if (bytesSent <= 0)
 			{
 				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
+			//else std::cout << "\nalive msg was sended!\n";
+			//return; node crush
+			// add node crush exe to check
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 	}
 	catch (std::runtime_error& e)
 	{
-		std::cout << "control manganon problem\n";
+		std::cout << "[SENDER] Control manganon problem!\n";
 		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "[SENDER] An unexpected error occurred!\n";
+	}
+}
+
+void Node::serveControl()
+{
+	try
+	{
+		SOCKET serverSock = createSocketWithServer();
+		unsigned long l;
+		ioctlsocket(serverSock, FIONREAD, &l);
+
+		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
+		//std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
+
+		controlSenderThread.join();
+		//controlReceiverThread.join();
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << "Control manganon problem!\n";
+		std::cout << e.what() << std::endl;
+	}
+	catch (...)
+	{
+		std::cout << "An unexpected error occurred!\n";
 	}
 }
 
@@ -161,7 +227,7 @@ void Node::acceptClient()
 
 }
 
-std::string Node::getEnvVar(const LPCSTR& key) 
+std::string Node::getEnvVar(const LPCSTR& key)
 {
 	// Buffer to hold the environment variable valu
 	char buffer[(int)(ENVE_MAX_LIMIT)];
@@ -190,23 +256,12 @@ void Node::clientHandler(const SOCKET client_socket)
 		LinkRequest lr;
 		RequestResult rr;
 		rr.circuit_id = 0;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), client_socket);
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), client_socket);
 		while (true)
 		{
+			//wait for msg from main
 			ri = Helper::waitForResponse(client_socket);
-			rr = nodeRequestHandler.directMsg(ri);
-			if ((unsigned int)(rr.buffer[0]) == LINK_STATUS || (unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_BACKWARD)
-			{
-				std::cout << "sending beckward!\n";
-				Helper::sendVector(circuits[rr.circuit_id].first, rr.buffer);
-			}
-
-			if ((unsigned int)(rr.buffer[0]) == HTTP_MSG_STATUS_FOWARD)
-			{
-				std::cout << "listening foward\n";
-				ri = Helper::waitForResponse(this->circuits[rr.circuit_id].second);
-				Helper::sendVector(this->circuits[rr.circuit_id].first, ri.buffer);
-			}
+			rr = nodeRequestHandler.handleMsg(ri);
 		}
 	}
 	catch (const std::runtime_error& e)
@@ -226,7 +281,7 @@ int main()
 		string ip_env = node.getEnvVar((LPCSTR)("NODE_IP")); // Get the IP from the environment variable
 		string port_env = node.getEnvVar((LPCSTR)("NODE_PORT")); // Get the port from the environment variable
 		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
- 		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
+		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
 
 		std::thread aliveMsg(&Node::serveControl, node);
 		aliveMsg.detach();
@@ -235,6 +290,10 @@ int main()
 	catch (const std::runtime_error& e)
 	{
 		std::cerr << e.what() << '\n';
+	}
+	catch (...)
+	{
+		std::cout << "an unaccespted error\n";
 	}
 
 	system("pause");

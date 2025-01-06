@@ -21,6 +21,6 @@ class HttpGetRequestHandler : virtual public IRequestHandler
 		RequestResult rr;
 		static size_t writeChunk(void* data, size_t size, size_t nmemb, void* userData);
 		std::string sendHttpRequest(const std::string& httpRequest);
-		std::map<unsigned int, std::pair<SOCKET, SOCKET>>& cd;
+		std::map<unsigned int, std::pair<SOCKET, SOCKET>>& _circuitsData;
 		SOCKET& _socket;
 };

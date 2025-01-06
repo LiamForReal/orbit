@@ -8,11 +8,14 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
     unsigned int len = 0;
 
     json public_key = rsaKeyExchangeRequest.public_key.str();
+    json product = rsaKeyExchangeRequest.product.str();
 
     std::cout << public_key << std::endl;
 
     json requestJson = {
         {"public_key", public_key},
+        {"product", product},
+        {"circuit_id", rsaKeyExchangeRequest.circuit_id},
     };
     
     std::string requestJsonStr = requestJson.dump();

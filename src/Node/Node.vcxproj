@@ -127,10 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\networking\handlers\DeleteCircuitRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\HttpGetRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\LinkRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\NodeRequestHandler.h" />
+    <ClInclude Include="..\networking\handlers\RsaKeyExchangeRequestHandler.h" />
     <ClInclude Include="..\networking\node.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
@@ -140,19 +142,23 @@
     <ClInclude Include="..\utils\Requestes.hpp" />
     <ClInclude Include="..\utils\RequestInfo.hpp" />
     <ClInclude Include="..\utils\Responses.hpp" />
+    <ClInclude Include="..\utils\RSA.h" />
     <ClInclude Include="..\utils\SerializerRequests.h" />
     <ClInclude Include="..\utils\SerializerResponses.h" />
     <ClInclude Include="..\utils\utils.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\networking\handlers\DeleteCircuitRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\LinkRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\NodeRequestHandler.cpp" />
+    <ClCompile Include="..\networking\handlers\RsaKeyExchangeRequestHandler.cpp" />
     <ClCompile Include="..\networking\node.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />
     <ClCompile Include="..\utils\DeserializerResponses.cpp" />
     <ClCompile Include="..\utils\Helper.cpp" />
+    <ClCompile Include="..\utils\RSA.cpp" />
     <ClCompile Include="..\utils\SerializerRequests.cpp" />
     <ClCompile Include="..\utils\SerializerResponses.cpp" />
     <ClCompile Include="..\utils\utils.cpp" />

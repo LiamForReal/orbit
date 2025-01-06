@@ -16,6 +16,7 @@ RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(
     try {
 		response.status = jsonData["status"];
         response.public_key = uint2048_t{ std::string(jsonData["public_key"]) };
+        response.product = uint2048_t{ std::string(jsonData["product"]) };
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");

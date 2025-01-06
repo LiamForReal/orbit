@@ -11,7 +11,7 @@ public:
 
 private:
 	SOCKET createSocket(const std::string& ip, unsigned int port);
-	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& cd;
+	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& _circuitData;
 	SOCKET& _socket;
 	RequestResult rr;
 };

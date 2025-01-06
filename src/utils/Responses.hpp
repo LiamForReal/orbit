@@ -41,6 +41,7 @@ typedef struct RsaKeyExchangeResponse
 {
 	unsigned int status; 
 	uint2048_t public_key;
+	uint2048_t product;
 } RsaKeyExchangeResponse;
 
 typedef struct EcdheKeyExchangeResponse
@@ -58,7 +59,7 @@ typedef struct CircuitConfirmationResponse
 {
 	unsigned int status; 
 	unsigned circuit_id;
-    list<pair<string, string>> nodesPath; 
+    std::vector<pair<string, string>> nodesPath; 
 } CircuitConfirmationResponse;
 
 typedef struct LinkResponse

@@ -3,7 +3,7 @@
 #include <curl/curl.h>
 #include <string>
 
-HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : cd(circuitsData), _socket(clientSock)
+HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : _circuitsData(circuitsData), _socket(clientSock)
 {
 	this->rr = RequestResult();
 }
@@ -94,34 +94,38 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 
 	HttpGetRequest hgRequest;
 	HttpGetResponse hgResponse;
+    RequestInfo ri;
 
 	try
 	{
-        std::cout << "1";
 		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
 		
         rr.circuit_id = hgRequest.circuit_id;
 		// check if there is next
-		if (this->cd[hgRequest.circuit_id].second != INVALID_SOCKET && cd[hgRequest.circuit_id].second != NULL)
+		if (_circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET && _circuitsData[hgRequest.circuit_id].second != NULL)
 		{
-            std::cout << "2";
 			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-			Helper::sendVector(this->cd[hgRequest.circuit_id].second, buffer);
+			Helper::sendVector(_circuitsData[hgRequest.circuit_id].second, buffer);
+            std::cout << "[HTTP GET] listening forward\n";
+            ri = Helper::waitForResponse(_circuitsData[rr.circuit_id].second);
+            std::cout << "[HTTP GET] sending backwards!\n";
+            Helper::sendVector(_circuitsData[rr.circuit_id].first, ri.buffer);
 		}
 		else
 		{
-            std::cout << "3";
             //if (this->cd.find(hgRequest.circuit_id) == cd.end())
             //{
                 //std::cout << "4";
-            cd[hgRequest.circuit_id].first = _socket;
+            _circuitsData[hgRequest.circuit_id].first = _socket;
             //}
             //else throw std::runtime_error("this circuit first already taken");
-            std::cout << "5";
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
+            std::cout << "[HTTP GET] sending backwards!\n";
+            this->rr.buffer = SerializerResponses::serializeResponse(hgResponse);
+            Helper::sendVector(_circuitsData[rr.circuit_id].first, rr.buffer);
 		}
 	}
 	catch (std::runtime_error e)
@@ -129,7 +133,5 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		hgResponse.status = Errors::HTTP_MSG_ERROR;
 		hgResponse.content = "";
 	}
-
-	this->rr.buffer = SerializerResponses::serializeResponse(hgResponse);
 	return this->rr;
 }

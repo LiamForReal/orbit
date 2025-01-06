@@ -1,8 +1,10 @@
 #include "docker_manager.h"
+
 #include <random>
 
 DockerManager::DockerManager() 
 { 
+    _clientsAmount = 0;
     this->amountCreated = 0; 
     runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");
     runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
@@ -17,48 +19,88 @@ void DockerManager::runCmdCommand(const std::string& command)
     else std::cerr << "Failed to start command's process. Error code: " << result << std::endl;
 }
 
+void DockerManager::setNewNodes(const int& create, const int& use)
+{
+    if (this->amountCreated + create >= 20)
+        throw std::runtime_error("to many nodes the server cant allow it!");
+
+    for (int i = 0; i < create; i++) //put all the nodes I wanna work with node1 - noden
+        unDefinedNodes.emplace_back(std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1));
+    //node2 node3 node4 , node1 node8 node6
+    if (use > pathNodeExisting.size() + unDefinedNodes.size())//chack use confirmation
+        throw std::runtime_error("use is grater then all the nodes exisiting");
+
+}
+
+std::vector<string> DockerManager::SelectPathAndAdjustNetwork(int use, const unsigned int circuitId)
+{
+    std::vector<string> nodeSelected;
+    std::vector<string> tmp;
+    for (int i = 0; i < unDefinedNodes.size(); ++i)  //node selected get all the nodes and choose unique paths to every client each
+    {
+        nodeSelected.emplace_back(unDefinedNodes[(i + _clientsAmount) % unDefinedNodes.size()]);
+    }
+    for (auto it : nodeSelected)
+    {
+        if (it != *nodeSelected.begin())
+        {
+            pathNodeExisting.emplace_back(it);  
+        }
+        else guardNodeCircuits[circuitId] = it; 
+    }
+    nodeSelected.clear();
+    for (int i = 1; i < use; ++i)  //node selected get all the nodes and choose unique paths to every client each
+    {
+        tmp.emplace_back(pathNodeExisting[i % pathNodeExisting.size()]);
+    }
+    nodeSelected.emplace_back(guardNodeCircuits[circuitId]);
+    nodeSelected.insert(nodeSelected.end(), tmp.begin(), tmp.end());
+    string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
+    std::cout << "CLIENT" << _clientsAmount << " PATH:\n [ " << *nodeSelected.begin() << ", ";
+    for (auto it = nodeSelected.begin() + 1; it != nodeSelected.end(); it++)
+    {
+        portsCommand += " " + *it;
+        std::cout << *it << ", ";
+    }
+    std::cout << "]\n";
+    runCmdCommand(portsCommand);
+    unDefinedNodes.clear();
+    return nodeSelected;
+}
 void DockerManager::openDocker(const int& amount)
 {
-    string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
     string firstNodeName = "";
     std::vector<string> nodesNames;
     std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
-    if (this->amountCreated + amount >= 20)
-        throw std::runtime_error("to many nodes the server cant allow it!");
     for (int i = 0; i < amount; i++)
     {
         buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1);
-
-        if (i != 0)
-        {
-            portsCommand += " " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1);
-            //nodesNames.emplace_back(std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1));
-        }
-
-        //if (i != this->amountCreated)
-        //{
-        //    portsCommand += " " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
-        //    nodesNames.emplace_back(std::string(CONTAINER_NAME) + std::to_string(i + 1));
-        //}
-        //else firstNodeName = std::string(CONTAINER_NAME) + std::to_string(i + 1);
     }
-
-    //buildCircuits[firstNodeName] = nodesNames; //for next 
-
-    runCmdCommand(portsCommand);
 
     runCmdCommand(buildCommand);
 }
 
-std::list<std::string> DockerManager::findIPs(const int& amount)
+void DockerManager::openDocker(const string& containerName)
 {
-    std::list<std::string> nodesIp;
+    if (containerName.empty())
+    {
+        std::cout << "Empty container name\n";
+        return;
+    }
+    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up -d " + containerName; //only restarts
+    runCmdCommand(buildCommand);
+}
+
+std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersNames)
+{
+    std::vector<std::string> nodesIp;
     char buffer[128];
     std::string containerID;
     //int random_number = min + std::rand() % (max - min + 1); TODO: access the nodes for all the clients!!!
-    for (int i = 0; i < amount; i++)
+    std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";
+    for (auto it : containersNames)
     {
-        std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";
+        
         FILE* pipe = _popen(containerIDCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run command");
         while (fgets(buffer, sizeof(buffer), pipe) != NULL)
@@ -67,7 +109,7 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
         }
         _pclose(pipe);
         containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + std::string(CONTAINER_NAME) + char(i + 49);
+        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + it;
         pipe = _popen(inspectCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run inspect command");
         std::string containerIP;
@@ -79,21 +121,21 @@ std::list<std::string> DockerManager::findIPs(const int& amount)
 	    containerIP = containerIP.substr(0, containerIP.find("\n"));
 	    nodesIp.push_back(containerIP);
     }
-
+    std::cout << "ips founded successfully!\n";
     return nodesIp;
 }
 
-std::list<std::string> DockerManager::findControlPorts(const int& amount)
+std::vector<std::string> DockerManager::findControlPorts(std::vector<string>& containersNames)
 {
-    std::list<std::string> controlNodesPorts;
+    std::vector<std::string> controlNodesPorts;
     char buffer[128];
     std::string portsStr = "", hostPort = "";
     std::string inspectCommand;
 
-    for (int i = 0; i < amount; i++)
+    for (auto it : containersNames)
     {
         // Build the docker inspect command with necessary `cd`
-        inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9051/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(i + 1);
+        inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9051/tcp\\\") 0).HostPort }}\" " + it;
 
         // Execute the command
         FILE* pipe = _popen(inspectCommand.c_str(), "r");
@@ -108,7 +150,7 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
         try
         {
             hostPort = std::to_string(std::stoi(portsStr));
-            std::cout << "container " << std::to_string(i + 1) << "control port id is "  << hostPort << "\n";
+            std::cout <<  it << ": control port id is "  << hostPort << "\n";
             controlNodesPorts.emplace_back(hostPort);
             portsStr = "";
         }
@@ -120,13 +162,13 @@ std::list<std::string> DockerManager::findControlPorts(const int& amount)
     return controlNodesPorts;
 }
 
-std::list<std::string> DockerManager::findProxyPorts(const int& amount)
+std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& containersNames)
 {
-    std::list<std::string> proxyNodesPorts;
+    std::vector<std::string> proxyNodesPorts;
     char buffer[128];
     std::string portsStr = "", hostPort = "";
     // Build the docker inspect command with necessary `cd`
-    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + 1);
+    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + *containersNames.begin();
     // Execute the command
     FILE* pipe = _popen(inspectCommand.c_str(), "r");
     if (!pipe)
@@ -144,11 +186,11 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     {
         hostPort = std::to_string(std::stoi(portsStr));
 
-        std::cout << "container " << std::to_string(this->amountCreated + 1) << " proxy port is " << hostPort << "\n";
+        std::cout << "container 1 (of this function calling) proxy port is " << hostPort << "\n";
         proxyNodesPorts.emplace_back(hostPort);
-        for (int i = 1; i < amount; i++)
+        for (int i = 1; i < containersNames.size(); i++)
         {
-            std::cout << "container " << std::to_string(this->amountCreated + i + 1) << " proxy port is 9050\n";
+            std::cout << "container " << std::to_string( i + 1) << " proxy port is 9050\n";
             proxyNodesPorts.emplace_back(INTERNAL_PORT);
         }
     }
@@ -161,12 +203,48 @@ std::list<std::string> DockerManager::findProxyPorts(const int& amount)
     return proxyNodesPorts;
 }
 
-std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create)
+std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create, const unsigned int circuitId)
 {
-    openDocker(create);
-    std::list<std::pair<std::string, std::string>> nodesInfo;
-    std::list<std::string> ips = findIPs(use); 
-    std::list<std::string> ports = findProxyPorts(use);
+    try
+    {
+        _clientsAmount++;
+        std::vector<std::pair<std::string, std::string>> nodesInfo;
+        setNewNodes(create, use);
+        std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use, circuitId);
+        openDocker(create);
+        std::vector<std::string> ips = findIPs(nodeSelected);
+        std::vector<std::string> ports = findProxyPorts(nodeSelected);
+        auto itIp = ips.begin();
+        auto itPort = ports.begin();
+        for (int i = 0; i < ips.size(); i++)
+        {
+            nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+            itPort++;
+            itIp++;
+        }
+        this->amountCreated += create;
+        return nodesInfo;
+    }
+    catch (std::runtime_error& e)
+    {
+        std::cerr << "amount to use is grater then the amount of exisiting nodes!!!\n";
+        return std::vector<std::pair<std::string, std::string>>();
+    }
+}
+
+std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo() //for server
+{
+    std::vector<std::pair<std::string, std::string>> nodesInfo;
+    std::vector<string> nodeExisting;
+    std::vector<string> guardNodeExisting;
+
+    for (auto it : this->guardNodeCircuits)
+        guardNodeExisting.emplace_back(it.second);
+
+    nodeExisting.insert(nodeExisting.end(), guardNodeExisting.begin(), guardNodeExisting.end());
+    nodeExisting.insert(nodeExisting.end(), pathNodeExisting.begin(), pathNodeExisting.end());
+    std::vector<std::string> ips = findIPs(nodeExisting);
+    std::vector<std::string> ports = findControlPorts(nodeExisting);
     auto itIp = ips.begin();
     auto itPort = ports.begin();
     for (int i = 0; i < ips.size(); i++)
@@ -175,22 +253,55 @@ std::list<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(con
         itPort++;
         itIp++;
     }
-    this->amountCreated += create;
     return nodesInfo;
 }
 
-std::list<std::pair<std::string, std::string>> DockerManager::GetControlInfo() //for server
+/*
+* 1find the node name -> 2reconfigure its ip by py script -> 
+* 3rerun him -> 4add him to the nodes properly path/guard ->
+* use function to find circuit -> get circuit ips and ports -> return
+*/
+std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfterCrush(string NodeIp, const int use, const unsigned int circuitId) // list of ips
 {
-    std::list<std::pair<std::string, std::string>> nodesInfo;
-    std::list<std::string> ips = findIPs(this->amountCreated);
-    std::list<std::string> ports = findControlPorts(this->amountCreated);
-    auto itIp = ips.begin();
-    auto itPort = ports.begin();
-    for (int i = 0; i < ips.size(); i++)
+    try
     {
-        nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
-        itPort++;
-        itIp++;
+        std::vector<std::pair<std::string, std::string>> nodesInfo;
+        std::vector<string> nodes;
+        string nodeName = "";
+        int NodeNumber = 1;
+
+        for (int i = 1; i <= NODE_CAPACITY; i++)
+            nodes.emplace_back(CONTAINER_NAME + std::to_string(i));
+        std::vector<std::string> ips = findIPs(nodes);
+        for (auto it : ips)
+        {
+            if (NodeIp == it)
+            {
+                nodeName = CONTAINER_NAME + std::to_string(NodeNumber);
+                std::cout << "Found that node container name is " << nodeName << " (" << NodeIp << ")" << std::endl;
+                break;
+            }
+            NodeNumber++;
+        }
+        std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_ip_changer.py " + nodeName;
+        runCmdCommand(regenerateIpsCommend);
+        std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use, circuitId);
+        std::vector<std::string> ports = findProxyPorts(nodeSelected);
+        openDocker(nodeName);
+        ips = findIPs(nodeSelected);
+        auto itIp = ips.begin();
+        auto itPort = ports.begin();
+        for (int i = 0; i < ips.size(); i++)
+        {
+            nodesInfo.emplace_back(std::make_pair(*itIp, *itPort));
+            itPort++;
+            itIp++;
+        }
+        return nodesInfo;
     }
-    return nodesInfo;
+    catch (std::runtime_error& e)
+    {
+        std::cerr << "amount to use is grater then the amount of exisiting nodes!!!\n";
+        return std::vector<std::pair<std::string, std::string>>();
+    }
 }
