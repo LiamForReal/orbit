@@ -20,6 +20,13 @@ public:
         if (upperBond != 1)
             upper_bound = upperBond;
 
+        if (std::is_same<T, uint256_t>::value)
+        {
+            if (lowerBond == 1)
+                lower_bound = T(1) << 128;
+            if (upperBond == 1)
+                upper_bound = (T(1) << 256) - 1;
+        }
         if (std::is_same<T, uint1024_t>::value)
         {
             if (lowerBond == 1)
