@@ -7,22 +7,25 @@ ECDHE::~ECDHE() {} // nothing to diconstruct
 
 std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ECDHE::createInfo()
 {
+	std::cout << "1";
 	std::promise<uint256_t> promiseG;
 	std::promise<uint256_t> promiseP;
 
+	std::cout << "2";
 	std::future<uint256_t> futurePromiseG = promiseG.get_future();
 	std::future<uint256_t> futurePromiseP = promiseP.get_future();
 
-
+	std::cout << "3";
 	std::thread generateQThread(&ECDHE::createElement, this, std::move(promiseG));
 	std::thread generatePThread(&ECDHE::createElement, this, std::move(promiseP));
 	
 	uint256_t tmpKey = createTmpKey();
-
+	std::cout << "4";
 	generateQThread.join();
 	generatePThread.join();
-	
-	std::pair<uint256_t, uint256_t> gAndP = std::make_pair<uint256_t, uint256_t>(futurePromiseG.get(), futurePromiseP.get());
+	std::cout << "5";
+	std::pair<uint256_t, uint256_t> gAndP = std::pair<uint256_t, uint256_t>(futurePromiseG.get(), futurePromiseP.get());
+	std::cout << "6";
 	return std::pair<uint256_t, std::pair<uint256_t, uint256_t>>(tmpKey, gAndP);
 }
 
