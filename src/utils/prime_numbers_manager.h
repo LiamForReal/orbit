@@ -19,7 +19,7 @@ public:
             lower_bound = lowerBond;
         if (upperBond != 1)
             upper_bound = upperBond;
-
+        std::cout << "1.1.1\n";
         if (std::is_same<T, uint256_t>::value)
         {
             if (lowerBond == 1)
@@ -27,6 +27,7 @@ public:
             if (upperBond == 1)
                 upper_bound = (T(1) << 256) - 1;
         }
+        std::cout << "1.1.2\n";
         if (std::is_same<T, uint1024_t>::value)
         {
             if (lowerBond == 1)
@@ -41,7 +42,7 @@ public:
             if (upperBond == 1)
                 upper_bound = (T(1) << 2048) - 1;
         }
-
+        std::cout << "1.1.3\n";
         boost::random::mt19937 rng(std::random_device{}());
         boost::random::uniform_int_distribution<T> dist(lower_bound, upper_bound);
 
@@ -52,7 +53,7 @@ public:
             if (candidate % 2 == 0)
                 candidate++;
         } while (!prime_numbers_manager::is_prime<T>(candidate));
-
+        std::cout << "1.1.4\n";
         return candidate;
     }
 

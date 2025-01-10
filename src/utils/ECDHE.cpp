@@ -7,25 +7,25 @@ ECDHE::~ECDHE() {} // nothing to diconstruct
 
 std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ECDHE::createInfo()
 {
-	std::cout << "1";
 	std::promise<uint256_t> promiseG;
 	std::promise<uint256_t> promiseP;
 
-	std::cout << "2";
 	std::future<uint256_t> futurePromiseG = promiseG.get_future();
 	std::future<uint256_t> futurePromiseP = promiseP.get_future();
 
-	std::cout << "3";
-	std::thread generateQThread(&ECDHE::createElement, this, std::move(promiseG));
+	std::thread generateGThread(&ECDHE::createElement, this, std::move(promiseG));
 	std::thread generatePThread(&ECDHE::createElement, this, std::move(promiseP));
 	
 	uint256_t tmpKey = createTmpKey();
-	std::cout << "4";
-	generateQThread.join();
+	generateGThread.join();
 	generatePThread.join();
-	std::cout << "5";
-	std::pair<uint256_t, uint256_t> gAndP = std::pair<uint256_t, uint256_t>(futurePromiseG.get(), futurePromiseP.get());
-	std::cout << "6";
+	std::cout << "1";
+	uint256_t G = futurePromiseG.get();
+	std::cout << "2";
+	uint256_t P = futurePromiseP.get();
+	std::cout << "3";
+	std::pair<uint256_t, uint256_t> gAndP = std::pair<uint256_t, uint256_t>(G, P);
+	std::cout << "4";
 	return std::pair<uint256_t, std::pair<uint256_t, uint256_t>>(tmpKey, gAndP);
 }
 
@@ -43,8 +43,11 @@ uint256_t ECDHE::getRandomPrimeNumberByRange(uint256_t lower_bound, uint256_t up
 
 uint256_t ECDHE::createElement(std::promise<uint256_t>&& promise)
 {
+	std::cout << "\n1.1\n";
 	uint256_t lowerBoned = uint256_t(1) << 128;
+	std::cout << "\n1.2\n";
 	uint256_t upperBoned = (uint256_t(1) << 256) - 1;
+	std::cout << "\n1.3\n";
 	return getRandomPrimeNumberByRange(lowerBoned, upperBoned);
 }
 
