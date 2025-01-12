@@ -3,8 +3,16 @@
 int main()
 {
 	ECDHE ecdhe;
+	std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ecdheInfo;
 	std::cout << "start creating side1 g (base), p (moduler), tmpKey (a):\n";
-	std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ecdheInfo = ecdhe.createInfo();
+	try
+	{
+		ecdheInfo = ecdhe.createInfo();
+	}
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 	uint256_t base = ecdheInfo.second.first, moduler = ecdheInfo.second.second, tmpSide1Key = ecdheInfo.first;
 	std::cout << "base = " << base << "\n";
 	std::cout << "modulae = " << moduler << "\n";

@@ -15,23 +15,20 @@ std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ECDHE::createInfo()
 
 	std::thread generateGThread(&ECDHE::createElement, this, std::move(promiseG));
 	std::thread generatePThread(&ECDHE::createElement, this, std::move(promiseP));
-	
 	uint256_t tmpKey = createTmpKey();
+
 	generateGThread.join();
 	generatePThread.join();
-	std::cout << "1";
+
 	uint256_t G = futurePromiseG.get();
-	std::cout << "2";
 	uint256_t P = futurePromiseP.get();
-	std::cout << "3";
 	std::pair<uint256_t, uint256_t> gAndP = std::pair<uint256_t, uint256_t>(G, P);
-	std::cout << "4";
 	return std::pair<uint256_t, std::pair<uint256_t, uint256_t>>(tmpKey, gAndP);
 }
 
 uint256_t ECDHE::createTmpKey()
 {
-	uint256_t lowerBoned = uint256_t(1);
+	uint256_t lowerBoned = uint256_t(2);
 	uint256_t upperBoned = (uint256_t(1) << 256) - 1;
 	return getRandomPrimeNumberByRange(lowerBoned, upperBoned);
 }
@@ -41,14 +38,11 @@ uint256_t ECDHE::getRandomPrimeNumberByRange(uint256_t lower_bound, uint256_t up
 	return prime_numbers_manager::getRandomPrimeNumber<uint256_t>(lower_bound, upper_bound);
 }
 
-uint256_t ECDHE::createElement(std::promise<uint256_t>&& promise)
+void ECDHE::createElement(std::promise<uint256_t>&& promise)
 {
-	std::cout << "\n1.1\n";
 	uint256_t lowerBoned = uint256_t(1) << 128;
-	std::cout << "\n1.2\n";
 	uint256_t upperBoned = (uint256_t(1) << 256) - 1;
-	std::cout << "\n1.3\n";
-	return getRandomPrimeNumberByRange(lowerBoned, upperBoned);
+	promise.set_value(getRandomPrimeNumberByRange(lowerBoned, upperBoned));
 }
 
 uint256_t ECDHE::createDefiKey(uint256_t base, uint256_t tmpKey, uint256_t moduler)
