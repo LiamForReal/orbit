@@ -30,6 +30,7 @@ typedef struct EcdheKeyExchangeRequest
     uint256_t b; 
     uint256_t m; 
     uint256_t calculationResult; 
+    unsigned int circuit_id;
 } EcdheKeyExchangeRequest;
 
 typedef struct NodeOpenRequest

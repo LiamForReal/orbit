@@ -47,6 +47,7 @@ EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest
 		request.b = uint256_t{ std::string(jsonData["base"]) };
 		request.m = uint256_t{ std::string(jsonData["modular"]) };
         request.calculationResult = uint256_t{ std::string(jsonData["calc_result"]) };
+		request.circuit_id = jsonData["circuit_id"];
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");

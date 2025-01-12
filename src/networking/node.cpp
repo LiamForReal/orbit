@@ -77,15 +77,14 @@ void Node::controlReceiver(SOCKET& serverSock)
 	{
 		RequestInfo ri;
 		RequestResult rr;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), serverSock);
-
 		while (true)
 		{
 			ri = Helper::waitForResponse(serverSock);
 
 			mutex.lock();
 			std::cout << "delete sended!\n\n";
-			rr = nodeRequestHandler.handleMsg(ri);
+			//ERROR!!!
+			//rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
 
 			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
 			{
@@ -256,7 +255,7 @@ void Node::clientHandler(const SOCKET client_socket)
 		LinkRequest lr;
 		RequestResult rr;
 		rr.circuit_id = 0;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), client_socket);
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaKeys), client_socket, std::ref(aesKeys));
 		while (true)
 		{
 			//wait for msg from main

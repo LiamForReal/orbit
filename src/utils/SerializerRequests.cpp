@@ -48,6 +48,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyEx
         {"base", base},
         {"modular", modular},
         {"calc_result", calcResult},
+        {"circuit_id", ecdheKeyExchangeRequest.circuit_id}
     };
     
     std::string requestJsonStr = requestJson.dump();

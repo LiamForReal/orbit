@@ -5,6 +5,15 @@ ECDHE::ECDHE() {} // nothing to construct
 
 ECDHE::~ECDHE() {} // nothing to diconstruct
 
+void ECDHE::setG(uint256_t g)
+{
+	this->g = g;
+}
+void ECDHE::setP(uint256_t p)
+{
+	this->p = p;
+}
+
 std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ECDHE::createInfo()
 {
 	std::promise<uint256_t> promiseG;
@@ -20,9 +29,9 @@ std::pair<uint256_t, std::pair<uint256_t, uint256_t>> ECDHE::createInfo()
 	generateGThread.join();
 	generatePThread.join();
 
-	uint256_t G = futurePromiseG.get();
-	uint256_t P = futurePromiseP.get();
-	std::pair<uint256_t, uint256_t> gAndP = std::pair<uint256_t, uint256_t>(G, P);
+	this->g = futurePromiseG.get();
+	this->p = futurePromiseP.get();
+	std::pair<uint256_t, uint256_t> gAndP = std::pair<uint256_t, uint256_t>(g, p);
 	return std::pair<uint256_t, std::pair<uint256_t, uint256_t>>(tmpKey, gAndP);
 }
 
@@ -48,4 +57,9 @@ void ECDHE::createElement(std::promise<uint256_t>&& promise)
 uint256_t ECDHE::createDefiKey(uint256_t base, uint256_t tmpKey, uint256_t moduler)
 {
 	return mod_exp<uint256_t>((cpp_int)(base), tmpKey, moduler);
+}
+
+uint256_t ECDHE::createDefiKey(uint256_t key)
+{
+	return mod_exp<uint256_t>((cpp_int)(g), key, p);
 }
