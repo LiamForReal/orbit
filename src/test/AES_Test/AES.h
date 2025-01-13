@@ -7,8 +7,10 @@
 /* AES chunk / block size in bytes */
 #define AES_CHUNK_SIZE_BYTES 16
 
-/* 14 + 1 AES rounds, because it is AES-256*/
-#define AES_ROUNDS 15
+/* 13 + 1 AES rounds, because it is AES-256*/
+#define AES_ROUNDS 14
+
+#define AES_KEY_EXPANSION_ROUNDS 7
 
 #define AES_ROUND_KEYS_ROWS 4
 #define AES_ROUND_KEYS_COLS 8
@@ -26,10 +28,10 @@ class AES
 		std::vector<uint8_t> encrypt(std::vector<uint8_t> plainTextVec);
 
 	private:
-		void rotWord(const uint8_t& key, const uint8_t& col);
-		void subWord(const uint8_t& key, const uint8_t& col);
+		void rotWord(uint8_t* roundKeyCol);
+		void subWord(uint8_t* roundKeyCol);
 		uint8_t roundConstant(const uint8_t& i);
-
+		void addRoundConstant(uint8_t* roundKeyCol, const uint8_t& index);
 
 		void addRoundKey();
 		void subBytes();
