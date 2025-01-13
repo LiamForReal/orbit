@@ -38,7 +38,7 @@ void Client::connectToServer(std::string serverIP, int port)
 
 	struct sockaddr_in sa = { 0 };
 	RequestInfo ri;
-
+	vector<unsigned char> tmp, data;
 	sa.sin_port = htons(port); // port that server will listen to
 	sa.sin_family = AF_INET;   // must be AF_INET
 	sa.sin_addr.s_addr = inet_addr(serverIP.c_str());    // the IP of the server
@@ -52,10 +52,13 @@ void Client::connectToServer(std::string serverIP, int port)
 	RsaKeyExchangeRequest rkeRequest;
 	rkeRequest.public_key = this->rsa.getPublicKey();
 	rkeRequest.product = this->rsa.getProduct();
-
+	tmp = SerializerRequests::serializeRequest(rkeRequest);
+	data.emplace_back(0); // temporery circuit id!!!
+	std::cout << "\nis this where the code crush?\n"; //YESSSS
+	std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
 	try
 	{
-		Helper::sendVector(_clientSocketWithDS, SerializerRequests::serializeRequest(rkeRequest));
+		Helper::sendVector(_clientSocketWithDS, data);
 		ri = Helper::waitForResponse(_clientSocketWithDS);
 	}
 	catch (...)
@@ -79,6 +82,8 @@ void Client::connectToServer(std::string serverIP, int port)
 void Client::nodeOpening()
 {
 	NodeOpenRequest nor;
+	std::vector<unsigned char> tmp;
+	std::vector<unsigned char> data;
 	do
 	{
 		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) + "): ";
@@ -86,7 +91,9 @@ void Client::nodeOpening()
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
-	std::vector<unsigned char> data = SerializerRequests::serializeRequest(nor);
+	data.emplace_back(0); // temporery circuit id = 0 default!!!
+	tmp = SerializerRequests::serializeRequest(nor);
+	std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
 	Helper::sendVector(_clientSocketWithDS, data);
 	std::cout << "Message send to server..." << std::endl;
 
@@ -178,8 +185,7 @@ void Client::startConversation(const bool& openNodes)
 	char buffer[100];
 	std::string domain;
 	RequestInfo ri;
-	std::vector<unsigned char> tmp;
-	std::vector<unsigned char> rkeData;
+	//NODE OPPENING START
 	if (openNodes)
 	{
 		nodeOpening();
@@ -200,8 +206,10 @@ void Client::startConversation(const bool& openNodes)
 	{
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
 	}
-
-	//headers of client sock begin
+	
+	//NODE OPPENING END
+	
+	//CONNECTING TO FIRST NODE START
 	_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	
 	if (_clientSocketWithFirstNode == INVALID_SOCKET)
@@ -219,15 +227,6 @@ void Client::startConversation(const bool& openNodes)
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
 	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
-	LinkRequest linkRequest;
-	RsaKeyExchangeRequest rkeRequest;
-	RsaKeyExchangeResponse rkeResponse;
-	rkeRequest.public_key = rsa.getPublicKey();
-	rkeRequest.product = rsa.getProduct();
-	tmp = SerializerRequests::serializeRequest(rkeRequest);
-	rkeData.emplace_back(ccr.circuit_id);
-	//to Change the make msges logic
-	//rkeData.insert(rkeData.begin() + 1, tmp);
 	if (status == INVALID_SOCKET)
 	{
 		int errCode = WSAGetLastError();  // Get the error code from Winsock
@@ -236,7 +235,22 @@ void Client::startConversation(const bool& openNodes)
 	}
 	else std::cout << "connected successfully to the first node\n";
 
-	Helper::sendVector(_clientSocketWithFirstNode, rkeData);
+	//CONNECTING TO FIRST NODE END
+
+	//SEND RSA KEY EXCHANGE TO FIRST NODE START
+	std::vector<unsigned char> tmp;
+	std::vector<unsigned char> dataRKE;
+	std::vector<unsigned char> data;
+	LinkRequest linkRequest;
+	RsaKeyExchangeRequest rkeRequest;
+	RsaKeyExchangeResponse rkeResponse;
+	rkeRequest.public_key = rsa.getPublicKey();
+	rkeRequest.product = rsa.getProduct();
+	tmp = SerializerRequests::serializeRequest(rkeRequest);
+	dataRKE.emplace_back(ccr.circuit_id);
+	//to Change the make msges logic
+	std::copy(tmp.begin(), tmp.end(), dataRKE.begin() + 1);
+	Helper::sendVector(_clientSocketWithFirstNode, dataRKE);
 	std::cout << "sent RSA msg\n";
 
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
@@ -253,8 +267,9 @@ void Client::startConversation(const bool& openNodes)
 		throw std::runtime_error("Could not exchange RSA keys, thus could not build circuit.");
 	}
 	ri.buffer.clear();
-
-    //headers of client sock end
+	//SEND RSA KEY EXCHANGE TO FIRST NODE END
+	
+    //SENDING LINK AND RSA KEY EXCHANGE TO ALL THE REST NODES START
 	if (ccr.nodesPath.size() > 1)
 	{
 		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
@@ -263,8 +278,11 @@ void Client::startConversation(const bool& openNodes)
 				it++;
 
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
-			linkRequest.circuit_id = ccr.circuit_id;
-			Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(linkRequest));
+			data.clear();
+			data.emplace_back(ccr.circuit_id);
+			tmp = SerializerRequests::serializeRequest(linkRequest);
+			std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
+			Helper::sendVector(_clientSocketWithFirstNode, data);
 			std::cout << "sent link msg\n";
 
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
@@ -275,7 +293,7 @@ void Client::startConversation(const bool& openNodes)
 			ri.buffer.clear();
 
 
-			Helper::sendVector(_clientSocketWithFirstNode, rkeRequestVec);
+			Helper::sendVector(_clientSocketWithFirstNode, dataRKE);
 			std::cout << "sent RSA msg\n";
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			//ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
@@ -294,18 +312,23 @@ void Client::startConversation(const bool& openNodes)
 			ri.buffer.clear();
 		}
 	}
+	//SENDING LINK AND RSA KEY EXCHANGE TO ALL THE REST NODES END
 
+	//SENDING HTTP GET START
 	HttpGetRequest httpGetRequest;
-	
+	data.clear();
+
 	std::cout << "Enter domain: ";
 	std::cin >> domain;
 	if (!domainValidationCheck(domain))
 		throw std::runtime_error("domain is illegal");
 
-	httpGetRequest.circuit_id = ccr.circuit_id;
+	data.emplace_back(ccr.circuit_id);
 	httpGetRequest.domain = domain;
+	tmp = SerializerRequests::serializeRequest(httpGetRequest);
+	std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
 
-	Helper::sendVector(_clientSocketWithFirstNode, SerializerRequests::serializeRequest(httpGetRequest));
+	Helper::sendVector(_clientSocketWithFirstNode, data);
 	std::cout << "sends httpGet Request:\n";
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 
@@ -321,6 +344,7 @@ void Client::startConversation(const bool& openNodes)
 		std::cout << "HTML of " << domain << ": " << std::endl;
 		std::cout << httpGetResponse.content << std::endl;
 	}
+	//SENDING HTTP GET END
 }
 
 int main()

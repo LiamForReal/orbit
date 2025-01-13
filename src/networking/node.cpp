@@ -264,7 +264,7 @@ void Node::clientHandler(const SOCKET client_socket)
 				ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.handleMsg(ri, isRSA);
 			if (unsigned int(rr.buffer[0]) == RSA_KEY_EXCHANGE_STATUS)
-				isRSA = true;
+				isRSA = false; // should be true bc currently untill now we did not encript
 		}
 	}
 	catch (const std::runtime_error& e)

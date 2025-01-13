@@ -114,14 +114,14 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::string msg = "";
 		unsigned int circuitID = 0;
 		RequestResult rr = RequestResult();
-		std::vector<unsigned char> RSAKeyExchangeVec;
+		std::vector<unsigned char> RSAKeyExchangeVec, tmp;
 		
 		uint2048_t rsaClientPubkey;
 		uint2048_t rsaClientProduct;
 
 		RsaKeyExchangeRequest rkeRequest;
 		RsaKeyExchangeResponse rkeResponse;
-
+		//GET REQUEST AND BUILD RSA RESPOSE START
 		try
 		{
 			ri = Helper::waitForResponse(client_socket);
@@ -144,8 +144,10 @@ void Server::clientHandler(const SOCKET client_socket)
 		{
 			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
 		}
-
-		RSAKeyExchangeVec = SerializerResponses::serializeResponse(rkeResponse), rsaClientPubkey, rsaClientProduct;
+		//GET REQUEST AND BUILD RSA RESPOSE END
+		tmp = SerializerResponses::serializeResponse(rkeResponse);
+		RSAKeyExchangeVec.emplace_back(0); //only for now
+		std::copy(tmp.begin(), tmp.end(), RSAKeyExchangeVec.begin() + 1);
 		Helper::sendVector(client_socket, RSAKeyExchangeVec);
 		RSAKeyExchangeVec.clear();
 
@@ -157,18 +159,24 @@ void Server::clientHandler(const SOCKET client_socket)
 
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
+		unsigned int circuit_id;
 		mutex.lock();
 		for (auto it : _clients)
 		{
 			if (it.second == INVALID_SOCKET)
 			{
-				_clients[it.first] = client_socket;
-
+				circuit_id = it.first;
+				_clients[circuit_id] = client_socket;
+				
 				std::cout << "new client allocated\n\n";
 				break;
 			}
 		}
 		mutex.unlock();
+		tmp = rr.buffer;
+		rr.buffer.clear();
+		rr.buffer.emplace_back(circuit_id);
+		std::copy(tmp.begin(), tmp.end(), rr.buffer.begin() + 1);
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
 		if (static_cast<unsigned int>(rr.buffer[0]) == CIRCUIT_CONFIRMATION_ERROR)
@@ -336,7 +344,7 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 {
 	try
 	{
-		DeleteCircuitRequest dcr;
+		std::vector<unsigned char> deleteRequest;
 		char buffer[100];
 		RequestInfo ri;
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
@@ -377,16 +385,16 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						}
 
 						// Handle delete circuit logic
-						dcr.circuit_id = circuitId;
-						std::vector<unsigned char> deleteCircuitBuffer = SerializerRequests::serializeRequest(dcr);
-
+						deleteRequest.clear();
+						deleteRequest.emplace_back(circuitId);
+						deleteRequest.emplace_back(DELETE_CIRCUIT_RC);
 						// Notify the remaining nodes
-						Helper::sendVector(node_sock, deleteCircuitBuffer);
+						Helper::sendVector(node_sock, deleteRequest);
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
 
 						std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-						Helper::sendVector(_clients[circuitId], deleteCircuitBuffer);
+						Helper::sendVector(_clients[circuitId], deleteRequest);
 						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
 
 						// Regenerate the circuit for the remaining nodes
