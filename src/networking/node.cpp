@@ -255,12 +255,16 @@ void Node::clientHandler(const SOCKET client_socket)
 		LinkRequest lr;
 		RequestResult rr;
 		rr.circuit_id = 0;
+		bool isRSA = false;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaKeys), client_socket, std::ref(aesKeys));
 		while (true)
 		{
 			//wait for msg from main
-			ri = Helper::waitForResponse(client_socket);
-			rr = nodeRequestHandler.handleMsg(ri);
+			if(!isRSA)
+				ri = Helper::waitForResponse(client_socket);
+			rr = nodeRequestHandler.handleMsg(ri, isRSA);
+			if (unsigned int(rr.buffer[0]) == RSA_KEY_EXCHANGE_STATUS)
+				isRSA = true;
 		}
 	}
 	catch (const std::runtime_error& e)

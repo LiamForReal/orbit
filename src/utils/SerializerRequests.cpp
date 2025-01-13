@@ -15,7 +15,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
     json requestJson = {
         {"public_key", public_key},
         {"product", product},
-        {"circuit_id", rsaKeyExchangeRequest.circuit_id},
     };
     
     std::string requestJsonStr = requestJson.dump();
@@ -48,7 +47,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyEx
         {"base", base},
         {"modular", modular},
         {"calc_result", calcResult},
-        {"circuit_id", ecdheKeyExchangeRequest.circuit_id}
     };
     
     std::string requestJsonStr = requestJson.dump();
@@ -94,7 +92,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
 
     unsigned int len = 0;
     json requestJson = {
-        {"circuit_id", linkRequest.circuit_id},
         {"nextNode", linkRequest.nextNode},
     };
     
@@ -118,59 +115,10 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const HttpGetReq
     unsigned int len = 0;
 
     json requestJson = {
-        {"circuit_id", httpGetRequest.circuit_id},
         {"domain", httpGetRequest.domain},
     };
     
     std::string requestJsonStr = requestJson.dump();
-
-	// Insert Message Length Into Vector
-	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
-
-	// Insert Message Into Vector
-	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
-
-    return vec;
-}
-
-std::vector<unsigned char> SerializerRequests::serializeRequest(const CloseConnectionRequest& closeConnectionRequest)
-{
-    std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(CLOSE_CONNECTION_RC));
-
-    unsigned int len = 0;
-
-    json requestJson = {
-        {"circuit_id", closeConnectionRequest.circuit_id},
-    };
-    
-    std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
-
-	// Insert Message Length Into Vector
-	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
-
-	// Insert Message Into Vector
-	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
-
-    return vec;
-}
-
-std::vector<unsigned char> SerializerRequests::serializeRequest(const DeleteCircuitRequest& deleteCircuitRequest)
-{
-    std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(DELETE_CIRCUIT_RC));
-
-    unsigned int len = 0;
-
-    json requestJson = {
-        {"circuit_id", deleteCircuitRequest.circuit_id},
-    };
-    
-    std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.

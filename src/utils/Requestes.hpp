@@ -22,7 +22,6 @@ typedef struct RsaKeyExchangeRequest
 {
     uint2048_t public_key;
     uint2048_t product;
-    unsigned int circuit_id;
 } RsaKeyExchangeRequest;
 
 typedef struct EcdheKeyExchangeRequest
@@ -30,7 +29,6 @@ typedef struct EcdheKeyExchangeRequest
     uint256_t b; 
     uint256_t m; 
     uint256_t calculationResult; 
-    unsigned int circuit_id;
 } EcdheKeyExchangeRequest;
 
 typedef struct NodeOpenRequest
@@ -42,21 +40,13 @@ typedef struct NodeOpenRequest
 typedef struct LinkRequest
 {
     pair<std::string, unsigned int> nextNode;
-    unsigned int circuit_id; 
 } LinkRequest;
 
 typedef struct HttpGetRequest
 {
     string domain; //maybe in cpp the library have other way to save the content and it will be switched there 
-    unsigned int circuit_id;
 } HttpGetRequest;
 
-typedef struct CloseConnectionRequest
-{ 
-    unsigned int circuit_id; 
-} CloseConnectionRequest;
+//Close connection is only a id
 
-typedef struct DeleteCircuitRequest
-{ 
-    unsigned int circuit_id; 
-} DeleteCircuitRequest;
+//delete circuit is only a id

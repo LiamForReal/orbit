@@ -19,8 +19,14 @@ NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, 
 	this->ekerh = new EcdheKeyExchangeRequestHandler(_circuitData, _socket, _rsaKeys, _aesKeys);
 }
 
-RequestResult NodeRequestHandler::handleMsg(const RequestInfo& requestInfo)
+RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo, bool& isRSA)
 {
+	if (isRSA)
+	{
+		requestInfo = Helper::waitForResponse_RSA(_socket, this->_rsaKeys[requestInfo.id].first);
+		isRSA = false;
+		//call to decript 
+	}
 	if (lrh->isRequestRelevant(requestInfo))
 	{
 		return lrh->handleRequest(requestInfo);

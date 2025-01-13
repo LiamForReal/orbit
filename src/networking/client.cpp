@@ -178,7 +178,8 @@ void Client::startConversation(const bool& openNodes)
 	char buffer[100];
 	std::string domain;
 	RequestInfo ri;
-
+	std::vector<unsigned char> tmp;
+	std::vector<unsigned char> rkeData;
 	if (openNodes)
 	{
 		nodeOpening();
@@ -223,9 +224,10 @@ void Client::startConversation(const bool& openNodes)
 	RsaKeyExchangeResponse rkeResponse;
 	rkeRequest.public_key = rsa.getPublicKey();
 	rkeRequest.product = rsa.getProduct();
-	rkeRequest.circuit_id = ccr.circuit_id;
-	std::vector<unsigned char> rkeRequestVec = SerializerRequests::serializeRequest(rkeRequest);
-
+	tmp = SerializerRequests::serializeRequest(rkeRequest);
+	rkeData.emplace_back(ccr.circuit_id);
+	//to Change the make msges logic
+	//rkeData.insert(rkeData.begin() + 1, tmp);
 	if (status == INVALID_SOCKET)
 	{
 		int errCode = WSAGetLastError();  // Get the error code from Winsock
@@ -234,7 +236,7 @@ void Client::startConversation(const bool& openNodes)
 	}
 	else std::cout << "connected successfully to the first node\n";
 
-	Helper::sendVector(_clientSocketWithFirstNode, rkeRequestVec);
+	Helper::sendVector(_clientSocketWithFirstNode, rkeData);
 	std::cout << "sent RSA msg\n";
 
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);

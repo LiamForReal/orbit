@@ -173,7 +173,7 @@ unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int 
 	return data;
 }
 
-RequestInfo Helper::buildRI(SOCKET socket, unsigned int statusCode)
+RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 {
     RequestInfo ri = RequestInfo();
     ri.buffer = std::vector<unsigned char>();
@@ -183,10 +183,12 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int statusCode)
     size_t i = 0;
     int j = 0;
 
-    ri.id = statusCode;
+	ri.circuit_id = circuitId;
 
-    std::cout << "DEBUG: Status code: " << statusCode << std::endl;
-    ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
+    ri.id = Helper::getStatusCodeFromSocket(socket);
+
+    std::cout << "DEBUG: Status code: " << ri.id << std::endl;
+    ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.id));
 
     if (ri.id == ALIVE_MSG_RC) //request how has no data
         return ri;
@@ -208,27 +210,25 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int statusCode)
 
     std::cout << "DEBUG: The message is: " << msg << std::endl;
 
-    ri.id = statusCode;
-
     return ri;
 }
 
 
 RequestInfo Helper::waitForResponse(SOCKET socket)
 {
-	unsigned int statusCode;
-
+	unsigned int circuitId;
+	//56 aadawdawdawdawdwadwdAAAADDAWDa 1080 
 	while (true)
 	{
-		statusCode = Helper::socketHasData(socket);
-		if (statusCode != 0 && statusCode != -1)
+		circuitId = Helper::socketHasData(socket);
+		if (circuitId != 0 && circuitId != -1)
 		{
-			return Helper::buildRI(socket, statusCode);
+			return Helper::buildRI(socket, circuitId);
 		}
 	}
 }
 
-RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, RSA& rsa)
+RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, RSA& rsa)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
@@ -236,6 +236,24 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, R
 	unsigned int circuitId = 0;
 	size_t i = 0;
 	int j = 0;
+
+	std::vector<uint8_t> encryptedStatusCodeVec;
+	encryptedStatusCodeVec.reserve(256);
+	unsigned int statusCodeValue = 0;
+
+	unsigned char* statusCodePtr = getUnsignedCharPartFromSocket(socket, 1 * 256, 0);
+	for (short i = 0; i < 256; i++)
+	{
+		encryptedStatusCodeVec.emplace_back(statusCodePtr[i]);
+	}
+
+	free(statusCodePtr);
+	statusCodePtr = NULL;
+	encryptedStatusCodeVec.clear();
+
+	std::vector<uint8_t> decryptedStatusCodeVec = rsa.Decrypt(std::ref(encryptedStatusCodeVec));
+	ri.id = decryptedStatusCodeVec[0];
+	decryptedStatusCodeVec.clear();
 
 	std::vector<uint8_t> encryptedLengthVec;
 	// 4 * 256 bytes because our RSA is 2048 bits and length is 4
@@ -261,10 +279,10 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, R
 	encryptedLengthVec.clear();
 	decryptedLengthVec.clear();
 
-	ri.id = statusCode;
+	ri.circuit_id = circuit_id;
 
-	std::cout << "DEBUG: Status code: " << statusCode << std::endl;
-	ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
+	std::cout << "DEBUG: Status code: " << circuit_id << std::endl;
+	ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.id));
 
 	if (ri.id == ALIVE_MSG_RC) //request how has no data
 		return ri;
@@ -308,9 +326,6 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, R
 	}
 
 	std::cout << "DEBUG: The message is: " << msg << std::endl;
-
-	ri.id = statusCode;
-
 	return ri;
 }
 

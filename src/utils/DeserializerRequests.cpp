@@ -1,6 +1,6 @@
 #include "DeserializerRequests.h"
 
-RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(const std::vector<unsigned char>& buffer) 
+RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(const std::vector<unsigned char>& buffer) // unsigned int circuit_id 
 {
     RsaKeyExchangeRequest request;
 
@@ -19,7 +19,6 @@ RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(con
 		
         request.public_key = uint2048_t { std::string(jsonData["public_key"]) };
 		request.product = uint2048_t { std::string(jsonData["product"]) };
-		request.circuit_id = jsonData["circuit_id"];
     }
     catch (...) 
 	{
@@ -47,7 +46,6 @@ EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest
 		request.b = uint256_t{ std::string(jsonData["base"]) };
 		request.m = uint256_t{ std::string(jsonData["modular"]) };
         request.calculationResult = uint256_t{ std::string(jsonData["calc_result"]) };
-		request.circuit_id = jsonData["circuit_id"];
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
@@ -105,7 +103,6 @@ LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsig
 
 	try
 	{
-		request.circuit_id = jsonData["circuit_id"];
 		request.nextNode = jsonData["nextNode"];
 	}
 	catch (...)
@@ -133,7 +130,6 @@ HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector
 
 	try
 	{
-		request.circuit_id = jsonData["circuit_id"];
 		request.domain = jsonData["domain"];
 	}
 	catch (...)
@@ -144,59 +140,4 @@ HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector
 	return request;
 }
 
-CloseConnectionRequest DeserializerRequests::deserializeCloseConnectionRequest(const std::vector<unsigned char>& buffer)
-{
-	CloseConnectionRequest request;
-	std::string jsonDataStr = "";
-	unsigned int len = 0, i = 0;
-
-	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-	std::cout << len << std::endl;
-    
-    for (i = 0; i < len; i++)
-	{
-		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
-	}
-    
-	
-	json jsonData = json::parse(jsonDataStr);
-
-	try
-	{
-		request.circuit_id = jsonData["circuit_id"];
-	}
-	catch (...)
-	{
-		throw std::runtime_error("Invalid json structure passed");
-	}
-
-	return request;
-}
-DeleteCircuitRequest DeserializerRequests::deserializeDeleteCircuitRequest(const std::vector<unsigned char>& buffer)
-{
-    DeleteCircuitRequest request;
-	std::string jsonDataStr = "";
-	unsigned int len = 0, i = 0;
-
-	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
-	std::cout << len << std::endl;
-    
-    for (i = 0; i < len; i++)
-	{
-		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
-	}
-    
-	
-	json jsonData = json::parse(jsonDataStr);
-
-	try
-	{
-		request.circuit_id = jsonData["circuit_id"];
-	}
-	catch (...)
-	{
-		throw std::runtime_error("Invalid json structure passed");
-	}
-
-	return request;
-}
+//no need in close connection

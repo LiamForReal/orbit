@@ -21,7 +21,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 	try
 	{
 		ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo.buffer);
-		rr.circuit_id = ekeRequest.circuit_id;
+		rr.circuit_id = requestInfo.circuit_id;
 
 		ekeResponse.status = ECDHE_KEY_EXCHANGE_STATUS;
 

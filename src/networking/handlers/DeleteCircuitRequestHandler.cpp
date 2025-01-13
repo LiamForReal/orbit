@@ -26,15 +26,16 @@ bool DeleteCircuitRequestHandler::isRequestRelevant(const RequestInfo& requestIn
 RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
 	this->rr.buffer.clear();
-	DeleteCircuitRequest dcr = DeserializerRequests::deserializeDeleteCircuitRequest(requestInfo.buffer);
+	//it is only a id 
+	
 	DeleteCircuitResponse dcre;
 	try
 	{
-		this->rr.circuit_id = dcr.circuit_id;
+		this->rr.circuit_id = requestInfo.circuit_id;
 		
-		closeSocket(this->cd[dcr.circuit_id].first);
-		closeSocket(this->cd[dcr.circuit_id].second);
-		this->cd.erase(dcr.circuit_id);
+		closeSocket(this->cd[requestInfo.circuit_id].first);
+		closeSocket(this->cd[requestInfo.circuit_id].second);
+		this->cd.erase(requestInfo.circuit_id);
 		dcre.status = DELETE_CIRCUIT_STATUS;
 	}
 	catch (std::runtime_error& e)

@@ -51,17 +51,17 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	{
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
 
-		rr.circuit_id = lr.circuit_id;
+		rr.circuit_id = requestInfo.circuit_id;
 
 		lre.status = LINK_STATUS;
 
-		if (_circuitData[lr.circuit_id].first == _socket)
+		if (_circuitData[requestInfo.circuit_id].first == _socket)
 		{
-			if (_circuitData[lr.circuit_id].second != INVALID_SOCKET && _circuitData[lr.circuit_id].second != NULL)
+			if (_circuitData[requestInfo.circuit_id].second != INVALID_SOCKET && _circuitData[requestInfo.circuit_id].second != NULL)
 			{
 				std::cout << "[LINK] seconed is exisist and trying to connenct" << std::endl;
-				Helper::sendVector(_circuitData[lr.circuit_id].second, requestInfo.buffer);
-				ri = Helper::waitForResponse(_circuitData[lr.circuit_id].second);//sends rr but I put that on ri
+				Helper::sendVector(_circuitData[requestInfo.circuit_id].second, requestInfo.buffer);
+				ri = Helper::waitForResponse(_circuitData[requestInfo.circuit_id].second);//sends rr but I put that on ri
 				if (ri.id == LINK_STATUS)
 					lre.status = LINK_STATUS;
 				else throw std::runtime_error("[LINK] problem occurred while linking the next node");
@@ -73,8 +73,8 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 			else
 			{
 				std::cout << "[LINK] seconed is new and now generating\n";
-				_circuitData[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
-				if (_circuitData[lr.circuit_id].second == INVALID_SOCKET)
+				_circuitData[requestInfo.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
+				if (_circuitData[requestInfo.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created";
 				rr.buffer = SerializerResponses::serializeResponse(lre);

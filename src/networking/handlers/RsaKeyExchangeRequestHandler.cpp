@@ -20,7 +20,7 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 	try
 	{
 		rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
-		rr.circuit_id = rkeRequest.circuit_id;
+		rr.circuit_id = requestInfo.circuit_id;
 
 		rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
 

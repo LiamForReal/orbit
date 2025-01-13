@@ -19,8 +19,6 @@ class DeserializerRequests
         static NodeOpenRequest deserializeNodeOpeningRequest(const std::vector<unsigned char>& buffer);
         static LinkRequest deserializeLinkRequest(const std::vector<unsigned char>& buffer);
         static HttpGetRequest deserializeHttpGetRequest(const std::vector<unsigned char>& buffer);
-        static CloseConnectionRequest deserializeCloseConnectionRequest(const std::vector<unsigned char>& buffer);
-        static DeleteCircuitRequest deserializeDeleteCircuitRequest(const std::vector<unsigned char>& buffer);
 };
 
 

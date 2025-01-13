@@ -10,7 +10,7 @@ class NodeRequestHandler
 public: 
 	~NodeRequestHandler();
 	NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuits, std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& rsaKeys, SOCKET cs, std::map<unsigned int, uint256_t>& aesKeys);
-	RequestResult handleMsg(const RequestInfo& requestInfo);
+	RequestResult handleMsg(RequestInfo& requestInfo, bool& isRSA);
 private:
 	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& _circuitData;
 	std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& _rsaKeys;

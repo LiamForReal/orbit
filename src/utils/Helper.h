@@ -23,9 +23,9 @@ public:
 	static unsigned int getCircuitIdFromSocket(const SOCKET sc); //
 	static unsigned int getLengthPartFromSocket(const SOCKET sc); //
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
-	static RequestInfo buildRI(SOCKET socket, unsigned int statusCode);
+	static RequestInfo buildRI(SOCKET socket, unsigned int circuit_id);
 	static RequestInfo waitForResponse(SOCKET socket);
-	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& statusCode, RSA& rsa);
+	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, RSA& rsa);
 	static RequestInfo waitForResponse_RSA(SOCKET socket, RSA& rsa);
 
 private:
