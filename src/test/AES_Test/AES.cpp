@@ -117,7 +117,7 @@ void AES::generateRoundKeys()
 void AES::rotWord(uint8_t* roundKeyCol) 
 {
     uint8_t temp = roundKeyCol[0];  // Save MSB
-    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; ++i) 
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS - DEC; ++i) 
     {
         roundKeyCol[i] = roundKeyCol[i + INC];
     }
@@ -175,6 +175,22 @@ void AES::subBytes(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
     }
 }
 
+void AES::shiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
+{
+    for (uint8_t i = 1; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t k = 0; k < i; k++)
+        {
+            uint8_t temp = grid[i][0];  // Save MSB
+            for (uint8_t j = 0; j < AES_GRID_COLS - DEC; j++)
+            {
+                grid[i][j] = grid[i][j + INC];
+            }
+            grid[i][AES_ROUND_KEYS_ROWS - DEC] = temp; // Set MSB as LSB
+        }
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
@@ -205,7 +221,8 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
         {
             subBytes(chunkGrid);
             addRoundKey(chunkGrid, round);
-
+            shiftRows(chunkGrid);
+            round = 99;
         }
 
         std::cout << "<=== CHUNK START ===>\n";
