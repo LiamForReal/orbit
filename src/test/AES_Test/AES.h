@@ -33,7 +33,7 @@ class AES
 		uint8_t roundConstant(const uint8_t& i);
 		void addRoundConstant(uint8_t* roundKeyCol, const uint8_t& index);
 
-		void addRoundKey();
+		void addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t& round);
 		void subBytes();
 		void mixColumns();
 		void shiftRows();

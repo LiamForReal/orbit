@@ -151,11 +151,24 @@ void AES::addRoundConstant(uint8_t* roundKeyCol, const uint8_t& index)
     roundKeyCol[0] ^= roundConstant(index);
 }
 
+void AES::addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t& round)
+{
+    uint8_t offset = (round % 2 == 0) ? 0 : 4;
+
+    for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+        {
+            grid[i][j] ^= this->_roundKeys[(((!round) ? 1 : round) - DEC) / 2][i][j + offset];
+        }
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
     //std::vector<uint8_t> chunkVec;
-    uint8_t chunkGrid[4][4] = { { 0 } };
+    uint8_t chunkGrid[AES_GRID_ROWS][AES_GRID_COLS] = { { 0 } };
     
     /* simple null padding */
     while (plainTextVec.size() % AES_CHUNK_SIZE_BYTES != 0)
@@ -175,12 +188,20 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
             }
         }
 
+        addRoundKey(chunkGrid, 0);
+
+        for (uint8_t round = 1; round <= AES_ROUNDS; round++)
+        {
+
+            addRoundKey(chunkGrid, round);
+        }
+
         std::cout << "<=== CHUNK START ===>\n";
         for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
         {
             for (uint8_t j = 0; j < AES_GRID_COLS; j++)
             {
-                std::cout << chunkGrid[i][j] << "      ";
+                std::cout << std::hex << int(chunkGrid[i][j]) << "      ";
             }
             std::cout << std::endl;
         }
