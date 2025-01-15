@@ -164,6 +164,17 @@ void AES::addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t&
     }
 }
 
+void AES::subBytes(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
+{
+    for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+        {
+            grid[i][j] = this->SBOX[(grid[i][j] >> 4) & 0x0F][grid[i][j] & 0x0F];
+        }
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
@@ -192,8 +203,9 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 
         for (uint8_t round = 1; round <= AES_ROUNDS; round++)
         {
-
+            subBytes(chunkGrid);
             addRoundKey(chunkGrid, round);
+
         }
 
         std::cout << "<=== CHUNK START ===>\n";
