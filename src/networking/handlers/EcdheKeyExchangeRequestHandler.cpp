@@ -43,17 +43,19 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE RSA AND SEND BACKWARDS
 				std::cout << "[ECDHE] Got from prev, there is no next, saving and sending backwards\n";
-				// TODO: TO CHANGE
 				//create defi HelmanKey and save it in ecdhe info
 				_ecdheInfo[rr.circuit_id].first.setG(ekeRequest.b);
 				_ecdheInfo[rr.circuit_id].first.setP(ekeRequest.m);
 				_ecdheInfo[rr.circuit_id].second = _ecdheInfo[rr.circuit_id].first.createTmpKey();
 				ekeResponse.calculationResult = _ecdheInfo[rr.circuit_id].first.createDefiKey(_ecdheInfo[rr.circuit_id].second);
 				std::cout << "[ECDHE] created for circuit " << rr.circuit_id << std::endl;
-				//rsa.Encrypt(_rsaKeys[rr.circuit_id].second) 
-				rr.buffer = SerializerResponses::serializeResponse(ekeResponse);
-				//self rsa.Encript(ECDHE msg, client pubkey, client product)
+				//rsa.Encrypt(_rsaKeys[rr.circuit_id].second)
 				rr.buffer = _rsaKeys[rr.circuit_id].first.Encrypt(rr.buffer, _rsaKeys[rr.circuit_id].second.first, _rsaKeys[rr.circuit_id].second.second);
+				rr.buffer[0] = uint8_t(rr.circuit_id);
+				auto tmp = SerializerResponses::serializeResponse(ekeResponse);
+				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
+				//self rsa.Encript(ECDHE msg, client pubkey, client product)
+				
 				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
 			}
 			else

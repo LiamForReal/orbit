@@ -53,9 +53,8 @@ void Client::connectToServer(std::string serverIP, int port)
 	rkeRequest.public_key = this->rsa.getPublicKey();
 	rkeRequest.product = this->rsa.getProduct();
 	tmp = SerializerRequests::serializeRequest(rkeRequest);
-	data.emplace_back(0); // temporery circuit id!!!
-	std::cout << "\nis this where the code crush?\n"; //YESSSS
-	std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
+	data.emplace_back(unsigned char(0)); // temporery circuit id!!!
+	data.insert(data.end(), tmp.begin(), tmp.end());
 	try
 	{
 		Helper::sendVector(_clientSocketWithDS, data);
@@ -91,13 +90,11 @@ void Client::nodeOpening()
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
-	data.emplace_back(0); // temporery circuit id = 0 default!!!
+	data.emplace_back(unsigned char(0)); // temporery circuit id = 0 default!!!
 	tmp = SerializerRequests::serializeRequest(nor);
-	std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
+	data.insert(data.end(), tmp.begin(), tmp.end());
 	Helper::sendVector(_clientSocketWithDS, data);
 	std::cout << "Message send to server..." << std::endl;
-
-	//CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse();
 }
 
 std::string Client::generateHttpGetRequest(const std::string& domain) 
@@ -191,15 +188,17 @@ void Client::startConversation(const bool& openNodes)
 		nodeOpening();
 	}
 
-	ri = Helper::waitForResponse(this->_clientSocketWithDS);
+	ri = Helper::waitForResponse(this->_clientSocketWithDS); //problem
 
 	if (openNodes)
 	{
 		this->_passedPathGetWait = true;
 	}
-
+	std::cout << "\n1\n";
+	unsigned int circuit_id = unsigned int(ri.buffer[0]);
+	std::cout << "\n2\n";
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
-
+	std::cout << "\n3\n";
 	this->rsaCircuitData.reserve(ccr.nodesPath.size());
 
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
@@ -247,9 +246,9 @@ void Client::startConversation(const bool& openNodes)
 	rkeRequest.public_key = rsa.getPublicKey();
 	rkeRequest.product = rsa.getProduct();
 	tmp = SerializerRequests::serializeRequest(rkeRequest);
-	dataRKE.emplace_back(ccr.circuit_id);
+	dataRKE.emplace_back(unsigned char(circuit_id));
 	//to Change the make msges logic
-	std::copy(tmp.begin(), tmp.end(), dataRKE.begin() + 1);
+	dataRKE.insert(dataRKE.end(), tmp.begin(), tmp.end());
 	Helper::sendVector(_clientSocketWithFirstNode, dataRKE);
 	std::cout << "sent RSA msg\n";
 
@@ -279,9 +278,9 @@ void Client::startConversation(const bool& openNodes)
 
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 			data.clear();
-			data.emplace_back(ccr.circuit_id);
+			data.emplace_back(unsigned char(circuit_id));
 			tmp = SerializerRequests::serializeRequest(linkRequest);
-			std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
+			data.insert(data.end(), tmp.begin(), tmp.end());
 			Helper::sendVector(_clientSocketWithFirstNode, data);
 			std::cout << "sent link msg\n";
 
@@ -323,10 +322,10 @@ void Client::startConversation(const bool& openNodes)
 	if (!domainValidationCheck(domain))
 		throw std::runtime_error("domain is illegal");
 
-	data.emplace_back(ccr.circuit_id);
+	data.emplace_back(unsigned char(circuit_id));
 	httpGetRequest.domain = domain;
 	tmp = SerializerRequests::serializeRequest(httpGetRequest);
-	std::copy(tmp.begin(), tmp.end(), data.begin() + 1);
+	data.insert(data.end(), tmp.begin(), tmp.end());
 
 	Helper::sendVector(_clientSocketWithFirstNode, data);
 	std::cout << "sends httpGet Request:\n";

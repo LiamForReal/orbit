@@ -66,7 +66,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 					lre.status = LINK_STATUS;
 				else throw std::runtime_error("[LINK] problem occurred while linking the next node");
 				std::cout << "[LINK] sends to the next node!\n";
-				rr.buffer = SerializerResponses::serializeResponse(lre);
+				rr.buffer = ri.buffer;
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
 			}
@@ -77,7 +77,9 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 				if (_circuitData[requestInfo.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created";
-				rr.buffer = SerializerResponses::serializeResponse(lre);
+				rr.buffer[0] = uint8_t(rr.circuit_id);
+				auto tmp = SerializerResponses::serializeResponse(lre);
+				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
 			}

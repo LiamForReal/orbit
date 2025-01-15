@@ -124,7 +124,9 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            this->rr.buffer = SerializerResponses::serializeResponse(hgResponse);
+            rr.buffer[0] = uint8_t(rr.circuit_id);
+            auto tmp = SerializerResponses::serializeResponse(hgResponse);
+            rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
             Helper::sendVector(_circuitsData[rr.circuit_id].first, rr.buffer);
 		}
 	}

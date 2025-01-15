@@ -146,8 +146,8 @@ void Server::clientHandler(const SOCKET client_socket)
 		}
 		//GET REQUEST AND BUILD RSA RESPOSE END
 		tmp = SerializerResponses::serializeResponse(rkeResponse);
-		RSAKeyExchangeVec.emplace_back(0); //only for now
-		std::copy(tmp.begin(), tmp.end(), RSAKeyExchangeVec.begin() + 1);
+		RSAKeyExchangeVec.emplace_back(unsigned char(0)); //only for now
+		RSAKeyExchangeVec.insert(RSAKeyExchangeVec.end(), tmp.begin(), tmp.end());
 		Helper::sendVector(client_socket, RSAKeyExchangeVec);
 		RSAKeyExchangeVec.clear();
 
@@ -159,14 +159,12 @@ void Server::clientHandler(const SOCKET client_socket)
 
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
-		unsigned int circuit_id;
 		mutex.lock();
 		for (auto it : _clients)
 		{
 			if (it.second == INVALID_SOCKET)
 			{
-				circuit_id = it.first;
-				_clients[circuit_id] = client_socket;
+				_clients[rr.circuit_id] = client_socket;
 				
 				std::cout << "new client allocated\n\n";
 				break;
@@ -175,8 +173,8 @@ void Server::clientHandler(const SOCKET client_socket)
 		mutex.unlock();
 		tmp = rr.buffer;
 		rr.buffer.clear();
-		rr.buffer.emplace_back(circuit_id);
-		std::copy(tmp.begin(), tmp.end(), rr.buffer.begin() + 1);
+		rr.buffer.emplace_back(byte(rr.circuit_id));
+		rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
 		if (static_cast<unsigned int>(rr.buffer[0]) == CIRCUIT_CONFIRMATION_ERROR)
@@ -401,11 +399,12 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
 						_controlList[circuitId] = newCircuit;
 
+						std::vector<unsigned char> responseBuffer;
 						CircuitConfirmationResponse ccr;
-						ccr.circuit_id = circuitId;
 						ccr.nodesPath = newCircuit;
 						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
-						std::vector<unsigned char> responseBuffer = SerializerResponses::serializeResponse(ccr);
+						auto tmp = SerializerResponses::serializeResponse(ccr);
+						responseBuffer.insert(responseBuffer.end(), tmp.begin(), tmp.end());
 						Helper::sendVector(_clients[circuitId], responseBuffer);
 
 						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";

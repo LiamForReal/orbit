@@ -62,7 +62,6 @@ NodeOpenResponse DeserializerResponses::deserializeNodeOpeningResponse(const std
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
     
-
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
     try {
@@ -91,7 +90,6 @@ CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmatio
     try {
 		
         response.status = jsonData["status"];
-        response.circuit_id = jsonData["circuit_id"];
         response.nodesPath = jsonData["nodesPath"];
     }
     catch (...) {

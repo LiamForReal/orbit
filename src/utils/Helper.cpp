@@ -184,7 +184,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
     int j = 0;
 
 	ri.circuit_id = circuitId;
-
+	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
     ri.id = Helper::getStatusCodeFromSocket(socket);
 
     std::cout << "DEBUG: Status code: " << ri.id << std::endl;
@@ -217,11 +217,10 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 RequestInfo Helper::waitForResponse(SOCKET socket)
 {
 	unsigned int circuitId;
-	//56 aadawdawdawdawdwadwdAAAADDAWDa 1080 
 	while (true)
 	{
 		circuitId = Helper::socketHasData(socket);
-		if (circuitId != 0 && circuitId != -1)
+		if (circuitId != -1)
 		{
 			return Helper::buildRI(socket, circuitId);
 		}
