@@ -151,6 +151,22 @@ void AES::addRoundConstant(uint8_t* roundKeyCol, const uint8_t& index)
     roundKeyCol[0] ^= roundConstant(index);
 }
 
+uint8_t AES::galoisMult(uint8_t a, uint8_t b) const
+{
+    uint8_t p = 0; /* accumulator for the product of the multiplication */
+    while (a != 0 && b != 0) {
+        if (b & 1) /* if the polynomial for b has a constant term, add the corresponding a to p */
+            p ^= a; /* addition in GF(2^m) is an XOR of the polynomial coefficients */
+    
+        if (a & 0x80) /* GF modulo: if a has a nonzero term x^7, then must be reduced when it becomes x^8 */
+            a = (a << 1) ^ 0x11b; /* subtract (XOR) the primitive polynomial x^8 + x^4 + x^3 + x + 1 (0b1_0001_1011) – you can change it but it must be irreducible */
+        else
+            a <<= 1; /* equivalent to a*x */
+        b >>= 1;
+    }
+    return p;
+}
+
 void AES::addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t& round)
 {
     uint8_t offset = (round % 2 == 0) ? 0 : 4;
@@ -191,6 +207,21 @@ void AES::shiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
     }
 }
 
+void AES::mixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
+{
+    uint8_t results[AES_GRID_ROWS][AES_GRID_COLS] = { {0} };
+
+    // results[?][?] ^= galoisMult(MIX_COLUMNS_MATRIX[?][?], grid[?][?]);
+
+    for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+        {
+            grid[i][j] = results[i][j];
+        }
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
@@ -220,8 +251,9 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
         for (uint8_t round = 1; round <= AES_ROUNDS; round++)
         {
             subBytes(chunkGrid);
-            addRoundKey(chunkGrid, round);
             shiftRows(chunkGrid);
+            mixColumns(chunkGrid);
+            //addRoundKey(chunkGrid, round);
             round = 99;
         }
 
