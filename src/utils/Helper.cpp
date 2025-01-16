@@ -12,9 +12,7 @@ using std::string;
 
 unsigned int Helper::socketHasData(SOCKET socket) 
 {
-	char buf;
-	unsigned int code = Helper::getStatusCodeFromSocket(socket);
-	return code;
+	return Helper::getCircuitIdFromSocket(socket);
 }
 
 // recieve data from socket according byteSize
@@ -73,9 +71,9 @@ unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 unsigned int Helper::getCircuitIdFromSocket(const SOCKET sc)
 {
     unsigned int value = 0;
-	unsigned char* data = getUnsignedCharPartFromSocket(sc, 1, 0);
-
-	value = (value << 8) | static_cast<unsigned char>(data[0]);
+	unsigned char* data = NULL;
+	recv(sc, (char*)(data), 1, 0);
+	value = (unsigned int)(data);
 
 	delete[] data;
 	data = NULL;

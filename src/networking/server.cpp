@@ -172,8 +172,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		}
 		mutex.unlock();
 		tmp = rr.buffer;
-		rr.buffer.clear();
-		rr.buffer.emplace_back(byte(rr.circuit_id));
+		rr.buffer[0] = (unsigned char)(rr.circuit_id);
 		rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";

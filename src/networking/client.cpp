@@ -189,16 +189,13 @@ void Client::startConversation(const bool& openNodes)
 	}
 
 	ri = Helper::waitForResponse(this->_clientSocketWithDS); //problem
-
+	std::cout << "the circuit id is: " << ri.circuit_id << "\n";
 	if (openNodes)
 	{
 		this->_passedPathGetWait = true;
 	}
-	std::cout << "\n1\n";
 	unsigned int circuit_id = unsigned int(ri.buffer[0]);
-	std::cout << "\n2\n";
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
-	std::cout << "\n3\n";
 	this->rsaCircuitData.reserve(ccr.nodesPath.size());
 
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
