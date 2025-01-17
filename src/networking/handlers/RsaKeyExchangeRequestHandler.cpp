@@ -19,8 +19,8 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 	rr.buffer.clear();
 	try
 	{
-		rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
 		rr.circuit_id = requestInfo.circuit_id;
+		rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
 
 		rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
 
@@ -54,8 +54,8 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				_rsaKeys[rr.circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
 				rkeResponse.public_key = _rsaKeys[rr.circuit_id].first.getPublicKey();
 				rkeResponse.product = _rsaKeys[rr.circuit_id].first.getProduct();
-				rr.buffer[0] = uint8_t(rr.circuit_id);
-				auto tmp = SerializerResponses::serializeResponse(rkeResponse);
+				rr.buffer.emplace_back(unsigned char(rr.circuit_id));
+				vector<unsigned char> tmp = SerializerResponses::serializeResponse(rkeResponse);
 				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
 			}

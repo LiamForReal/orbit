@@ -77,8 +77,8 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 				if (_circuitData[requestInfo.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created";
-				rr.buffer[0] = uint8_t(rr.circuit_id);
-				auto tmp = SerializerResponses::serializeResponse(lre);
+				rr.buffer.emplace_back(unsigned char(rr.circuit_id));
+				vector<unsigned char> tmp = SerializerResponses::serializeResponse(lre);
 				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);

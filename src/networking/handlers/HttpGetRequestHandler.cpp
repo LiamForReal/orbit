@@ -99,12 +99,11 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 	try
 	{
 		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
-		
+        hgResponse.status = HTTP_MSG_STATUS;
         rr.circuit_id = requestInfo.circuit_id;
 		// check if there is next
 		if (_circuitsData[requestInfo.circuit_id].second != INVALID_SOCKET && _circuitsData[requestInfo.circuit_id].second != NULL)
 		{
-			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
 			Helper::sendVector(_circuitsData[requestInfo.circuit_id].second, buffer);
             std::cout << "[HTTP GET] listening forward\n";
@@ -114,18 +113,12 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		}
 		else
 		{
-            //if (this->cd.find(hgRequest.circuit_id) == cd.end())
-            //{
-                //std::cout << "4";
             _circuitsData[requestInfo.circuit_id].first = _socket;
-            //}
-            //else throw std::runtime_error("this circuit first already taken");
 			// send HTTP GET (hgRequest.msg) to Web Server
-			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            rr.buffer[0] = uint8_t(rr.circuit_id);
-            auto tmp = SerializerResponses::serializeResponse(hgResponse);
+            rr.buffer.emplace_back(unsigned char(rr.circuit_id));
+            vector<unsigned char> tmp = SerializerResponses::serializeResponse(hgResponse);
             rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
             Helper::sendVector(_circuitsData[rr.circuit_id].first, rr.buffer);
 		}

@@ -67,8 +67,7 @@ unsigned int Helper::getCircuitIdFromSocket(const SOCKET sc)
 	data = new unsigned char[1];
 	recv(sc, (char*)(data), 1, 0);
 	value = (unsigned int)(*data);
-	std::cout << "data is: " << data << std::endl;
-	std::cout << "value is: " << value << std::endl;
+
 	delete[] data;
 	data = NULL;
 

@@ -187,13 +187,13 @@ void Client::startConversation(const bool& openNodes)
 	{
 		nodeOpening();
 	}
-
+	
 	ri = Helper::waitForResponse(this->_clientSocketWithDS); //problem
 	if (openNodes)
 	{
 		this->_passedPathGetWait = true;
 	}
-	unsigned int circuit_id = unsigned int(ri.buffer[0]);
+	unsigned int circuit_id = ri.circuit_id;
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
 	this->rsaCircuitData.reserve(ccr.nodesPath.size());
 
@@ -263,15 +263,13 @@ void Client::startConversation(const bool& openNodes)
 	}
 	ri.buffer.clear();
 	//SEND RSA KEY EXCHANGE TO FIRST NODE END
-	
+	// 
     //SENDING LINK AND RSA KEY EXCHANGE TO ALL THE REST NODES START
 	if (ccr.nodesPath.size() > 1)
 	{
-		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
+		//
+		for (auto it = ccr.nodesPath.begin() + 1; it != ccr.nodesPath.end(); it++)
 		{
-			if (it == ccr.nodesPath.begin())
-				it++;
-
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
 			data.clear();
 			data.emplace_back(unsigned char(circuit_id));
@@ -358,8 +356,8 @@ int main()
 		{
 			if (client.getPassedPathGetWait())
 			{
-				std::thread listenToServerInfoThread(&Client::listenToServerInfo, std::ref(client));
-				listenToServerInfoThread.detach();
+				//std::thread listenToServerInfoThread(&Client::listenToServerInfo, std::ref(client));
+				//listenToServerInfoThread.detach();
 				client.setPassedPathGetWait(false);
 			}
 			if (client.getRestartConversation())

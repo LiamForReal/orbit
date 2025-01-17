@@ -26,8 +26,6 @@ bool DeleteCircuitRequestHandler::isRequestRelevant(const RequestInfo& requestIn
 RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
 	this->rr.buffer.clear();
-	//it is only a id 
-	
 	DeleteCircuitResponse dcre;
 	try
 	{
@@ -43,8 +41,8 @@ RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requ
 		dcre.status = DELETE_CIRCUIT_ERROR;
 		std::cout << e.what() << std::endl;
 	}
-	rr.buffer[0] = uint8_t(rr.circuit_id);
-	auto tmp = SerializerResponses::serializeResponse(dcre);
+	rr.buffer.emplace_back(unsigned char(rr.circuit_id));
+	vector<unsigned char> tmp = SerializerResponses::serializeResponse(dcre);
 	rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 	return rr;
 }
