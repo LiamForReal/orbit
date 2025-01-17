@@ -49,7 +49,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         ccr.status = CIRCUIT_CONFIRMATION_ERROR;
     }
 
-    rr.buffer.emplace_back(unsigned char(this->circuit_id));
+    rr.buffer.emplace_back(unsigned char(rr.circuit_id));
     auto tmp = SerializerResponses::serializeResponse(ccr);
     rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
     return rr;

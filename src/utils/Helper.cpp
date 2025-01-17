@@ -7,14 +7,6 @@
 
 using std::string;
 
-// recieves the type code of the message from socket (3 bytes)
-// and returns the code. if no message found in the socket returns 0 (which means the client disconnected)
-
-unsigned int Helper::socketHasData(SOCKET socket) 
-{
-	return Helper::getCircuitIdFromSocket(socket);
-}
-
 // recieve data from socket according byteSize
 // returns the data as string
 string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
@@ -71,10 +63,12 @@ unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 unsigned int Helper::getCircuitIdFromSocket(const SOCKET sc)
 {
     unsigned int value = 0;
-	unsigned char* data = NULL;
+	unsigned char* data = NULL; 
+	data = new unsigned char[1];
 	recv(sc, (char*)(data), 1, 0);
-	value = (unsigned int)(data);
-
+	value = (unsigned int)(*data);
+	std::cout << "data is: " << data << std::endl;
+	std::cout << "value is: " << value << std::endl;
 	delete[] data;
 	data = NULL;
 
@@ -105,21 +99,6 @@ std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum)
 {
 	return getPartFromSocket(sc, bytesNum, 0);
 }
-
-// send data to socket
-// this is private function
-/*
-    void Helper::sendData(const SOCKET sc, const std::string message)
-{
-	const char* data = message.c_str();
-
-	if (send(sc, data, message.size(), 0) == INVALID_SOCKET)
-	{
-		throw std::exception("Error while sending message to client");
-	}
-}
-
-*/
 
 
 std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
@@ -165,9 +144,6 @@ unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int 
 	{
 		// Handle incomplete data reception if needed
 	}
-
-	//data[bytesNum] = '\0';
-
 	return data;
 }
 
@@ -177,11 +153,10 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
     ri.buffer = std::vector<unsigned char>();
     std::string msg = "";
     unsigned int msgLength = 0;
-	unsigned int circuitId = 0;
     size_t i = 0;
     int j = 0;
 
-	ri.circuit_id = circuitId;
+	ri.circuit_id = circuit_id;
 	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
     ri.id = Helper::getStatusCodeFromSocket(socket);
 
@@ -214,15 +189,8 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 
 RequestInfo Helper::waitForResponse(SOCKET socket)
 {
-	unsigned int circuitId;
-	while (true)
-	{
-		circuitId = Helper::socketHasData(socket);
-		if (circuitId != -1)
-		{
-			return Helper::buildRI(socket, circuitId);
-		}
-	}
+	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
+	return Helper::buildRI(socket, circuitId);
 }
 
 RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, RSA& rsa)

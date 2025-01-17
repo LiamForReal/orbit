@@ -53,8 +53,8 @@ void Client::connectToServer(std::string serverIP, int port)
 	rkeRequest.public_key = this->rsa.getPublicKey();
 	rkeRequest.product = this->rsa.getProduct();
 	tmp = SerializerRequests::serializeRequest(rkeRequest);
-	data.emplace_back(unsigned char(0)); // temporery circuit id!!!
-	data.insert(data.end(), tmp.begin(), tmp.end());
+	data.emplace_back(unsigned char(0)); // temporery circuit id becouse it must be one!!!
+	data.insert(data.end(), tmp.begin(), tmp.end()); //suppose to be - 1(x^n) for example 1xxx or 1xxxxx
 	try
 	{
 		Helper::sendVector(_clientSocketWithDS, data);
@@ -189,7 +189,6 @@ void Client::startConversation(const bool& openNodes)
 	}
 
 	ri = Helper::waitForResponse(this->_clientSocketWithDS); //problem
-	std::cout << "the circuit id is: " << ri.circuit_id << "\n";
 	if (openNodes)
 	{
 		this->_passedPathGetWait = true;
