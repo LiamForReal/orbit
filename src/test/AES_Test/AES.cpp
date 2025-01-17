@@ -169,13 +169,13 @@ uint8_t AES::galoisMult(uint8_t a, uint8_t b) const
 
 void AES::addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t& round)
 {
-    uint8_t offset = (round % 2 == 0) ? 0 : 4;
+    uint8_t offset = (round != 0 && ((round + INC) % 2 == 0 || round == 1)) ? 4 : 0;
 
     for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
     {
         for (uint8_t j = 0; j < AES_GRID_COLS; j++)
         {
-            grid[i][j] ^= this->_roundKeys[(((!round) ? 1 : round) - DEC) / 2][i][j + offset];
+            grid[i][j] ^= this->_roundKeys[round / 2][i][j + offset];
         }
     }
 }
@@ -210,8 +210,18 @@ void AES::shiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
 void AES::mixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
 {
     uint8_t results[AES_GRID_ROWS][AES_GRID_COLS] = { {0} };
-
-    // results[?][?] ^= galoisMult(MIX_COLUMNS_MATRIX[?][?], grid[?][?]);
+    
+    for (uint8_t i = 0; i < AES_GRID_COLS; i++) 
+    {
+        for (uint8_t j = 0; j < AES_GRID_ROWS; j++)
+        {
+            results[j][i] = 0;
+            for (uint8_t k = 0; k < AES_GRID_COLS; k++)
+            {
+                results[j][i] ^= galoisMult(MIX_COLUMNS_MATRIX[j][k], grid[k][i]);
+            }
+        }
+    }
 
     for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
     {
@@ -221,6 +231,7 @@ void AES::mixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
         }
     }
 }
+
 
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
@@ -252,9 +263,11 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
         {
             subBytes(chunkGrid);
             shiftRows(chunkGrid);
-            mixColumns(chunkGrid);
-            //addRoundKey(chunkGrid, round);
-            round = 99;
+            if (round != AES_ROUNDS)
+            {
+                mixColumns(chunkGrid);
+            }
+            addRoundKey(chunkGrid, round);
         }
 
         std::cout << "<=== CHUNK START ===>\n";
@@ -267,7 +280,6 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
             std::cout << std::endl;
         }
         std::cout << "<=== CHUNK END ===>\n";
-
         //chunkVec.clear();
     }
 
