@@ -27,10 +27,9 @@ RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requ
 {
 	this->rr.buffer.clear();
 	DeleteCircuitResponse dcre;
+	unsigned int circuit_id = requestInfo.circuit_id;
 	try
 	{
-		this->rr.circuit_id = requestInfo.circuit_id;
-		
 		closeSocket(this->cd[requestInfo.circuit_id].first);
 		closeSocket(this->cd[requestInfo.circuit_id].second);
 		this->cd.erase(requestInfo.circuit_id);
@@ -41,8 +40,6 @@ RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requ
 		dcre.status = DELETE_CIRCUIT_ERROR;
 		std::cout << e.what() << std::endl;
 	}
-	rr.buffer.emplace_back(unsigned char(rr.circuit_id));
-	vector<unsigned char> tmp = SerializerResponses::serializeResponse(dcre);
-	rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
+	rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(dcre), circuit_id);
 	return rr;
 }

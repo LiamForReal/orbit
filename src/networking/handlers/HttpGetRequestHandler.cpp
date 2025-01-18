@@ -100,16 +100,18 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 	{
 		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
         hgResponse.status = HTTP_MSG_STATUS;
-        rr.circuit_id = requestInfo.circuit_id;
+        unsigned int circuit_id = requestInfo.circuit_id;
 		// check if there is next
-		if (_circuitsData[requestInfo.circuit_id].second != INVALID_SOCKET && _circuitsData[requestInfo.circuit_id].second != NULL)
+		if (_circuitsData[circuit_id].second != INVALID_SOCKET && _circuitsData[circuit_id].second != NULL)
 		{
 			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-			Helper::sendVector(_circuitsData[requestInfo.circuit_id].second, buffer);
+            rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(hgRequest), circuit_id);
+			Helper::sendVector(_circuitsData[circuit_id].second, rr.buffer);
             std::cout << "[HTTP GET] listening forward\n";
-            ri = Helper::waitForResponse(_circuitsData[rr.circuit_id].second);
+            ri = Helper::waitForResponse(_circuitsData[circuit_id].second);
             std::cout << "[HTTP GET] sending backwards!\n";
-            Helper::sendVector(_circuitsData[rr.circuit_id].first, ri.buffer);
+            rr.buffer = Helper::buildRR(ri);
+            Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
 		}
 		else
 		{
@@ -117,10 +119,8 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            rr.buffer.emplace_back(unsigned char(rr.circuit_id));
-            vector<unsigned char> tmp = SerializerResponses::serializeResponse(hgResponse);
-            rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
-            Helper::sendVector(_circuitsData[rr.circuit_id].first, rr.buffer);
+            rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(hgResponse), circuit_id);
+            Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
 		}
 	}
 	catch (std::runtime_error e)

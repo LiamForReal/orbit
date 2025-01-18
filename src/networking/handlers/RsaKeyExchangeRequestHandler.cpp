@@ -19,28 +19,29 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 	rr.buffer.clear();
 	try
 	{
-		rr.circuit_id = requestInfo.circuit_id;
+		unsigned int circuit_id = requestInfo.circuit_id;
 		rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
 
 		rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
 
-		if (_circuitData.find(rr.circuit_id) == _circuitData.end())
+		if (_circuitData.find(circuit_id) == _circuitData.end())
 		{
-			_circuitData[rr.circuit_id].first = _socket;
+			_circuitData[circuit_id].first = _socket;
 		}
 
-		if (_circuitData[rr.circuit_id].first == _socket)
+		if (_circuitData[circuit_id].first == _socket)
 		{
-			if (_circuitData[rr.circuit_id].second != INVALID_SOCKET && _circuitData[rr.circuit_id].second != NULL)
+			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NEXT
 				// SEND TO NEXT AND WAIT FOR RESPONSE AND THEN SEND BACKWARDS
 				std::cout << "[RSA] Got from prev, there is next, sending and listening forward\n";
-				Helper::sendVector(_circuitData[rr.circuit_id].second, requestInfo.buffer);
-				ri = Helper::waitForResponse(_circuitData[rr.circuit_id].second);//sends rr but I put that on ri
+				rr.buffer = Helper::buildRR(requestInfo);
+				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
+				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
 				std::cout << "[RSA] sending backwards\n";
-				rr.buffer = ri.buffer;
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				rr.buffer = Helper::buildRR(ri);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 			else
 			{
@@ -50,17 +51,15 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				// TODO: HERE CREATE THE RSA OF THE NODE
 				RSA rsa;
 				rsa.pregenerateKeys();
-				std::cout << "RSA created for circuit " << rr.circuit_id << std::endl;
-				_rsaKeys[rr.circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
-				rkeResponse.public_key = _rsaKeys[rr.circuit_id].first.getPublicKey();
-				rkeResponse.product = _rsaKeys[rr.circuit_id].first.getProduct();
-				rr.buffer.emplace_back(unsigned char(rr.circuit_id));
-				vector<unsigned char> tmp = SerializerResponses::serializeResponse(rkeResponse);
-				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				std::cout << "[RSA] created for circuit " << circuit_id << std::endl;
+				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
+				rkeResponse.public_key = _rsaKeys[circuit_id].first.getPublicKey();
+				rkeResponse.product = _rsaKeys[circuit_id].first.getProduct();
+				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), circuit_id);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}
-		else throw std::runtime_error("There is an error with the key exchanges, got from unknown socket");
+		else throw std::runtime_error("[RSA] There is an error with the key exchanges, got from unknown socket");
 	}
 	catch (std::runtime_error& e)
 	{

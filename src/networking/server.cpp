@@ -112,7 +112,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
-		unsigned int circuitID = 0;
+		unsigned int circuit_id = 0;
 		RequestResult rr = RequestResult();
 		std::vector<unsigned char> RSAKeyExchangeVec, tmp;
 		
@@ -164,19 +164,17 @@ void Server::clientHandler(const SOCKET client_socket)
 		{
 			if (it.second == INVALID_SOCKET)
 			{
-				_clients[rr.circuit_id] = client_socket;
+				circuit_id = it.first;
+				_clients[circuit_id] = client_socket;
 				
 				std::cout << "new client allocated\n\n";
 				break;
 			}
 		}
 		mutex.unlock();
-		tmp = rr.buffer;
-		rr.buffer[0] = (unsigned char)(rr.circuit_id);
-		rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
 		Helper::sendVector(client_socket, rr.buffer);
 		std::cout << "sending msg...\n";
-		if (static_cast<unsigned int>(rr.buffer[0]) == CIRCUIT_CONFIRMATION_ERROR)
+		if (static_cast<unsigned int>(rr.buffer[1]) == CIRCUIT_CONFIRMATION_ERROR)
 		{
 			throw std::runtime_error("failed to get nodes details");
 		}

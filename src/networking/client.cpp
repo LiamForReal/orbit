@@ -81,8 +81,7 @@ void Client::connectToServer(std::string serverIP, int port)
 void Client::nodeOpening()
 {
 	NodeOpenRequest nor;
-	std::vector<unsigned char> tmp;
-	std::vector<unsigned char> data;
+	RequestResult rr;
 	do
 	{
 		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) + "): ";
@@ -90,10 +89,8 @@ void Client::nodeOpening()
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
-	data.emplace_back(unsigned char(0)); // temporery circuit id = 0 default!!!
-	tmp = SerializerRequests::serializeRequest(nor);
-	data.insert(data.end(), tmp.begin(), tmp.end());
-	Helper::sendVector(_clientSocketWithDS, data);
+	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(nor));
+	Helper::sendVector(_clientSocketWithDS, rr.buffer);
 	std::cout << "Message send to server..." << std::endl;
 }
 
@@ -233,19 +230,15 @@ void Client::startConversation(const bool& openNodes)
 	//CONNECTING TO FIRST NODE END
 
 	//SEND RSA KEY EXCHANGE TO FIRST NODE START
-	std::vector<unsigned char> tmp;
-	std::vector<unsigned char> dataRKE;
-	std::vector<unsigned char> data;
+	RequestResult rrRSA, rr;
 	LinkRequest linkRequest;
 	RsaKeyExchangeRequest rkeRequest;
 	RsaKeyExchangeResponse rkeResponse;
 	rkeRequest.public_key = rsa.getPublicKey();
 	rkeRequest.product = rsa.getProduct();
-	tmp = SerializerRequests::serializeRequest(rkeRequest);
-	dataRKE.emplace_back(unsigned char(circuit_id));
+	rrRSA.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), circuit_id);
 	//to Change the make msges logic
-	dataRKE.insert(dataRKE.end(), tmp.begin(), tmp.end());
-	Helper::sendVector(_clientSocketWithFirstNode, dataRKE);
+	Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
 	std::cout << "sent RSA msg\n";
 
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
@@ -271,13 +264,11 @@ void Client::startConversation(const bool& openNodes)
 		for (auto it = ccr.nodesPath.begin() + 1; it != ccr.nodesPath.end(); it++)
 		{
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
-			data.clear();
-			data.emplace_back(unsigned char(circuit_id));
-			tmp = SerializerRequests::serializeRequest(linkRequest);
-			data.insert(data.end(), tmp.begin(), tmp.end());
-			Helper::sendVector(_clientSocketWithFirstNode, data);
+			rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(linkRequest), circuit_id);
+			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 			std::cout << "sent link msg\n";
 
+			
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			if (Errors::LINK_ERROR == ri.id)
 			{
@@ -285,8 +276,8 @@ void Client::startConversation(const bool& openNodes)
 			}
 			ri.buffer.clear();
 
-
-			Helper::sendVector(_clientSocketWithFirstNode, dataRKE);
+			
+			Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
 			std::cout << "sent RSA msg\n";
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			//ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
@@ -309,19 +300,15 @@ void Client::startConversation(const bool& openNodes)
 
 	//SENDING HTTP GET START
 	HttpGetRequest httpGetRequest;
-	data.clear();
 
 	std::cout << "Enter domain: ";
 	std::cin >> domain;
 	if (!domainValidationCheck(domain))
 		throw std::runtime_error("domain is illegal");
-
-	data.emplace_back(unsigned char(circuit_id));
 	httpGetRequest.domain = domain;
-	tmp = SerializerRequests::serializeRequest(httpGetRequest);
-	data.insert(data.end(), tmp.begin(), tmp.end());
+	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(httpGetRequest),circuit_id);
 
-	Helper::sendVector(_clientSocketWithFirstNode, data);
+	Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 	std::cout << "sends httpGet Request:\n";
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 

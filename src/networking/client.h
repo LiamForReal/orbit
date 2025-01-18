@@ -17,6 +17,11 @@
 #include "../utils/Helper.h"
 #include "../utils/RSA.h"
 
+typedef struct RequestResult // Changed from typedef to struct definition
+{
+	std::vector<unsigned char> buffer;
+} RequestResult;
+
 #define COMMUNICATE_NODE_PORT 9050
 #define COMMUNICATE_SERVER_PORT 9787
 #define MAX_NODES_TO_OPEN 5

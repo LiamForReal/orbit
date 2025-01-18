@@ -319,3 +319,19 @@ RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 
 	return Helper::buildRI_RSA(socket, statusCode, std::ref(rsa));
 }
+
+vector<unsigned char> Helper::buildRR(const RequestInfo ri)
+{
+	vector<unsigned char> tmp;
+	tmp.emplace_back(unsigned char(ri.circuit_id));
+	tmp.insert(tmp.end(), ri.buffer.begin(), ri.buffer.end());
+	return tmp;
+}
+
+vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int circuit_id)
+{
+	vector<unsigned char> tmp;
+	tmp.emplace_back(unsigned char(circuit_id));
+	tmp.insert(tmp.end(), buffer.begin(), buffer.end());
+	return tmp;
+}

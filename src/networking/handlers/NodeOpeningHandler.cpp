@@ -37,21 +37,17 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
         ccr.nodesPath = nodesInfo;
-        rr.circuit_id = this->circuit_id;
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
         std::cout << "\n\nthe circuit chosen is " << circuit_id << "\n\n";
         _clients[circuit_id] = INVALID_SOCKET;
-        this->circuit_id++;
     }
     catch (std::runtime_error e)
     {
         ccr.status = CIRCUIT_CONFIRMATION_ERROR;
     }
-
-    rr.buffer.emplace_back(unsigned char(rr.circuit_id));
-    auto tmp = SerializerResponses::serializeResponse(ccr);
-    rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
+    rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), this->circuit_id);
+    this->circuit_id++;
     return rr;
 }
 //get last id

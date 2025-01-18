@@ -254,7 +254,6 @@ void Node::clientHandler(const SOCKET client_socket)
 		RequestInfo ri;
 		LinkRequest lr;
 		RequestResult rr;
-		rr.circuit_id = 0;
 		bool isRSA = false;
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaKeys), client_socket, std::ref(aesKeys));
 		while (true)

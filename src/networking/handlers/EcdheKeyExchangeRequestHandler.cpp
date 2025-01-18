@@ -21,48 +21,48 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 	try
 	{
 		ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo.buffer);
-		rr.circuit_id = requestInfo.circuit_id;
+		unsigned int circuit_id = requestInfo.circuit_id;
 
 		ekeResponse.status = ECDHE_KEY_EXCHANGE_STATUS;
 
-		if (_circuitData[rr.circuit_id].first == _socket)
+		if (_circuitData[circuit_id].first == _socket)
 		{
-			if (_circuitData[rr.circuit_id].second != INVALID_SOCKET && _circuitData[rr.circuit_id].second != NULL)
+			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NEXT
 				// SEND TO NEXT AND WAIT FOR RESPONSE AND THEN SEND BACKWARDS
 				std::cout << "[ECDHE] Got from prev, there is next, sending and listening forward\n";
-				Helper::sendVector(_circuitData[rr.circuit_id].second, requestInfo.buffer);
-				ri = Helper::waitForResponse(_circuitData[rr.circuit_id].second);//sends rr but I put that on ri
+				rr.buffer = Helper::buildRR(requestInfo);
+				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
+				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
 				std::cout << "[ECDHE] sending backwards\n";
-				rr.buffer = ri.buffer;
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				rr.buffer = Helper::buildRR(ri);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
-			else if(_ecdheInfo[rr.circuit_id].second == uint256_t())
+			else if(_ecdheInfo[circuit_id].second == uint256_t())
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE RSA AND SEND BACKWARDS
 				std::cout << "[ECDHE] Got from prev, there is no next, saving and sending backwards\n";
 				//create defi HelmanKey and save it in ecdhe info
-				_ecdheInfo[rr.circuit_id].first.setG(ekeRequest.b);
-				_ecdheInfo[rr.circuit_id].first.setP(ekeRequest.m);
-				_ecdheInfo[rr.circuit_id].second = _ecdheInfo[rr.circuit_id].first.createTmpKey();
-				ekeResponse.calculationResult = _ecdheInfo[rr.circuit_id].first.createDefiKey(_ecdheInfo[rr.circuit_id].second);
-				std::cout << "[ECDHE] created for circuit " << rr.circuit_id << std::endl;
+				_ecdheInfo[circuit_id].first.setG(ekeRequest.b);
+				_ecdheInfo[circuit_id].first.setP(ekeRequest.m);
+				_ecdheInfo[circuit_id].second = _ecdheInfo[circuit_id].first.createTmpKey();
+				ekeResponse.calculationResult = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
+				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
 				//rsa.Encrypt(_rsaKeys[rr.circuit_id].second)
-				rr.buffer = _rsaKeys[rr.circuit_id].first.Encrypt(rr.buffer, _rsaKeys[rr.circuit_id].second.first, _rsaKeys[rr.circuit_id].second.second);
-				rr.buffer.emplace_back(unsigned char(rr.circuit_id));
-				vector<unsigned char> tmp = SerializerResponses::serializeResponse(ekeResponse);
-				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
+				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second)
+				, circuit_id);
+
 				//self rsa.Encript(ECDHE msg, client pubkey, client product)
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 			else
 			{
-				rr.buffer = _rsaKeys[rr.circuit_id].first.Decrypt(rr.buffer);
-				_ecdheInfo[rr.circuit_id].first.setG(ekeRequest.calculationResult);
+				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Decrypt(rr.buffer), circuit_id);
+				_ecdheInfo[circuit_id].first.setG(ekeRequest.calculationResult);
 				std::cout << "[ECDHE] generate aes key!!!\n";
-				_aesKeys[rr.circuit_id] = _ecdheInfo[rr.circuit_id].second = _ecdheInfo[rr.circuit_id].first.createDefiKey(_ecdheInfo[rr.circuit_id].second);
+				_aesKeys[circuit_id] = _ecdheInfo[circuit_id].second = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
 				//nothing to send!!! 
 				//decript RSA + found the sherd seacret + and put is in AES 
 			}

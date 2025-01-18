@@ -43,32 +43,29 @@ bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 
 RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
-	rr.buffer.clear();
 	LinkRequest lr;
 	LinkResponse lre;
 	RequestInfo ri;
+	rr.buffer.clear();
 	try
 	{
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
 
-		rr.circuit_id = requestInfo.circuit_id;
+		unsigned int circuit_id = requestInfo.circuit_id;
 
 		lre.status = LINK_STATUS;
 
-		if (_circuitData[requestInfo.circuit_id].first == _socket)
+		if (_circuitData[circuit_id].first == _socket)
 		{
-			if (_circuitData[requestInfo.circuit_id].second != INVALID_SOCKET && _circuitData[requestInfo.circuit_id].second != NULL)
+			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
 			{
 				std::cout << "[LINK] seconed is exisist and trying to connenct" << std::endl;
-				Helper::sendVector(_circuitData[requestInfo.circuit_id].second, requestInfo.buffer);
-				ri = Helper::waitForResponse(_circuitData[requestInfo.circuit_id].second);//sends rr but I put that on ri
-				if (ri.id == LINK_STATUS)
-					lre.status = LINK_STATUS;
-				else throw std::runtime_error("[LINK] problem occurred while linking the next node");
-				std::cout << "[LINK] sends to the next node!\n";
-				rr.buffer = ri.buffer;
+				rr.buffer = Helper::buildRR(requestInfo);
+				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
+				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
+				rr.buffer = Helper::buildRR(ri);
 				std::cout << "[LINK] sending backwards!\n";
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 			else
 			{
@@ -76,12 +73,11 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 				_circuitData[requestInfo.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
 				if (_circuitData[requestInfo.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("[LINK] socket creation failed");
-				std::cout << "[LINK] next created";
-				rr.buffer.emplace_back(unsigned char(rr.circuit_id));
-				vector<unsigned char> tmp = SerializerResponses::serializeResponse(lre);
-				rr.buffer.insert(rr.buffer.end(), tmp.begin(), tmp.end());
+				std::cout << "[LINK] next created\n";
+				rr.buffer.clear();
+				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(lre), circuit_id);
 				std::cout << "[LINK] sending backwards!\n";
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}
 		else throw std::runtime_error("the socket given is corrupted");
