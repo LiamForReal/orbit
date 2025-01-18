@@ -5,9 +5,7 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-#define INIT_VEC_SIZE 5
-#define BYTES_TO_COPY 4
-#define INC 1
+#define INIT_VEC_SIZE 4
 
 //Node 
 

@@ -145,10 +145,8 @@ void Server::clientHandler(const SOCKET client_socket)
 			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
 		}
 		//GET REQUEST AND BUILD RSA RESPOSE END
-		tmp = SerializerResponses::serializeResponse(rkeResponse);
-		RSAKeyExchangeVec.emplace_back(unsigned char(0)); //only for now
-		RSAKeyExchangeVec.insert(RSAKeyExchangeVec.end(), tmp.begin(), tmp.end());
-		Helper::sendVector(client_socket, RSAKeyExchangeVec);
+		rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), rkeResponse.status);
+		Helper::sendVector(client_socket, rr.buffer);
 		RSAKeyExchangeVec.clear();
 
 		mutex.lock();

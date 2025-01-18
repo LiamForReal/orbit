@@ -5,7 +5,7 @@ RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(con
     RsaKeyExchangeRequest request;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     std::cout << "Deserialized length: " << len << std::endl;
 
     // Convert the serialized JSON string from the buffer
@@ -33,7 +33,7 @@ EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest
 	EcdheKeyExchangeRequest request;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     std::cout << "Deserialized length: " << len << std::endl;
 
     // Convert the serialized JSON string from the buffer
@@ -60,12 +60,12 @@ NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const std::v
 	std::string jsonDataStr = "";
 	unsigned int len = 0, i = 0;
 
-	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+	std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
 	std::cout << len << std::endl;
     
     for (i = 0; i < len; i++)
 	{
-		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
+		jsonDataStr += buffer[INIT_VEC_SIZE + i];
 	}
     
 	
@@ -90,12 +90,12 @@ LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsig
 	std::string jsonDataStr = "";
 	unsigned int len = 0, i = 0;
 
-	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+	std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
 	std::cout << len << std::endl;
     
     for (i = 0; i < len; i++)
 	{
-		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
+		jsonDataStr += buffer[INIT_VEC_SIZE + i];
 	}
     
 	
@@ -117,12 +117,12 @@ HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector
 	HttpGetRequest request;
 	std::string jsonDataStr = "";
 	unsigned int len = 0, i = 0;
-
-	std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+	// 1 2 3 4
+	std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
 
     for (i = 0; i < len; i++)
 	{
-		jsonDataStr += buffer[BYTES_TO_COPY + INC + i];
+		jsonDataStr += buffer[INIT_VEC_SIZE + i];
 	}
     
 	

@@ -55,7 +55,7 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
 				rkeResponse.public_key = _rsaKeys[circuit_id].first.getPublicKey();
 				rkeResponse.product = _rsaKeys[circuit_id].first.getProduct();
-				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), circuit_id);
+				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), rkeResponse.status ,circuit_id);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}

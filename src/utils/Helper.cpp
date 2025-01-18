@@ -11,14 +11,14 @@ using std::string;
 // returns the data as string
 string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
 {
-	return getPartFromSocket(sc, bytesNum*sizeof(unsigned char), 0);
+	return getPartFromSocket(sc, bytesNum * sizeof(unsigned char), 0);
 }
 
 void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 {
 	std::cout << "Sending...\n";
 	const char* dataPtr = reinterpret_cast<const char*>(vec.data());
-	std::string str = dataPtr; 
+	std::string str = dataPtr;
 	int dataSize = static_cast<int>(vec.size());
 	int totalBytesSent = 0;
 	std::cout << "socket to send: " << sc << std::endl;
@@ -50,9 +50,11 @@ void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 {
 	unsigned int value = 0;
-	unsigned char* data = getUnsignedCharPartFromSocket(sc, 1, 0);
+	unsigned char* data = NULL;
 
-	value = (value << 8) | static_cast<unsigned char>(data[0]);
+	data = new unsigned char[1];
+	recv(sc, (char*)(data), 1, 0);
+	value = (unsigned int)(*data);
 
 	delete[] data;
 	data = NULL;
@@ -62,8 +64,8 @@ unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 
 unsigned int Helper::getCircuitIdFromSocket(const SOCKET sc)
 {
-    unsigned int value = 0;
-	unsigned char* data = NULL; 
+	unsigned int value = 0;
+	unsigned char* data = NULL;
 	data = new unsigned char[1];
 	recv(sc, (char*)(data), 1, 0);
 	value = (unsigned int)(*data);
@@ -148,41 +150,40 @@ unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int 
 
 RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 {
-    RequestInfo ri = RequestInfo();
-    ri.buffer = std::vector<unsigned char>();
-    std::string msg = "";
-    unsigned int msgLength = 0;
-    size_t i = 0;
-    int j = 0;
+	RequestInfo ri = RequestInfo();
+	ri.buffer = std::vector<unsigned char>();
+	std::string msg = "";
+	unsigned int msgLength = 0;
+	size_t i = 0;
+	int j = 0;
 
 	ri.circuit_id = circuit_id;
 	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
-    ri.id = Helper::getStatusCodeFromSocket(socket);
 
-    std::cout << "DEBUG: Status code: " << ri.id << std::endl;
-    ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.id));
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
 
-    if (ri.id == ALIVE_MSG_RC) //request how has no data
-        return ri;
+	if (ri.id == ALIVE_MSG_RC) //request how has no data
+		return ri;
 
-    msgLength = Helper::getLengthPartFromSocket(socket);
-    std::cout << "DEBUG: Length: " << msgLength << std::endl;
+	msgLength = Helper::getLengthPartFromSocket(socket);
+	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-    for (j = 0; j < BYTES_TO_COPY; ++j) {
-        ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
-    }
+	for (j = 0; j < BYTES_TO_COPY; ++j) {
+		ri.buffer.insert(ri.buffer.begin() + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
+	}
 
-    msg = Helper::getStringPartFromSocket(socket, msgLength);
-    msg[msgLength] = '\0';
+	msg = Helper::getStringPartFromSocket(socket, msgLength);
+	msg[msgLength] = '\0';
 
-    for (i = 0; i < msgLength; i++)
-    {
-        ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
-    }
+	for (i = 0; i < msgLength; i++)
+	{
+		ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
+	}
 
-    std::cout << "DEBUG: The message is: " << msg << std::endl;
+	std::cout << "DEBUG: The message is: " << msg << std::endl;
 
-    return ri;
+	return ri;
 }
 
 
@@ -253,7 +254,7 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, R
 
 	std::cout << "DEBUG: Length: " << msgLengthValue << std::endl;
 
-	for (j = 0; j < BYTES_TO_COPY; ++j) 
+	for (j = 0; j < BYTES_TO_COPY; ++j)
 	{
 		ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLengthValue >> (8 * j)) & 0xFF));
 	}
@@ -324,14 +325,16 @@ vector<unsigned char> Helper::buildRR(const RequestInfo ri)
 {
 	vector<unsigned char> tmp;
 	tmp.emplace_back(unsigned char(ri.circuit_id));
+	tmp.emplace_back(unsigned char(ri.id));
 	tmp.insert(tmp.end(), ri.buffer.begin(), ri.buffer.end());
 	return tmp;
 }
 
-vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int circuit_id)
+vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int circuit_id)
 {
 	vector<unsigned char> tmp;
 	tmp.emplace_back(unsigned char(circuit_id));
+	tmp.emplace_back(unsigned char(status));
 	tmp.insert(tmp.end(), buffer.begin(), buffer.end());
 	return tmp;
 }

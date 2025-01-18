@@ -75,7 +75,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created\n";
 				rr.buffer.clear();
-				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(lre), circuit_id);
+				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(lre), lre.status , circuit_id);
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}

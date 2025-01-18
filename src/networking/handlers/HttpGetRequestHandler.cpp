@@ -104,8 +104,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 		// check if there is next
 		if (_circuitsData[circuit_id].second != INVALID_SOCKET && _circuitsData[circuit_id].second != NULL)
 		{
-			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-            rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(hgRequest), circuit_id);
+            rr.buffer = Helper::buildRR(requestInfo);
 			Helper::sendVector(_circuitsData[circuit_id].second, rr.buffer);
             std::cout << "[HTTP GET] listening forward\n";
             ri = Helper::waitForResponse(_circuitsData[circuit_id].second);
@@ -119,7 +118,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(hgResponse), circuit_id);
+            rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(hgResponse), hgResponse.status, circuit_id);
             Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
 		}
 	}

@@ -46,7 +46,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     {
         ccr.status = CIRCUIT_CONFIRMATION_ERROR;
     }
-    rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), this->circuit_id);
+    rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), ccr.status, this->circuit_id);
     this->circuit_id++;
     return rr;
 }

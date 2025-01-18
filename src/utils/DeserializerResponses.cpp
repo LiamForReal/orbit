@@ -5,7 +5,7 @@ RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(
     RsaKeyExchangeResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer
@@ -30,7 +30,7 @@ EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeRespo
     EcdheKeyExchangeResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer
@@ -56,7 +56,7 @@ NodeOpenResponse DeserializerResponses::deserializeNodeOpeningResponse(const std
     NodeOpenResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer
@@ -80,7 +80,7 @@ CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmatio
     CircuitConfirmationResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
 
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
@@ -104,7 +104,7 @@ LinkResponse DeserializerResponses::deserializeLinkResponse(const std::vector<un
     LinkResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer
@@ -129,7 +129,7 @@ HttpGetResponse DeserializerResponses::deserializeHttpGetResponse(const std::vec
     HttpGetResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer
@@ -155,7 +155,7 @@ CloseConnectionResponse DeserializerResponses::deserializeCloseConnectionRespons
     CloseConnectionResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer
@@ -180,7 +180,7 @@ DeleteCircuitResponse DeserializerResponses::deserializeDeleteCircuitResponse(co
     DeleteCircuitResponse response;
 
     unsigned int len = 0;
-    std::memcpy(&len, buffer.data() + INC, BYTES_TO_COPY);
+    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     
 
     // Convert the serialized JSON string from the buffer

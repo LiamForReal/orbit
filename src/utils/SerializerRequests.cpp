@@ -3,7 +3,6 @@
 std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExchangeRequest& rsaKeyExchangeRequest)
 {
     std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(RSA_KEY_EXCHANGE_RC));
 
     unsigned int len = 0;
 
@@ -22,7 +21,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
+	std::memcpy(vec.data(), &len, INIT_VEC_SIZE);
 
 	// Insert Message Into Vector
 	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
@@ -34,7 +33,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
 std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyExchangeRequest& ecdheKeyExchangeRequest)
 {
     std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(ECDHE_KEY_EXCHANGE_RC));
 
     unsigned int len = 0;
 
@@ -54,7 +52,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyEx
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
+	std::memcpy(vec.data(), &len, INIT_VEC_SIZE);
 
 	// Insert Message Into Vector
 	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
@@ -65,7 +63,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyEx
 std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRequest& nodeOpenRequest)
 {
     std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(NODE_OPEN_RC));
 
     unsigned int len = 0;
 
@@ -78,7 +75,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
+	std::memcpy(vec.data(), &len, INIT_VEC_SIZE);
    
     vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
 
@@ -88,7 +85,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const NodeOpenRe
 std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkRequest& linkRequest)
 {
     std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(LINK_RC));
 
     unsigned int len = 0;
     json requestJson = {
@@ -99,7 +95,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
+	std::memcpy(vec.data(), &len, INIT_VEC_SIZE);
 
 	// Insert Message Into Vector
 	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());
@@ -110,7 +106,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const LinkReques
 std::vector<unsigned char> SerializerRequests::serializeRequest(const HttpGetRequest& httpGetRequest)
 {
     std::vector<unsigned char> vec(INIT_VEC_SIZE);
-    vec[0] = ((unsigned char)(HTTP_MSG_RC));
 
     unsigned int len = 0;
 
@@ -122,7 +117,7 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const HttpGetReq
 
 	// Insert Message Length Into Vector
 	len = (unsigned int)(requestJsonStr.size()); // possible lose of data for 64 bits.
-	std::memcpy(vec.data() + INC, &len, BYTES_TO_COPY);
+	std::memcpy(vec.data(), &len, INIT_VEC_SIZE);
 
 	// Insert Message Into Vector
 	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());

@@ -28,7 +28,7 @@ public:
 	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, RSA& rsa);
 	static RequestInfo waitForResponse_RSA(SOCKET socket, RSA& rsa);
 	static vector<unsigned char> buildRR(const RequestInfo ri);
-	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int circuit_id = 0);
+	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int circuit_id = 0);
 
 private:
 	static std::string getPartFromSocket(const SOCKET sc, const int bytesNum);

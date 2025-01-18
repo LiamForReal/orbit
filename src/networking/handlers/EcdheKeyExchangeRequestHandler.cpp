@@ -52,7 +52,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
 				//rsa.Encrypt(_rsaKeys[rr.circuit_id].second)
 				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second)
-				, circuit_id);
+				, ekeResponse.status, circuit_id);
 
 				//self rsa.Encript(ECDHE msg, client pubkey, client product)
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);

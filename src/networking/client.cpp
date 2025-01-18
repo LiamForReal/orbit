@@ -35,10 +35,9 @@ Client::~Client()
 
 void Client::connectToServer(std::string serverIP, int port)
 {
-
+	RequestResult rr;
 	struct sockaddr_in sa = { 0 };
 	RequestInfo ri;
-	vector<unsigned char> tmp, data;
 	sa.sin_port = htons(port); // port that server will listen to
 	sa.sin_family = AF_INET;   // must be AF_INET
 	sa.sin_addr.s_addr = inet_addr(serverIP.c_str());    // the IP of the server
@@ -52,12 +51,10 @@ void Client::connectToServer(std::string serverIP, int port)
 	RsaKeyExchangeRequest rkeRequest;
 	rkeRequest.public_key = this->rsa.getPublicKey();
 	rkeRequest.product = this->rsa.getProduct();
-	tmp = SerializerRequests::serializeRequest(rkeRequest);
-	data.emplace_back(unsigned char(0)); // temporery circuit id becouse it must be one!!!
-	data.insert(data.end(), tmp.begin(), tmp.end()); //suppose to be - 1(x^n) for example 1xxx or 1xxxxx
+	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), RSA_KEY_EXCHANGE_RC);
 	try
 	{
-		Helper::sendVector(_clientSocketWithDS, data);
+		Helper::sendVector(_clientSocketWithDS, rr.buffer);
 		ri = Helper::waitForResponse(_clientSocketWithDS);
 	}
 	catch (...)
@@ -89,7 +86,7 @@ void Client::nodeOpening()
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
-	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(nor));
+	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(nor), NODE_OPEN_RC);
 	Helper::sendVector(_clientSocketWithDS, rr.buffer);
 	std::cout << "Message send to server..." << std::endl;
 }
@@ -236,7 +233,7 @@ void Client::startConversation(const bool& openNodes)
 	RsaKeyExchangeResponse rkeResponse;
 	rkeRequest.public_key = rsa.getPublicKey();
 	rkeRequest.product = rsa.getProduct();
-	rrRSA.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), circuit_id);
+	rrRSA.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), RSA_KEY_EXCHANGE_RC ,circuit_id);
 	//to Change the make msges logic
 	Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
 	std::cout << "sent RSA msg\n";
@@ -264,7 +261,7 @@ void Client::startConversation(const bool& openNodes)
 		for (auto it = ccr.nodesPath.begin() + 1; it != ccr.nodesPath.end(); it++)
 		{
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
-			rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(linkRequest), circuit_id);
+			rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(linkRequest), LINK_RC ,circuit_id);
 			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 			std::cout << "sent link msg\n";
 
@@ -277,7 +274,7 @@ void Client::startConversation(const bool& openNodes)
 			ri.buffer.clear();
 
 			
-			Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
+			Helper::sendVector(_clientSocketWithFirstNode,rrRSA.buffer);
 			std::cout << "sent RSA msg\n";
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			//ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
@@ -306,7 +303,7 @@ void Client::startConversation(const bool& openNodes)
 	if (!domainValidationCheck(domain))
 		throw std::runtime_error("domain is illegal");
 	httpGetRequest.domain = domain;
-	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(httpGetRequest),circuit_id);
+	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(httpGetRequest),HTTP_MSG_RC,circuit_id);
 
 	Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 	std::cout << "sends httpGet Request:\n";

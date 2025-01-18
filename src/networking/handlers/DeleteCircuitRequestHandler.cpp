@@ -40,6 +40,6 @@ RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requ
 		dcre.status = DELETE_CIRCUIT_ERROR;
 		std::cout << e.what() << std::endl;
 	}
-	rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(dcre), circuit_id);
+	rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(dcre), dcre.status, circuit_id);
 	return rr;
 }

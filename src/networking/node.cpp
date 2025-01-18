@@ -1,6 +1,7 @@
 #include "node.h"
 // add request handler that muches 
-
+#define STATUS_INDEX 1
+#define CIRCUIT_ID_INDEX 0
 #define ENVE_MAX_LIMIT  32,766
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
@@ -86,7 +87,7 @@ void Node::controlReceiver(SOCKET& serverSock)
 			//ERROR!!!
 			//rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
 
-			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
+			if (DELETE_CIRCUIT_STATUS == rr.buffer[STATUS_INDEX])
 			{
 				std::cout << "Delete successfully done!\n";
 			}
@@ -262,7 +263,7 @@ void Node::clientHandler(const SOCKET client_socket)
 			if(!isRSA)
 				ri = Helper::waitForResponse(client_socket);
 			rr = nodeRequestHandler.handleMsg(ri, isRSA);
-			if (unsigned int(rr.buffer[0]) == RSA_KEY_EXCHANGE_STATUS)
+			if (unsigned int(rr.buffer[STATUS_INDEX]) == RSA_KEY_EXCHANGE_STATUS)
 				isRSA = false; // should be true bc currently untill now we did not encript
 		}
 	}
