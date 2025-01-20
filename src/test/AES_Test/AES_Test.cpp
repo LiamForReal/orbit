@@ -15,7 +15,15 @@ int main()
 
     AES aes;
     aes.generateRoundKeys();
-    aes.encrypt(vec);
+    std::vector<uint8_t> cvec = aes.encrypt(vec);
+
+    for (uint8_t b : cvec)
+    {
+        std::cout << std::hex << int(b);
+    }
+    std::cout << std::endl;
+
+    cvec.clear();
 
     system("pause");
     return 0;
