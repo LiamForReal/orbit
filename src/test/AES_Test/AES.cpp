@@ -232,6 +232,16 @@ void AES::mixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
     }
 }
 
+void AES::inverseSubBytes(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
+{
+    for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+        {
+            grid[i][j] = this->INVERSE_SBOX[(grid[i][j] >> 4) & 0x0F][grid[i][j] & 0x0F];
+        }
+    }
+}
 
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
