@@ -261,6 +261,31 @@ void AES::inverseShiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
     }
 }
 
+void AES::inverseMixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
+{
+    uint8_t results[AES_GRID_ROWS][AES_GRID_COLS] = { {0} };
+
+    for (uint8_t i = 0; i < AES_GRID_COLS; i++)
+    {
+        for (uint8_t j = 0; j < AES_GRID_ROWS; j++)
+        {
+            results[j][i] = 0;
+            for (uint8_t k = 0; k < AES_GRID_COLS; k++)
+            {
+                results[j][i] ^= galoisMult(INVERSE_MIX_COLUMNS_MATRIX[j][k], grid[k][i]);
+            }
+        }
+    }
+
+    for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+        {
+            grid[i][j] = results[i][j];
+        }
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
@@ -284,7 +309,7 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
             }
         }
 
-        //addRoundKey(chunkGrid, 0);
+        addRoundKey(chunkGrid, 0);
 
         for (uint8_t round = 1; round <= AES_ROUNDS; round++)
         {
