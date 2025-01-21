@@ -193,6 +193,7 @@ void AES::subBytes(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
 
 void AES::shiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
 {
+    // Performs Left Shift
     for (uint8_t i = 1; i < AES_GRID_ROWS; i++)
     {
         for (uint8_t k = 0; k < i; k++)
@@ -202,7 +203,7 @@ void AES::shiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
             {
                 grid[i][j] = grid[i][j + INC];
             }
-            grid[i][AES_ROUND_KEYS_ROWS - DEC] = temp; // Set MSB as LSB
+            grid[i][AES_GRID_ROWS - DEC] = temp; // Set MSB as LSB
         }
     }
 }
@@ -243,6 +244,23 @@ void AES::inverseSubBytes(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
     }
 }
 
+void AES::inverseShiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
+{
+    // Performs Right Shift
+    for (uint8_t i = 1; i < AES_GRID_ROWS; i++)
+    {
+        for (uint8_t k = 0; k < i; k++)
+        {
+            uint8_t temp = grid[i][AES_GRID_ROWS - DEC];  // Save LSB
+            for (uint8_t j = AES_GRID_COLS - DEC; j > 0; j--)
+            {
+                grid[i][j] = grid[i][j - DEC];
+            }
+            grid[i][0] = temp; // Set MSB as LSB
+        }
+    }
+}
+
 std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
@@ -266,7 +284,7 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
             }
         }
 
-        addRoundKey(chunkGrid, 0);
+        //addRoundKey(chunkGrid, 0);
 
         for (uint8_t round = 1; round <= AES_ROUNDS; round++)
         {

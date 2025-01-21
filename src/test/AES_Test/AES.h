@@ -41,6 +41,7 @@ class AES
 		void mixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS]);
 
 		void inverseSubBytes(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS]);
+		void inverseShiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS]);
 
 		uint256_t _key;
 		std::map<uint8_t, uint8_t[AES_ROUND_KEYS_ROWS][AES_ROUND_KEYS_COLS]> _roundKeys;
