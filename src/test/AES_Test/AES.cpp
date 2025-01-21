@@ -154,14 +154,21 @@ void AES::addRoundConstant(uint8_t* roundKeyCol, const uint8_t& index)
 uint8_t AES::galoisMult(uint8_t a, uint8_t b) const
 {
     uint8_t p = 0; /* accumulator for the product of the multiplication */
-    while (a != 0 && b != 0) {
+    while (a != 0 && b != 0) 
+    {
         if (b & 1) /* if the polynomial for b has a constant term, add the corresponding a to p */
+        {
             p ^= a; /* addition in GF(2^m) is an XOR of the polynomial coefficients */
-    
+        }
+
         if (a & 0x80) /* GF modulo: if a has a nonzero term x^7, then must be reduced when it becomes x^8 */
+        {
             a = (a << 1) ^ 0x11b; /* subtract (XOR) the primitive polynomial x^8 + x^4 + x^3 + x + 1 (0b1_0001_1011) – you can change it but it must be irreducible */
+        }
         else
+        {
             a <<= 1; /* equivalent to a*x */
+        }
         b >>= 1;
     }
     return p;
@@ -170,6 +177,8 @@ uint8_t AES::galoisMult(uint8_t a, uint8_t b) const
 void AES::addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t& round)
 {
     uint8_t offset = (round != 0 && ((round + INC) % 2 == 0 || round == 1)) ? 4 : 0;
+
+    std::cout << "ADDING ROUND KEY " << std::dec << int(round) << " WITH OFFEST " << std::dec << int(offset) << std::endl;
 
     for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
     {
@@ -343,4 +352,57 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
     }
 
     return cipherTextVec;
+}
+
+std::vector<uint8_t> AES::decrypt(std::vector<uint8_t> cipherTextVec)
+{
+    std::vector<uint8_t> plainTextVec;
+    uint8_t chunkGrid[AES_GRID_ROWS][AES_GRID_COLS] = { { 0 } };
+    
+    plainTextVec.reserve(cipherTextVec.size());
+
+    for (auto it = cipherTextVec.begin(); it != cipherTextVec.end(); it += AES_CHUNK_SIZE_BYTES)
+    {
+        for (uint8_t i = 0; i < AES_GRID_COLS; i++)
+        {
+            for (uint8_t j = 0; j < AES_GRID_ROWS; j++)
+            {
+                chunkGrid[j][i] = *(it + j + AES_GRID_COLS * i);
+            }
+        }
+
+        addRoundKey(chunkGrid, AES_ROUNDS);
+
+        for (uint8_t round = AES_ROUNDS; round > 0; round--)
+        {
+            inverseShiftRows(chunkGrid);
+            inverseSubBytes(chunkGrid);
+            addRoundKey(chunkGrid, round - DEC);
+            if ((round - DEC))
+            {
+                inverseMixColumns(chunkGrid);
+            }
+        }
+
+        std::cout << "<=== CHUNK START ===>\n";
+        for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+        {
+            for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+            {
+                std::cout << std::hex << int(chunkGrid[i][j]) << "      ";
+            }
+            std::cout << std::endl;
+        }
+        std::cout << "<=== CHUNK END ===>\n";
+
+        for (uint8_t i = 0; i < AES_GRID_COLS; i++)
+        {
+            for (uint8_t j = 0; j < AES_GRID_ROWS; j++)
+            {
+                plainTextVec.emplace_back(chunkGrid[j][i]);
+            }
+        }
+    }
+
+    return plainTextVec;
 }

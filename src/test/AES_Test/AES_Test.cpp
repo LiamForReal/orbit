@@ -23,7 +23,38 @@ int main()
     }
     std::cout << std::endl;
 
+    std::vector<uint8_t> pvec = aes.decrypt(cvec);
+    std::string res = "";
+
+    std::cout << "\n=== DECRYPTED DATA ===\n\n";
+
+    for (uint8_t b : pvec)
+    {
+        std::cout << std::hex << int(b);
+        res += char(b);
+
+        if (res[res.length() - DEC] == NULL)
+        {
+            break;
+        }
+    }
+    std::cout << "\nDECRYPTED STRING: " << std::endl << res.length() << std::endl;
+
+    for (char c : res)
+    {
+        std::cout << c;
+    }
+    std::cout << "\n";
+
+    for (int i = 0; i < res.length(); i++)
+    {
+        std::cout << res[i];
+    }
+    std::cout << "\n";
+
     cvec.clear();
+    pvec.clear();
+    vec.clear();
 
     system("pause");
     return 0;

@@ -26,6 +26,7 @@ class AES
 		void generateRoundKeys();
 
 		std::vector<uint8_t> encrypt(std::vector<uint8_t> plainTextVec);
+		std::vector<uint8_t> decrypt(std::vector<uint8_t> cipherTextVec);
 
 	private:
 		void rotWord(uint8_t* roundKeyCol);
