@@ -140,6 +140,7 @@
     <ClInclude Include="..\utils\DeserializerResponses.h" />
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
+    <ClInclude Include="..\utils\prime_numbers_manager.h" />
     <ClInclude Include="..\utils\Requestes.hpp" />
     <ClInclude Include="..\utils\RequestInfo.hpp" />
     <ClInclude Include="..\utils\Responses.hpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="..\utils\DeserializerResponses.cpp" />
     <ClCompile Include="..\utils\ECDHE.cpp" />
     <ClCompile Include="..\utils\Helper.cpp" />
+    <ClCompile Include="..\utils\prime_numbers_manager.cpp" />
     <ClCompile Include="..\utils\RSA.cpp" />
     <ClCompile Include="..\utils\SerializerRequests.cpp" />
     <ClCompile Include="..\utils\SerializerResponses.cpp" />

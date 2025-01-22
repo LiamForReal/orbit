@@ -25,7 +25,7 @@ public:
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 	static RequestInfo buildRI(SOCKET socket, unsigned int circuit_id);
 	static RequestInfo waitForResponse(SOCKET socket);
-	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, RSA& rsa);
+	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa);
 	static RequestInfo waitForResponse_RSA(SOCKET socket, RSA& rsa);
 	static vector<unsigned char> buildRR(const RequestInfo ri);
 	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int circuit_id = 0);

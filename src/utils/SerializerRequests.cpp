@@ -40,7 +40,6 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const EcdheKeyEx
     json modular = ecdheKeyExchangeRequest.m.str();
     json calcResult = ecdheKeyExchangeRequest.calculationResult.str();
 
-    std::cout << "base: " << base << "\nmodular: " << modular << "\ncalcResult: " << calcResult;
     json requestJson = {
         {"base", base},
         {"modular", modular},

@@ -193,7 +193,7 @@ RequestInfo Helper::waitForResponse(SOCKET socket)
 	return Helper::buildRI(socket, circuitId);
 }
 
-RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, RSA& rsa)
+RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode ,RSA& rsa)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
@@ -202,6 +202,9 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, R
 	size_t i = 0;
 	int j = 0;
 
+	ri.circuit_id = circuit_id;
+	ri.id = statusCode;
+	//length and data partes... TOFIX
 	std::vector<uint8_t> encryptedStatusCodeVec;
 	encryptedStatusCodeVec.reserve(256);
 	unsigned int statusCodeValue = 0;
@@ -244,7 +247,6 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, R
 	encryptedLengthVec.clear();
 	decryptedLengthVec.clear();
 
-	ri.circuit_id = circuit_id;
 
 	std::cout << "DEBUG: Status code: " << circuit_id << std::endl;
 	ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(ri.id));
@@ -297,9 +299,10 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, R
 RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 {
 	std::vector<uint8_t> encryptedStatusCodeVec;
+	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
+	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
 	// 256 bytes because our RSA is 2048 bits
-	encryptedStatusCodeVec.reserve(256);
-	unsigned int statusCode;
+	/*encryptedStatusCodeVec.reserve(256);
 
 	unsigned char* encryptedStatusCode = getUnsignedCharPartFromSocket(socket, 256, 0);
 	for (short i = 0; i < 256; i++)
@@ -316,9 +319,9 @@ RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 	statusCode = decryptedStatusCodeVec[0];
 
 	encryptedStatusCodeVec.clear();
-	decryptedStatusCodeVec.clear();
+	decryptedStatusCodeVec.clear();*/
 
-	return Helper::buildRI_RSA(socket, statusCode, std::ref(rsa));
+	return Helper::buildRI_RSA(socket, circuitId, statusCode, std::ref(rsa));
 }
 
 vector<unsigned char> Helper::buildRR(const RequestInfo ri)

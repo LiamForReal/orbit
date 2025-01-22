@@ -152,14 +152,14 @@ void Server::clientHandler(const SOCKET client_socket)
 		uint256_t tmpKey;
 		try
 		{
-			ri = Helper::waitForResponse(client_socket);
+			ri = Helper::waitForResponse_RSA(client_socket, _rsaInfo[client_socket].first);
 
 			if (ECDHE_KEY_EXCHANGE_RC != ri.id)
 			{
 				throw std::runtime_error("Did not get ECDHE key exchange request!");
 			}
 			std::cout << "ecdhe msg recved\n";
-			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(_rsaInfo[client_socket].first.Decrypt(ri.buffer));
+			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(ri.buffer);
 			_ecdheInfo[client_socket].setG(ekeRequest.b);
 			_ecdheInfo[client_socket].setP(ekeRequest.m);
 			tmpKey = _ecdheInfo[client_socket].createTmpKey();

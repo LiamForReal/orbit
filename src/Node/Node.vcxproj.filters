@@ -75,6 +75,9 @@
     <ClInclude Include="..\networking\handlers\EcdheKeyExchangeRequestHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils\prime_numbers_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\networking\node.cpp">
@@ -123,6 +126,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\utils\ECDHE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\prime_numbers_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

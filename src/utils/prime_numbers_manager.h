@@ -50,7 +50,6 @@ public:
             if (candidate % 2 == 0)
                 candidate++;
         } while (!prime_numbers_manager::is_prime<T>(candidate));
-        std::cout << "Successfully generated!!!\n";
         return candidate;
     }
 

@@ -95,15 +95,15 @@ void Client::connectToServer(std::string serverIP, int port)
 		//SEND REQUEST AND BUILD ECDHE INFO END
 
 		//BUILD AES KEY START
-		ri = Helper::waitForResponse(_clientSocketWithDS);
+		ri = Helper::waitForResponse_RSA(_clientSocketWithDS, _rsa);
 
-		if (ECDHE_KEY_EXCHANGE_RC != ri.id)
+		if (ECDHE_KEY_EXCHANGE_STATUS != ri.id)
 		{
 			throw std::runtime_error("Did not get ECDHE key exchange request!");
 		}
 		std::cout << "ecdhe msg recved\n";
 		
-		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(_rsa.Decrypt(ri.buffer));
+		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri.buffer);
 		_ecdhe.setG(ekeRequest.calculationResult);
 		std::cout << "generate aes key!!!\n";
 		_aes = _ecdhe.createDefiKey(tmpKey);
@@ -112,6 +112,7 @@ void Client::connectToServer(std::string serverIP, int port)
 	catch (std::runtime_error e)
 	{
 		ekeResponse.status = ECDHE_KEY_EXCHANGE_ERROR;
+		std::cout << e.what() << std::endl;
 	}
 	//BUILD AES KEY END
 }
