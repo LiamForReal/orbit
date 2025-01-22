@@ -20,6 +20,7 @@
 #include "../utils/Helper.h"
 #include "handlers/TorRequestHandler.h"
 #include "../utils/RSA.h"
+#include "../utils/ECDHE.h"
 
 #define MAX_INT_OF_BYTE 256
 #define DEC 1
@@ -50,5 +51,9 @@ class Server
         SOCKET _socket;
         SOCKET _controlSocket;
 
-        RSA rsa;
+        ECDHE ecdhe;
+                //self, client's
+        std::map<SOCKET, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>> _rsaInfo;
+        std::map<SOCKET, ECDHE> _ecdheInfo;
+        std::map<SOCKET, uint256_t> _aesKeys;
 };

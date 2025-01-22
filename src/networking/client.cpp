@@ -5,9 +5,6 @@ std::mutex mtx;
 
 Client::Client()
 {
-	this->rsa.pregenerateKeys();
-	std::cout << "Client finished pregenerating RSA keys...\n";
-
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	_clientSocketWithFirstNode = INVALID_SOCKET;
@@ -26,7 +23,7 @@ Client::~Client()
 	{
 		// the only use of the destructor should be for freeing 
 		// resources that was allocated in the constructor
-		this->rsaCircuitData.clear();
+		_rsaCircuitData.clear();
 		closesocket(_clientSocketWithFirstNode);
 		closesocket(_clientSocketWithDS);
 	}
@@ -47,10 +44,15 @@ void Client::connectToServer(std::string serverIP, int port)
 
 	if (status == INVALID_SOCKET)
 		throw std::runtime_error("Cant connect to server");
-
+	//CREATE SELF RSA PAIR OF KEYS START
+	_rsa.pregenerateKeys(); 
+	std::cout << "Client finished pregenerating RSA keys...\n";
+	//CREATE SELF RSA PAIR OF KEYS END
+	
+	//RSA KEY EXCHANGE WITH DS START
 	RsaKeyExchangeRequest rkeRequest;
-	rkeRequest.public_key = this->rsa.getPublicKey();
-	rkeRequest.product = this->rsa.getProduct();
+	rkeRequest.public_key = _rsa.getPublicKey();
+	rkeRequest.product = _rsa.getProduct();
 	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), RSA_KEY_EXCHANGE_RC);
 	try
 	{
@@ -64,15 +66,54 @@ void Client::connectToServer(std::string serverIP, int port)
 	if (RSA_KEY_EXCHANGE_STATUS == ri.id)
 	{
 		RsaKeyExchangeResponse rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
-		this->rsaServerPubkey = rkeResponse.public_key;
-		this->rsaServerProduct = rkeResponse.product;
-		std::cout << "Got server's RSA public key: " << this->rsaServerPubkey << std::endl;
+		_serverRSA.first = rkeResponse.public_key;
+		_serverRSA.second = rkeResponse.product;
+		std::cout << "Got server's RSA public key: " << _serverRSA.first << std::endl;
 	}
 	else
 	{
 		std::cerr << "Could not exchange RSA keys with server!\n";
 		exit(1);
 	}
+	//RSA KEY EXCHANGE WITH DS END
+
+	//SEND REQUEST AND BUILD  ECDHE INFO START
+	EcdheKeyExchangeRequest ekeRequest;
+	EcdheKeyExchangeResponse ekeResponse;
+	uint256_t tmpKey;
+	try
+	{
+		std::cout << "ecdhe first msg is now generating\n";
+		auto ecdheInfo = _ecdhe.createInfo(); //(tmpKey, (g, p)) 
+		tmpKey = ecdheInfo.first;
+		ekeRequest.b = ecdheInfo.second.first;
+		ekeRequest.m = ecdheInfo.second.second;
+		tmpKey = _ecdhe.createTmpKey();
+		ekeRequest.calculationResult = _ecdhe.createDefiKey(tmpKey);
+		rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), _serverRSA.first, _serverRSA.second), ECDHE_KEY_EXCHANGE_RC);
+		Helper::sendVector(_clientSocketWithDS, rr.buffer);
+		//SEND REQUEST AND BUILD ECDHE INFO END
+
+		//BUILD AES KEY START
+		ri = Helper::waitForResponse(_clientSocketWithDS);
+
+		if (ECDHE_KEY_EXCHANGE_RC != ri.id)
+		{
+			throw std::runtime_error("Did not get ECDHE key exchange request!");
+		}
+		std::cout << "ecdhe msg recved\n";
+		
+		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(_rsa.Decrypt(ri.buffer));
+		_ecdhe.setG(ekeRequest.calculationResult);
+		std::cout << "generate aes key!!!\n";
+		_aes = _ecdhe.createDefiKey(tmpKey);
+		std::cout << "shered sicret is: " << _aes << "\n";
+	}
+	catch (std::runtime_error e)
+	{
+		ekeResponse.status = ECDHE_KEY_EXCHANGE_ERROR;
+	}
+	//BUILD AES KEY END
 }
 
 void Client::nodeOpening()
@@ -189,7 +230,7 @@ void Client::startConversation(const bool& openNodes)
 	}
 	unsigned int circuit_id = ri.circuit_id;
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
-	this->rsaCircuitData.reserve(ccr.nodesPath.size());
+	_rsaCircuitData.reserve(ccr.nodesPath.size());
 
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 	{
@@ -231,8 +272,8 @@ void Client::startConversation(const bool& openNodes)
 	LinkRequest linkRequest;
 	RsaKeyExchangeRequest rkeRequest;
 	RsaKeyExchangeResponse rkeResponse;
-	rkeRequest.public_key = rsa.getPublicKey();
-	rkeRequest.product = rsa.getProduct();
+	rkeRequest.public_key = _rsa.getPublicKey();
+	rkeRequest.product = _rsa.getProduct();
 	rrRSA.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), RSA_KEY_EXCHANGE_RC ,circuit_id);
 	//to Change the make msges logic
 	Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
@@ -244,7 +285,7 @@ void Client::startConversation(const bool& openNodes)
 	if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
 	{
 		std::cout << "Got FIRST NODE public_key: " << rkeResponse.public_key << std::endl;
-		this->rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
+		_rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
 		std::cout << "Saved FIRST NODE pubkey\n";
 	}
 	else
@@ -283,7 +324,7 @@ void Client::startConversation(const bool& openNodes)
 			if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
 			{
 				std::cout << "Got NODE public_key: " << rkeResponse.public_key << std::endl;
-				this->rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
+				_rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
 				std::cout << "Saved NODE pubkey\n";
 			}
 			else

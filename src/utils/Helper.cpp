@@ -326,7 +326,8 @@ vector<unsigned char> Helper::buildRR(const RequestInfo ri)
 	vector<unsigned char> tmp;
 	tmp.emplace_back(unsigned char(ri.circuit_id));
 	tmp.emplace_back(unsigned char(ri.id));
-	tmp.insert(tmp.end(), ri.buffer.begin(), ri.buffer.end());
+	if (!ri.buffer.empty())
+		tmp.insert(tmp.end(), ri.buffer.begin(), ri.buffer.end());
 	return tmp;
 }
 
@@ -335,6 +336,7 @@ vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsign
 	vector<unsigned char> tmp;
 	tmp.emplace_back(unsigned char(circuit_id));
 	tmp.emplace_back(unsigned char(status));
-	tmp.insert(tmp.end(), buffer.begin(), buffer.end());
+	if(!buffer.empty())
+		tmp.insert(tmp.end(), buffer.begin(), buffer.end());
 	return tmp;
 }

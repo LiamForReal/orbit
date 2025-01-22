@@ -39,7 +39,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				rr.buffer = Helper::buildRR(ri);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
-			else if(_ecdheInfo[circuit_id].second == uint256_t())
+			else if(_ecdheInfo[circuit_id].second == 0 || _ecdheInfo[circuit_id].second == NULL)
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE RSA AND SEND BACKWARDS
@@ -50,19 +50,22 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				_ecdheInfo[circuit_id].second = _ecdheInfo[circuit_id].first.createTmpKey();
 				ekeResponse.calculationResult = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
 				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
-				//rsa.Encrypt(_rsaKeys[rr.circuit_id].second)
+
 				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second)
 				, ekeResponse.status, circuit_id);
+				std::cout << "[ECDHE] send to client rsa encripted msg\n";
 
-				//self rsa.Encript(ECDHE msg, client pubkey, client product)
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 			else
 			{
-				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Decrypt(rr.buffer), circuit_id);
+				ri.buffer = requestInfo.buffer;
+				ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(_rsaKeys[circuit_id].first.Decrypt(ri.buffer));
+				rr.buffer = Helper::buildRR(std::vector<unsigned char>(), ekeResponse.status, circuit_id); //only for not crushed the code with rr.buffer
 				_ecdheInfo[circuit_id].first.setG(ekeRequest.calculationResult);
 				std::cout << "[ECDHE] generate aes key!!!\n";
-				_aesKeys[circuit_id] = _ecdheInfo[circuit_id].second = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
+				_aesKeys[circuit_id] = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
+				std::cout << "[ECDHE] shered sicret is: " << _aesKeys[circuit_id] << "\n";
 				//nothing to send!!! 
 				//decript RSA + found the sherd seacret + and put is in AES 
 			}

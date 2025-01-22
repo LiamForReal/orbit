@@ -19,7 +19,6 @@ public:
 private:
 	uint256_t getRandomPrimeNumberByRange(uint256_t lower_bound = 1, uint256_t upper_bound = 1);
 	void createElement(std::promise<uint256_t>&& promise);
-	bool nullFlag;
 
 	uint256_t g; 
 	uint256_t p;

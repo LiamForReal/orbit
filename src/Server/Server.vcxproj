@@ -134,6 +134,7 @@
     <ClInclude Include="..\networking\server.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
+    <ClInclude Include="..\utils\ECDHE.h" />
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
     <ClInclude Include="..\utils\prime_numbers_manager.h" />
@@ -152,6 +153,7 @@
     <ClCompile Include="..\networking\server.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />
+    <ClCompile Include="..\utils\ECDHE.cpp" />
     <ClCompile Include="..\utils\Helper.cpp" />
     <ClCompile Include="..\utils\prime_numbers_manager.cpp" />
     <ClCompile Include="..\utils\RSA.cpp" />

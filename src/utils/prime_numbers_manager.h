@@ -21,7 +21,6 @@ public:
             upper_bound = upperBond;
         if (std::is_same<T, uint256_t>::value)
         {
-            std::cout << "is 256\n";
             if (lowerBond == 1)
                 lower_bound = T(1) << 128;
             if (upperBond == 1)

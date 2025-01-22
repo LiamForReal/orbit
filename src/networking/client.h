@@ -16,6 +16,7 @@
 #include "../utils/SerializerRequests.h"
 #include "../utils/Helper.h"
 #include "../utils/RSA.h"
+#include "../utils/ECDHE.h"
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
@@ -55,11 +56,15 @@ private:
 	bool _passedPathGetWait;
 	bool _restartConversation;
 
-	SOCKET _clientSocketWithFirstNode;
 	SOCKET _clientSocketWithDS;
+	SOCKET _clientSocketWithFirstNode;
 
-	RSA rsa;
-	uint2048_t rsaServerPubkey;
-	uint2048_t rsaServerProduct;
-	std::vector<std::pair<uint2048_t, uint2048_t>> rsaCircuitData;
+	RSA _rsa; //self
+	std::pair<uint2048_t, uint2048_t> _serverRSA; //server's
+	std::vector<std::pair<uint2048_t, uint2048_t>> _rsaCircuitData; //circuit's
+
+	ECDHE _ecdhe; //self 
+
+	uint256_t _aes;
+
 };

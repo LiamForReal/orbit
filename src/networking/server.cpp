@@ -17,7 +17,6 @@ DockerManager dm = DockerManager();
 
 Server::Server()
 {
-	this->rsa.pregenerateKeys();
 	std::cout << "Server finished pregenerating RSA keys...\n";
 	
 	// notice that we step out to the global namespace
@@ -109,35 +108,33 @@ void Server::clientHandler(const SOCKET client_socket)
 {
 	try
 	{
+		_rsaInfo[client_socket].first.pregenerateKeys(); // generate rsa keys for circuit
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
 		unsigned int circuit_id = 0;
 		RequestResult rr = RequestResult();
-		std::vector<unsigned char> RSAKeyExchangeVec, tmp;
-		
-		uint2048_t rsaClientPubkey;
-		uint2048_t rsaClientProduct;
 
+	
+		//GET REQUEST AND BUILD RSA RESPOSE START
 		RsaKeyExchangeRequest rkeRequest;
 		RsaKeyExchangeResponse rkeResponse;
-		//GET REQUEST AND BUILD RSA RESPOSE START
 		try
 		{
 			ri = Helper::waitForResponse(client_socket);
-
+			
 			if (RSA_KEY_EXCHANGE_RC != ri.id)
 			{
 				throw std::runtime_error("Did not get RSA key exchange request!");
 			}
-
+			std::cout << "rsa msg was sended\n";
 			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(ri.buffer);
 			std::cout << "Got public RSA key from client: " << rkeRequest.public_key << std::endl;
-			rsaClientPubkey = rkeRequest.public_key;
-			rsaClientProduct = rkeRequest.product;
+			_rsaInfo[client_socket].second.first = rkeRequest.public_key;
+			_rsaInfo[client_socket].second.second = rkeRequest.product;
 
-			rkeResponse.public_key = this->rsa.getPublicKey();
-			rkeResponse.product = this->rsa.getProduct();
+			rkeResponse.public_key = this->_rsaInfo[client_socket].first.getPublicKey();
+			rkeResponse.product = this->_rsaInfo[client_socket].first.getProduct();
 			rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
 		}
 		catch (std::runtime_error e)
@@ -147,7 +144,45 @@ void Server::clientHandler(const SOCKET client_socket)
 		//GET REQUEST AND BUILD RSA RESPOSE END
 		rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), rkeResponse.status);
 		Helper::sendVector(client_socket, rr.buffer);
-		RSAKeyExchangeVec.clear();
+
+
+		//GET REQUEST AND BUILD  ECDHE INFO START
+		EcdheKeyExchangeRequest ekeRequest;
+		EcdheKeyExchangeResponse ekeResponse;
+		uint256_t tmpKey;
+		try
+		{
+			ri = Helper::waitForResponse(client_socket);
+
+			if (ECDHE_KEY_EXCHANGE_RC != ri.id)
+			{
+				throw std::runtime_error("Did not get ECDHE key exchange request!");
+			}
+			std::cout << "ecdhe msg recved\n";
+			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(_rsaInfo[client_socket].first.Decrypt(ri.buffer));
+			_ecdheInfo[client_socket].setG(ekeRequest.b);
+			_ecdheInfo[client_socket].setP(ekeRequest.m);
+			tmpKey = _ecdheInfo[client_socket].createTmpKey();
+			ekeResponse.calculationResult = _ecdheInfo[client_socket].createDefiKey(tmpKey);
+
+			rr.buffer = Helper::buildRR(_rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second)
+				, ekeResponse.status);
+
+			std::cout << "ecdhe msg sended\n";
+			Helper::sendVector(client_socket, rr.buffer);
+			//GET REQUEST AND BUILD ECDHE INFO END
+
+			//BUILD AES KEY START
+			_ecdheInfo[client_socket].setG(ekeRequest.calculationResult);
+			std::cout << "generate aes key!!!\n";
+			_aesKeys[client_socket] = _ecdheInfo[client_socket].createDefiKey(tmpKey);
+			std::cout << "shered sicret is: " << _aesKeys[circuit_id] << "\n";
+		}
+		catch (std::runtime_error e)
+		{
+			ekeResponse.status = ECDHE_KEY_EXCHANGE_ERROR;
+		}
+		//BUILD AES KEY END
 
 		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
