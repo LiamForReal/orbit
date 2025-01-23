@@ -183,7 +183,7 @@ void Server::clientHandler(const SOCKET client_socket)
 			_ecdheInfo[client_socket].setG(ekeRequest.calculationResult);
 			std::cout << "generate aes key!!!\n";
 			_aesKeys[client_socket] = _ecdheInfo[client_socket].createDefiKey();
-			std::cout << "shered sicret is: " << _aesKeys[circuit_id] << "\n";
+			std::cout << "shered sicret is: " << _aesKeys[client_socket] << "\n";
 		}
 		catch (std::runtime_error e)
 		{

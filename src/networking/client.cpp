@@ -99,7 +99,7 @@ void Client::connectToServer(std::string serverIP, int port)
 		std::cout << "ecdhe msg recved\n";
 		
 		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri.buffer);
-		_ecdhe.setG(ekeRequest.calculationResult);
+		_ecdhe.setG(ekeResponse.calculationResult);
 		std::cout << "generate aes key!!!\n";
 		_aes = _ecdhe.createDefiKey();
 		std::cout << "shered sicret is: " << _aes << "\n";

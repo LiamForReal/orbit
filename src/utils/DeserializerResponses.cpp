@@ -35,12 +35,11 @@ EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeRespo
     // Convert the serialized JSON string from the buffer
     std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
     
-
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
-    try {
-		
-        response.calculationResult = uint256_t{ std::string(jsonData["public_key"]) };   
+    try 
+    {
+        response.calculationResult = uint256_t{ std::string(jsonData["calcResult"]) };   
     }
     catch (...) {
         throw std::runtime_error("Invalid JSON structure passed");
