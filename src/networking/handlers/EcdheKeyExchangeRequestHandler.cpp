@@ -3,7 +3,7 @@
 EcdheKeyExchangeRequestHandler::EcdheKeyExchangeRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s, std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& rsaKeys, std::map<unsigned int, uint256_t>& aesKeys)
 	: _circuitData(circuitData), _socket(s), _rsaKeys(rsaKeys), _aesKeys(aesKeys)
 {
-	this->_ecdheInfo = std::map<unsigned int, std::pair<ECDHE, uint256_t>>();
+	this->_ecdheInfo = std::map<unsigned int, ECDHE>();
 	this->rr = RequestResult();
 }
 
@@ -17,13 +17,12 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 	RequestInfo ri;
 	EcdheKeyExchangeRequest ekeRequest;
 	EcdheKeyExchangeResponse ekeResponse;
+	unsigned int status = ECDHE_KEY_EXCHANGE_STATUS;
 	rr.buffer.clear();
 	try
 	{
 		ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo.buffer);
 		unsigned int circuit_id = requestInfo.circuit_id;
-
-		ekeResponse.status = ECDHE_KEY_EXCHANGE_STATUS;
 
 		if (_circuitData[circuit_id].first == _socket)
 		{
@@ -39,20 +38,20 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				rr.buffer = Helper::buildRR(ri);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
-			else if(_ecdheInfo[circuit_id].second == 0 || _ecdheInfo[circuit_id].second == NULL)
+			else if(_ecdheInfo[circuit_id].getTmpKey() == 0 || _ecdheInfo[circuit_id].getTmpKey() == NULL)
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE RSA AND SEND BACKWARDS
 				std::cout << "[ECDHE] Got from prev, there is no next, saving and sending backwards\n";
 				//create defi HelmanKey and save it in ecdhe info
-				_ecdheInfo[circuit_id].first.setG(ekeRequest.b);
-				_ecdheInfo[circuit_id].first.setP(ekeRequest.m);
-				_ecdheInfo[circuit_id].second = _ecdheInfo[circuit_id].first.createTmpKey();
-				ekeResponse.calculationResult = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
+				_ecdheInfo[circuit_id].setG(ekeRequest.b);
+				_ecdheInfo[circuit_id].setP(ekeRequest.m);
+				_ecdheInfo[circuit_id].createTmpKey();
+				ekeResponse.calculationResult = _ecdheInfo[circuit_id].createDefiKey();
 				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
 
 				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second)
-				, ekeResponse.status, circuit_id);
+				, status, circuit_id);
 				std::cout << "[ECDHE] send to client rsa encripted msg\n";
 
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
@@ -61,10 +60,10 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 			{
 				ri.buffer = requestInfo.buffer;
 				ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(_rsaKeys[circuit_id].first.Decrypt(ri.buffer));
-				rr.buffer = Helper::buildRR(std::vector<unsigned char>(), ekeResponse.status, circuit_id); //only for not crushed the code with rr.buffer
-				_ecdheInfo[circuit_id].first.setG(ekeRequest.calculationResult);
+				rr.buffer = Helper::buildRR(std::vector<unsigned char>(), status, circuit_id); //only for not crushed the code with rr.buffer
+				_ecdheInfo[circuit_id].setG(ekeRequest.calculationResult);
 				std::cout << "[ECDHE] generate aes key!!!\n";
-				_aesKeys[circuit_id] = _ecdheInfo[circuit_id].first.createDefiKey(_ecdheInfo[circuit_id].second);
+				_aesKeys[circuit_id] = _ecdheInfo[circuit_id].createDefiKey();
 				std::cout << "[ECDHE] shered sicret is: " << _aesKeys[circuit_id] << "\n";
 				//nothing to send!!! 
 				//decript RSA + found the sherd seacret + and put is in AES 
@@ -74,7 +73,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 	}
 	catch (std::runtime_error& e)
 	{
-		ekeResponse.status = RSA_KEY_EXCHANGE_ERROR;
+		status = RSA_KEY_EXCHANGE_ERROR;
 		std::cout << e.what() << std::endl;
 	}
 	catch (...)

@@ -22,7 +22,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     std::vector<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
     this->rr.buffer.clear();
-
+    unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
     try
     {
         NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo.buffer);
@@ -34,7 +34,6 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         if (nodesInfo.empty())
             throw std::runtime_error("the failed to take nodes details");
         controlNodesInfo = dm.GetControlInfo();
-        ccr.status = Status::CIRCUIT_CONFIRMATION_STATUS;
 
         ccr.nodesPath = nodesInfo;
         this->_controlList[this->circuit_id] = controlNodesInfo;
@@ -44,9 +43,9 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     }
     catch (std::runtime_error e)
     {
-        ccr.status = CIRCUIT_CONFIRMATION_ERROR;
+        status = CIRCUIT_CONFIRMATION_ERROR;
     }
-    rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), ccr.status, this->circuit_id);
+    rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), status, this->circuit_id);
     this->circuit_id++;
     return rr;
 }

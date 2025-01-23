@@ -40,9 +40,7 @@ void Client::connectToServer(std::string serverIP, int port)
 	sa.sin_addr.s_addr = inet_addr(serverIP.c_str());    // the IP of the server
 
 	// the process will not continue until the server accepts the client
-	int status = connect(_clientSocketWithDS, (struct sockaddr*)&sa, sizeof(sa));
-
-	if (status == INVALID_SOCKET)
+	if (connect(_clientSocketWithDS, (struct sockaddr*)&sa, sizeof(sa)) == INVALID_SOCKET)
 		throw std::runtime_error("Cant connect to server");
 	//CREATE SELF RSA PAIR OF KEYS START
 	_rsa.pregenerateKeys(); 
@@ -80,16 +78,13 @@ void Client::connectToServer(std::string serverIP, int port)
 	//SEND REQUEST AND BUILD  ECDHE INFO START
 	EcdheKeyExchangeRequest ekeRequest;
 	EcdheKeyExchangeResponse ekeResponse;
-	uint256_t tmpKey;
 	try
 	{
 		std::cout << "ecdhe first msg is now generating\n";
-		auto ecdheInfo = _ecdhe.createInfo(); //(tmpKey, (g, p)) 
-		tmpKey = ecdheInfo.first;
-		ekeRequest.b = ecdheInfo.second.first;
-		ekeRequest.m = ecdheInfo.second.second;
-		tmpKey = _ecdhe.createTmpKey();
-		ekeRequest.calculationResult = _ecdhe.createDefiKey(tmpKey);
+		std::pair<uint256_t, uint256_t> ecdheInfo = _ecdhe.createInfo(); //(g, p) 
+		ekeRequest.b = ecdheInfo.first;
+		ekeRequest.m = ecdheInfo.second;
+		ekeRequest.calculationResult = _ecdhe.createDefiKey();
 		rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), _serverRSA.first, _serverRSA.second), ECDHE_KEY_EXCHANGE_RC);
 		Helper::sendVector(_clientSocketWithDS, rr.buffer);
 		//SEND REQUEST AND BUILD ECDHE INFO END
@@ -106,12 +101,11 @@ void Client::connectToServer(std::string serverIP, int port)
 		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri.buffer);
 		_ecdhe.setG(ekeRequest.calculationResult);
 		std::cout << "generate aes key!!!\n";
-		_aes = _ecdhe.createDefiKey(tmpKey);
+		_aes = _ecdhe.createDefiKey();
 		std::cout << "shered sicret is: " << _aes << "\n";
 	}
 	catch (std::runtime_error e)
 	{
-		ekeResponse.status = ECDHE_KEY_EXCHANGE_ERROR;
 		std::cout << e.what() << std::endl;
 	}
 	//BUILD AES KEY END
@@ -257,8 +251,7 @@ void Client::startConversation(const bool& openNodes)
 	sa.sin_port = htons(stoi(ccr.nodesPath.begin()->second));
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = inet_addr(ccr.nodesPath.begin()->first.c_str());
-	int status = connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa));
-	if (status == INVALID_SOCKET)
+	if (connect(_clientSocketWithFirstNode, (struct sockaddr*)&sa, sizeof(sa)) == INVALID_SOCKET)
 	{
 		int errCode = WSAGetLastError();  // Get the error code from Winsock
 		std::cerr << "Connect failed with error code: " << errCode << std::endl;
@@ -283,7 +276,7 @@ void Client::startConversation(const bool& openNodes)
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 	rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
 
-	if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
+	if (Status::RSA_KEY_EXCHANGE_STATUS == ri.id)
 	{
 		std::cout << "Got FIRST NODE public_key: " << rkeResponse.public_key << std::endl;
 		_rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
@@ -322,7 +315,7 @@ void Client::startConversation(const bool& openNodes)
 			//ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, std::ref(this->rsa));
 			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
 
-			if (Status::RSA_KEY_EXCHANGE_STATUS == rkeResponse.status)
+			if (Status::RSA_KEY_EXCHANGE_STATUS == ri.id)
 			{
 				std::cout << "Got NODE public_key: " << rkeResponse.public_key << std::endl;
 				_rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
@@ -354,7 +347,7 @@ void Client::startConversation(const bool& openNodes)
 	HttpGetResponse httpGetResponse;
 	httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
 
-	if (Errors::HTTP_MSG_ERROR == httpGetResponse.status)
+	if (Errors::HTTP_MSG_ERROR == ri.id)
 	{
 		std::cerr << "Could not get HTML of " << domain << std::endl;
 	}

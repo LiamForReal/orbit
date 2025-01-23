@@ -44,16 +44,14 @@ bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
 	LinkRequest lr;
-	LinkResponse lre;
 	RequestInfo ri;
+	unsigned int status = LINK_STATUS;
 	rr.buffer.clear();
 	try
 	{
 		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
 
 		unsigned int circuit_id = requestInfo.circuit_id;
-
-		lre.status = LINK_STATUS;
 
 		if (_circuitData[circuit_id].first == _socket)
 		{
@@ -75,7 +73,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created\n";
 				rr.buffer.clear();
-				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(lre), lre.status , circuit_id);
+				rr.buffer = Helper::buildRR(status , circuit_id);
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
@@ -85,7 +83,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	}
 	catch (std::runtime_error& e)
 	{
-		lre.status = LINK_ERROR;
+		status = LINK_ERROR;
 	}
 	return rr;
 }

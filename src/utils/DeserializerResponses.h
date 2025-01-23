@@ -14,10 +14,6 @@ class DeserializerResponses
     public: 
         static RsaKeyExchangeResponse deserializeRsaKeyExchangeResponse(const std::vector<unsigned char>& buffer);
         static EcdheKeyExchangeResponse deserializeEcdheKeyExchangeResponse(const std::vector<unsigned char>& buffer);
-        static NodeOpenResponse deserializeNodeOpeningResponse(const std::vector<unsigned char>& buffer);
         static CircuitConfirmationResponse deserializeCircuitConfirmationResponse(const std::vector<unsigned char>& buffer);
-        static LinkResponse deserializeLinkResponse(const std::vector<unsigned char>& buffer);
-        static HttpGetResponse deserializeHttpGetResponse(const std::vector<unsigned char>& buffer);
-        static CloseConnectionResponse deserializeCloseConnectionResponse(const std::vector<unsigned char>& buffer);
-        static DeleteCircuitResponse deserializeDeleteCircuitResponse(const std::vector<unsigned char>& buffer);        
+        static HttpGetResponse deserializeHttpGetResponse(const std::vector<unsigned char>& buffer);   
 };

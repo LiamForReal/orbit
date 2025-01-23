@@ -16,13 +16,12 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 	RequestInfo ri;
 	RsaKeyExchangeRequest rkeRequest;
 	RsaKeyExchangeResponse rkeResponse;
+	unsigned int status = RSA_KEY_EXCHANGE_STATUS;
 	rr.buffer.clear();
 	try
 	{
 		unsigned int circuit_id = requestInfo.circuit_id;
 		rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
-
-		rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
 
 		if (_circuitData.find(circuit_id) == _circuitData.end())
 		{
@@ -55,7 +54,7 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(rsa, std::pair<uint2048_t, uint2048_t>(rkeRequest.public_key, rkeRequest.product));
 				rkeResponse.public_key = _rsaKeys[circuit_id].first.getPublicKey();
 				rkeResponse.product = _rsaKeys[circuit_id].first.getProduct();
-				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), rkeResponse.status ,circuit_id);
+				rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), status ,circuit_id);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}
@@ -63,7 +62,7 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 	}
 	catch (std::runtime_error& e)
 	{
-		rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
+		status = RSA_KEY_EXCHANGE_ERROR;
 		std::cout << e.what() << std::endl;
 	}
 	catch (...)

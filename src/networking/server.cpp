@@ -112,7 +112,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
 		std::string msg = "";
-		unsigned int circuit_id = 0;
+		unsigned int circuit_id = 0,status = 0;
 		RequestResult rr = RequestResult();
 
 	
@@ -135,14 +135,14 @@ void Server::clientHandler(const SOCKET client_socket)
 
 			rkeResponse.public_key = this->_rsaInfo[client_socket].first.getPublicKey();
 			rkeResponse.product = this->_rsaInfo[client_socket].first.getProduct();
-			rkeResponse.status = RSA_KEY_EXCHANGE_STATUS;
+			status = RSA_KEY_EXCHANGE_STATUS;
 		}
 		catch (std::runtime_error e)
 		{
-			rkeResponse.status = RSA_KEY_EXCHANGE_ERROR;
+			status = RSA_KEY_EXCHANGE_ERROR;
 		}
 		//GET REQUEST AND BUILD RSA RESPOSE END
-		rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), rkeResponse.status);
+		rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), status);
 		Helper::sendVector(client_socket, rr.buffer);
 
 
@@ -152,6 +152,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		uint256_t tmpKey;
 		try
 		{
+			status = ECDHE_KEY_EXCHANGE_STATUS;
 			ri = Helper::waitForResponse_RSA(client_socket, _rsaInfo[client_socket].first);
 
 			if (ECDHE_KEY_EXCHANGE_RC != ri.id)
@@ -162,11 +163,17 @@ void Server::clientHandler(const SOCKET client_socket)
 			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(ri.buffer);
 			_ecdheInfo[client_socket].setG(ekeRequest.b);
 			_ecdheInfo[client_socket].setP(ekeRequest.m);
-			tmpKey = _ecdheInfo[client_socket].createTmpKey();
-			ekeResponse.calculationResult = _ecdheInfo[client_socket].createDefiKey(tmpKey);
-
+			_ecdheInfo[client_socket].createTmpKey();
+			ekeResponse.calculationResult = _ecdheInfo[client_socket].createDefiKey();
+		}
+		catch (std::runtime_error e)
+		{
+			status = ECDHE_KEY_EXCHANGE_ERROR;
+		}
+		try
+		{
 			rr.buffer = Helper::buildRR(_rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second)
-				, ekeResponse.status);
+				, status);
 
 			std::cout << "ecdhe msg sended\n";
 			Helper::sendVector(client_socket, rr.buffer);
@@ -175,12 +182,12 @@ void Server::clientHandler(const SOCKET client_socket)
 			//BUILD AES KEY START
 			_ecdheInfo[client_socket].setG(ekeRequest.calculationResult);
 			std::cout << "generate aes key!!!\n";
-			_aesKeys[client_socket] = _ecdheInfo[client_socket].createDefiKey(tmpKey);
+			_aesKeys[client_socket] = _ecdheInfo[client_socket].createDefiKey();
 			std::cout << "shered sicret is: " << _aesKeys[circuit_id] << "\n";
 		}
 		catch (std::runtime_error e)
 		{
-			ekeResponse.status = ECDHE_KEY_EXCHANGE_ERROR;
+			std::cout << e.what() << std::endl;
 		}
 		//BUILD AES KEY END
 
@@ -372,10 +379,10 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 {
 	try
 	{
-		std::vector<unsigned char> deleteRequest;
 		char buffer[100];
 		RequestInfo ri;
 		DWORD timeout = SECONDS_TO_WAIT * 1000;
+		RequestResult rr;
 		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 
 		std::cout << "Enter to control with socket " << node_sock << std::endl;
@@ -413,29 +420,24 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 						}
 
 						// Handle delete circuit logic
-						deleteRequest.clear();
-						deleteRequest.emplace_back(circuitId);
-						deleteRequest.emplace_back(DELETE_CIRCUIT_RC);
+						rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
 						// Notify the remaining nodes
-						Helper::sendVector(node_sock, deleteRequest);
+						Helper::sendVector(node_sock, rr.buffer);
 						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
 
 						std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-						Helper::sendVector(_clients[circuitId], deleteRequest);
+						Helper::sendVector(_clients[circuitId], rr.buffer);
 						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
 
 						// Regenerate the circuit for the remaining nodes
 						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
 						_controlList[circuitId] = newCircuit;
 
-						std::vector<unsigned char> responseBuffer;
 						CircuitConfirmationResponse ccr;
 						ccr.nodesPath = newCircuit;
-						ccr.status = CIRCUIT_CONFIRMATION_STATUS;
-						auto tmp = SerializerResponses::serializeResponse(ccr);
-						responseBuffer.insert(responseBuffer.end(), tmp.begin(), tmp.end());
-						Helper::sendVector(_clients[circuitId], responseBuffer);
+						rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), CIRCUIT_CONFIRMATION_STATUS, circuitId);
+						Helper::sendVector(_clients[circuitId], rr.buffer);
 
 						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
 						return; //close this socket does not exsist

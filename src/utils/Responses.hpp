@@ -38,50 +38,21 @@ typedef enum Errors
 
 typedef struct RsaKeyExchangeResponse
 {
-	unsigned int status; 
 	uint2048_t public_key;
 	uint2048_t product;
 } RsaKeyExchangeResponse;
 
 typedef struct EcdheKeyExchangeResponse
 {
-	unsigned int status; 
 	uint256_t calculationResult;
 } EcdheKeyExchangeResponse;
 
-typedef struct NodeOpenResponse
-{
-	unsigned int status; 
-} NodeOpenResponse;
-
 typedef struct CircuitConfirmationResponse
 {
-	unsigned int status; 
     std::vector<pair<string, string>> nodesPath; 
 } CircuitConfirmationResponse;
 
-typedef struct LinkResponse
-{
-	unsigned int status; 
-} LinkResponse;
-
 typedef struct HttpGetResponse
 {
-	unsigned int status;
 	string content;  //html index.html file
 } HttpGetResponse;
-
-typedef struct CloseConnectionResponse
-{
-	unsigned int status; 
-} CloseConnectionResponse;
-
-typedef struct AliveMsgResponse
-{
-	unsigned int status; 
-} AliveMsgResponse;
-
-typedef struct DeleteCircuitResponse
-{
-	unsigned int status; 
-}  DeleteCircuitResponse;

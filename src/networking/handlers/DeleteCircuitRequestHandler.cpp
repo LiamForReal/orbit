@@ -26,20 +26,18 @@ bool DeleteCircuitRequestHandler::isRequestRelevant(const RequestInfo& requestIn
 RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
 	this->rr.buffer.clear();
-	DeleteCircuitResponse dcre;
-	unsigned int circuit_id = requestInfo.circuit_id;
+	unsigned int circuit_id = requestInfo.circuit_id,status = DELETE_CIRCUIT_STATUS;
 	try
 	{
 		closeSocket(this->cd[requestInfo.circuit_id].first);
 		closeSocket(this->cd[requestInfo.circuit_id].second);
 		this->cd.erase(requestInfo.circuit_id);
-		dcre.status = DELETE_CIRCUIT_STATUS;
 	}
 	catch (std::runtime_error& e)
 	{
-		dcre.status = DELETE_CIRCUIT_ERROR;
+		status = DELETE_CIRCUIT_ERROR;
 		std::cout << e.what() << std::endl;
 	}
-	rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(dcre), dcre.status, circuit_id);
+	rr.buffer = Helper::buildRR(status, circuit_id);
 	return rr;
 }
