@@ -38,7 +38,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				rr.buffer = Helper::buildRR(ri);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
-			else if(_ecdheInfo[circuit_id].getTmpKey() == 0 || _ecdheInfo[circuit_id].getTmpKey() == NULL)
+			else 
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE RSA AND SEND BACKWARDS
@@ -55,12 +55,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				std::cout << "[ECDHE] send to client rsa encripted msg\n";
 
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
-			}
-			else
-			{
-				ri.buffer = requestInfo.buffer;
-				ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(_rsaKeys[circuit_id].first.Decrypt(ri.buffer));
-				rr.buffer = Helper::buildRR(std::vector<unsigned char>(), status, circuit_id); //only for not crushed the code with rr.buffer
+
 				_ecdheInfo[circuit_id].setG(ekeRequest.calculationResult);
 				std::cout << "[ECDHE] generate aes key!!!\n";
 				_aesKeys[circuit_id] = _ecdheInfo[circuit_id].createDefiKey();

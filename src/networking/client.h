@@ -65,6 +65,7 @@ private:
 
 	ECDHE _ecdhe; //self 
 
-	uint256_t _aes;
+	uint256_t _serverAes;
+	std::vector<uint256_t> _aesCircuitData;
 
 };
