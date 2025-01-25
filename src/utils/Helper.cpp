@@ -214,10 +214,10 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
 	std::vector<uint8_t> encryptedMessageVec;
-	encryptedMessageVec.reserve(ri.length * 256);
+	encryptedMessageVec.reserve(ri.length);
 
-	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length * 256, 0);
-	for (unsigned int i = 0; i < ri.length * 256; i++)
+	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
+	for (unsigned int i = 0; i < ri.length; i++)
 	{
 		encryptedMessageVec.emplace_back(encryptedMessage[i]);
 	}
