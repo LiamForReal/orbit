@@ -351,7 +351,7 @@ void Client::startConversation(const bool& openNodes)
 				std::cout << "Got NODE public_key: " << rkeResponse.public_key << std::endl;
 				_rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
 				nodePlaceIt++;
-				std::cout << "Saved NODE pubkey\n";
+				std::cout << "Saved NODE pubkey " << nodePlaceIt->first << "\n";
 			}
 			else
 			{
