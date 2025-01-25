@@ -4,7 +4,7 @@
 #include "Requestes.hpp"
 #include "json.hpp"
 using json = nlohmann::json;
-
+#include "RequestInfo.hpp"
 #define INIT_VEC_SIZE 4
 
 //Node 
@@ -12,11 +12,11 @@ using json = nlohmann::json;
 class DeserializerRequests
 {
     public:
-        static RsaKeyExchangeRequest deserializeRsaKeyExchangeRequest(const std::vector<unsigned char>& buffer);
-        static EcdheKeyExchangeRequest deserializeEcdheKeyExchangeRequest(const std::vector<unsigned char>& buffer);
-        static NodeOpenRequest deserializeNodeOpeningRequest(const std::vector<unsigned char>& buffer);
-        static LinkRequest deserializeLinkRequest(const std::vector<unsigned char>& buffer);
-        static HttpGetRequest deserializeHttpGetRequest(const std::vector<unsigned char>& buffer);
+        static RsaKeyExchangeRequest deserializeRsaKeyExchangeRequest(const RequestInfo ri);
+        static EcdheKeyExchangeRequest deserializeEcdheKeyExchangeRequest(const RequestInfo ri);
+        static NodeOpenRequest deserializeNodeOpeningRequest(const RequestInfo ri);
+        static LinkRequest deserializeLinkRequest(const RequestInfo ri);
+        static HttpGetRequest deserializeHttpGetRequest(const RequestInfo ri);
 };
 
 

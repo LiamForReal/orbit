@@ -19,9 +19,9 @@ public:
 	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
 	static void sendVector(const SOCKET sc, const std::vector<unsigned char>& vec);
 
-	static unsigned int getStatusCodeFromSocket(const SOCKET sc); //
-	static unsigned int getCircuitIdFromSocket(const SOCKET sc); //
-	static unsigned int getLengthPartFromSocket(const SOCKET sc); //
+	static unsigned int getStatusCodeFromSocket(const SOCKET sc); 
+	static unsigned int getCircuitIdFromSocket(const SOCKET sc); 
+	static unsigned int getLengthPartFromSocket(const SOCKET sc); 
 
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 	static RequestInfo buildRI(SOCKET socket, unsigned int circuit_id);
@@ -29,7 +29,7 @@ public:
 	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa);
 	static RequestInfo waitForResponse_RSA(SOCKET socket, RSA& rsa);
 	static vector<unsigned char> buildRR(const RequestInfo ri);
-	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int circuit_id = 0);
+	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int length, unsigned int circuit_id = 0);
 	static vector<unsigned char> buildRR(unsigned int status, unsigned int circuit_id = 0);
 
 private:

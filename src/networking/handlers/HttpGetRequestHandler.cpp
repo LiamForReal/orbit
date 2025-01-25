@@ -98,7 +98,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
     unsigned int status = HTTP_MSG_STATUS;
 	try
 	{
-		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
+		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo);
         unsigned int circuit_id = requestInfo.circuit_id;
 		// check if there is next
 		if (_circuitsData[circuit_id].second != INVALID_SOCKET && _circuitsData[circuit_id].second != NULL)
@@ -117,7 +117,9 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(hgResponse),status, circuit_id);
+
+            std::vector<unsigned char> data = SerializerResponses::serializeResponse(hgResponse);
+            rr.buffer = Helper::buildRR(data,status, data.size(), circuit_id);
             Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
 		}
 	}

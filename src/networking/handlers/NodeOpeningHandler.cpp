@@ -25,7 +25,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
     try
     {
-        NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo.buffer);
+        NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo);
 
         std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
 
@@ -45,7 +45,8 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     {
         status = CIRCUIT_CONFIRMATION_ERROR;
     }
-    rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), status, this->circuit_id);
+    std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
+    rr.buffer = Helper::buildRR(data, status, data.size(), this->circuit_id);
     this->circuit_id++;
     return rr;
 }

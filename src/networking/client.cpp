@@ -35,6 +35,7 @@ void Client::connectToServer(std::string serverIP, int port)
 	RequestResult rr;
 	struct sockaddr_in sa = { 0 };
 	RequestInfo ri;
+	std::vector<unsigned char> data;
 	sa.sin_port = htons(port); // port that server will listen to
 	sa.sin_family = AF_INET;   // must be AF_INET
 	sa.sin_addr.s_addr = inet_addr(serverIP.c_str());    // the IP of the server
@@ -51,7 +52,8 @@ void Client::connectToServer(std::string serverIP, int port)
 	RsaKeyExchangeRequest rkeRequest;
 	rkeRequest.public_key = _rsa.getPublicKey();
 	rkeRequest.product = _rsa.getProduct();
-	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), RSA_KEY_EXCHANGE_RC);
+	data = SerializerRequests::serializeRequest(rkeRequest);
+	rr.buffer = Helper::buildRR(data, RSA_KEY_EXCHANGE_RC, data.size());
 	try
 	{
 		Helper::sendVector(_clientSocketWithDS, rr.buffer);
@@ -63,7 +65,7 @@ void Client::connectToServer(std::string serverIP, int port)
 	}
 	if (RSA_KEY_EXCHANGE_STATUS == ri.id)
 	{
-		RsaKeyExchangeResponse rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
+		RsaKeyExchangeResponse rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri);
 		_serverRSA.first = rkeResponse.public_key;
 		_serverRSA.second = rkeResponse.product;
 		std::cout << "Got server's RSA public key: " << _serverRSA.first << std::endl;
@@ -85,7 +87,8 @@ void Client::connectToServer(std::string serverIP, int port)
 		ekeRequest.b = ecdheInfo.first;
 		ekeRequest.m = ecdheInfo.second;
 		ekeRequest.calculationResult = _ecdhe.createDefiKey();
-		rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), _serverRSA.first, _serverRSA.second), ECDHE_KEY_EXCHANGE_RC);
+		std::vector<unsigned char> data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), _serverRSA.first, _serverRSA.second);
+		rr.buffer = Helper::buildRR(data, ECDHE_KEY_EXCHANGE_RC, data.size());
 		Helper::sendVector(_clientSocketWithDS, rr.buffer);
 		//SEND REQUEST AND BUILD ECDHE INFO END
 
@@ -98,7 +101,7 @@ void Client::connectToServer(std::string serverIP, int port)
 		}
 		std::cout << "ecdhe msg recved\n";
 		
-		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri.buffer);
+		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri);
 		_ecdhe.setG(ekeResponse.calculationResult);
 		std::cout << "generate aes key!!!\n";
 		_serverAes = _ecdhe.createDefiKey();
@@ -115,6 +118,7 @@ void Client::nodeOpening()
 {
 	NodeOpenRequest nor;
 	RequestResult rr;
+	std::vector<unsigned char> data;
 	do
 	{
 		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) + "): ";
@@ -122,7 +126,8 @@ void Client::nodeOpening()
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
-	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(nor), NODE_OPEN_RC);
+	data = SerializerRequests::serializeRequest(nor);
+	rr.buffer = Helper::buildRR(data, NODE_OPEN_RC, data.size());
 	Helper::sendVector(_clientSocketWithDS, rr.buffer);
 	std::cout << "Message send to server..." << std::endl;
 }
@@ -213,6 +218,7 @@ void Client::startConversation(const bool& openNodes)
 	std::string domain;
 	RequestInfo ri;
 	RequestResult rr;
+	std::vector<unsigned char> data;;
 	//NODE OPPENING START
 	if (openNodes)
 	{
@@ -224,7 +230,7 @@ void Client::startConversation(const bool& openNodes)
 		this->_passedPathGetWait = true;
 	}
 	unsigned int circuit_id = ri.circuit_id;
-	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri.buffer);
+	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri);
 	_rsaCircuitData.reserve(ccr.nodesPath.size());
 
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
@@ -268,13 +274,15 @@ void Client::startConversation(const bool& openNodes)
 	RsaKeyExchangeResponse rkeResponse;
 	rkeRequest.public_key = _rsa.getPublicKey();
 	rkeRequest.product = _rsa.getProduct();
-	rrRSA.buffer = Helper::buildRR(SerializerRequests::serializeRequest(rkeRequest), RSA_KEY_EXCHANGE_RC ,circuit_id);
+
+	data = SerializerRequests::serializeRequest(rkeRequest);
+	rrRSA.buffer = Helper::buildRR(data, RSA_KEY_EXCHANGE_RC, data.size(), circuit_id);
 	//to Change the make msges logic
 	Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
 	std::cout << "sent RSA msg\n";
 
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-	rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
+	rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri);
 
 	if (Status::RSA_KEY_EXCHANGE_STATUS == ri.id)
 	{
@@ -300,7 +308,9 @@ void Client::startConversation(const bool& openNodes)
 		ekeRequest.b = ecdheInfo.first;
 		ekeRequest.m = ecdheInfo.second;
 		ekeRequest.calculationResult = _ecdhe.createDefiKey();
-		rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second), ECDHE_KEY_EXCHANGE_RC, circuit_id);
+		
+		data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second);
+		rr.buffer = Helper::buildRR(data, ECDHE_KEY_EXCHANGE_RC, data.size(), circuit_id);
 		std::cout << "ecdhe with first node msg is now sending\n";
 		Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 
@@ -312,7 +322,7 @@ void Client::startConversation(const bool& openNodes)
 		}
 		std::cout << "ecdhe msg recved\n";
 
-		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri.buffer);
+		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri);
 		_ecdhe.setG(ekeResponse.calculationResult);
 		std::cout << "generate aes key!!!\n";
 		_aesCircuitData.emplace_back(_ecdhe.createDefiKey());
@@ -330,7 +340,9 @@ void Client::startConversation(const bool& openNodes)
 		for (auto it = ccr.nodesPath.begin() + 1; it != ccr.nodesPath.end(); it++)
 		{
 			linkRequest.nextNode = std::pair<std::string, unsigned int>(it->first, stoi(it->second));
-			rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(linkRequest), LINK_RC ,circuit_id);
+
+			data = SerializerRequests::serializeRequest(linkRequest);
+			rr.buffer = Helper::buildRR(data, LINK_RC, data.size(), circuit_id);
 			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 			std::cout << "sent link msg\n";
 
@@ -344,7 +356,7 @@ void Client::startConversation(const bool& openNodes)
 			Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
 			std::cout << "sent RSA msg\n";
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
+			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri);
 
 			if (Status::RSA_KEY_EXCHANGE_STATUS == ri.id)
 			{
@@ -365,7 +377,9 @@ void Client::startConversation(const bool& openNodes)
 				ekeRequest.b = ecdheInfo.first;
 				ekeRequest.m = ecdheInfo.second;
 				ekeRequest.calculationResult = _ecdhe.createDefiKey();
-				rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second), ECDHE_KEY_EXCHANGE_RC, circuit_id);
+
+				data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second);
+				rr.buffer = Helper::buildRR(data, ECDHE_KEY_EXCHANGE_RC, data.size(), circuit_id);
 				Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 				
 				ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, _rsa);
@@ -376,7 +390,7 @@ void Client::startConversation(const bool& openNodes)
 				}
 				std::cout << "ecdhe msg recved\n";
 
-				ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri.buffer);
+				ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri);
 				_ecdhe.setG(ekeResponse.calculationResult);
 				std::cout << "generate aes key!!!\n";
 				_aesCircuitData.emplace_back(_ecdhe.createDefiKey());
@@ -399,14 +413,16 @@ void Client::startConversation(const bool& openNodes)
 	if (!domainValidationCheck(domain))
 		throw std::runtime_error("domain is illegal");
 	httpGetRequest.domain = domain;
-	rr.buffer = Helper::buildRR(SerializerRequests::serializeRequest(httpGetRequest),HTTP_MSG_RC,circuit_id);
+
+	data = SerializerRequests::serializeRequest(httpGetRequest);
+	rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
 
 	Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 	std::cout << "sends httpGet Request:\n";
 	ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 
 	HttpGetResponse httpGetResponse;
-	httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri.buffer);
+	httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
 
 	if (Errors::HTTP_MSG_ERROR == ri.id)
 	{

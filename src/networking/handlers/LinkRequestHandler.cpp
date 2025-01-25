@@ -49,7 +49,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	rr.buffer.clear();
 	try
 	{
-		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
+		lr = DeserializerRequests::deserializeLinkRequest(requestInfo);
 
 		unsigned int circuit_id = requestInfo.circuit_id;
 
@@ -73,7 +73,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created\n";
 				rr.buffer.clear();
-				rr.buffer = Helper::buildRR(status , circuit_id);
+				rr.buffer = Helper::buildRR(status ,circuit_id);
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}

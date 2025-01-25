@@ -30,19 +30,19 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo, bool& isRS
 	}
 	if (lrh->isRequestRelevant(requestInfo))
 	{
-		return lrh->handleRequest(requestInfo);
+		return lrh->handleRequest(requestInfo); 
 	}
 	else if (hgrh->isRequestRelevant(requestInfo))
 	{
-		return hgrh->handleRequest(requestInfo);
+		return hgrh->handleRequest(requestInfo); 
 	}
 	else if (dcrh->isRequestRelevant(requestInfo))
 	{
-		return dcrh->handleRequest(requestInfo);
+		return dcrh->handleRequest(requestInfo); 
 	}
 	else if (rkerh->isRequestRelevant(requestInfo))
 	{
-		return rkerh->handleRequest(requestInfo);
+		return rkerh->handleRequest(requestInfo); 
 	}
 	else if (ekerh->isRequestRelevant(requestInfo))
 	{

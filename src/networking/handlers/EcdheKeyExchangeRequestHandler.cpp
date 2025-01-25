@@ -21,7 +21,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 	rr.buffer.clear();
 	try
 	{
-		ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo.buffer);
+		ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo);
 		unsigned int circuit_id = requestInfo.circuit_id;
 		std::cout << "[ECDHE] circuit id: " << circuit_id << "\n";
 		if (_circuitData[circuit_id].first == _socket)
@@ -50,8 +50,8 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				ekeResponse.calculationResult = _ecdheInfo[circuit_id].createDefiKey();
 				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
 
-				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second)
-					, status, circuit_id); 
+				std::vector<unsigned char> data = _rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second);
+				rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id); 
 				std::cout << "[ECDHE] send to client rsa encripted msg\n";
 
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);

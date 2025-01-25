@@ -3,7 +3,7 @@
 #include <iostream>
 #include "Responses.hpp"
 #include "json.hpp"
-
+#include "RequestInfo.hpp"
 using json = nlohmann::json;
 
 #define INIT_VEC_SIZE 4
@@ -12,8 +12,8 @@ using json = nlohmann::json;
 class DeserializerResponses 
 {
     public: 
-        static RsaKeyExchangeResponse deserializeRsaKeyExchangeResponse(const std::vector<unsigned char>& buffer);
-        static EcdheKeyExchangeResponse deserializeEcdheKeyExchangeResponse(const std::vector<unsigned char>& buffer);
-        static CircuitConfirmationResponse deserializeCircuitConfirmationResponse(const std::vector<unsigned char>& buffer);
-        static HttpGetResponse deserializeHttpGetResponse(const std::vector<unsigned char>& buffer);   
+        static RsaKeyExchangeResponse deserializeRsaKeyExchangeResponse(const RequestInfo ri);
+        static EcdheKeyExchangeResponse deserializeEcdheKeyExchangeResponse(const RequestInfo ri);
+        static CircuitConfirmationResponse deserializeCircuitConfirmationResponse(const RequestInfo ri);
+        static HttpGetResponse deserializeHttpGetResponse(const RequestInfo ri);   
 };

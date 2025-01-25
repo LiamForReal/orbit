@@ -82,7 +82,6 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 	unsigned int value = 0;
 	unsigned char* data = Helper::getUnsignedCharPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
 
-
 	for (i = 0; i < 4; i++)
 	{
 		value |= (static_cast<unsigned int>(data[i]) << (i * 8));
@@ -168,11 +167,8 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 		return ri;
 
 	msgLength = Helper::getLengthPartFromSocket(socket);
+	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
-
-	for (j = 0; j < BYTES_TO_COPY; ++j) {
-		ri.buffer.insert(ri.buffer.begin() + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
-	}
 
 	msg = Helper::getStringPartFromSocket(socket, msgLength);
 	msg[msgLength] = '\0';
@@ -212,48 +208,16 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
 		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
 		return ri;
-	//length and data partes... TOFIX
-	std::vector<uint8_t> encryptedStatusCodeVec;
-	encryptedStatusCodeVec.reserve(256);
-	unsigned int statusCodeValue = 0;
 
-	std::vector<uint8_t> encryptedLengthVec;
-	// 4 * 256 bytes because our RSA is 2048 bits and length is 4
-	encryptedLengthVec.reserve(BYTES_TO_COPY * 256);
-	unsigned int msgLengthValue = 0;
-
-	unsigned char* encryptedLength = getUnsignedCharPartFromSocket(socket, 4 * 256, 0);
-	for (short i = 0; i < 4 * 256; i++)
-	{
-		encryptedLengthVec.emplace_back(encryptedLength[i]);
-	}
-
-	free(encryptedLength);
-	encryptedLength = NULL;
-
-	std::vector<uint8_t> decryptedLengthVec = rsa.Decrypt(std::ref(encryptedLengthVec));
-
-	for (i = 0; i < 4; i++)
-	{
-		msgLengthValue |= (static_cast<unsigned int>(decryptedLengthVec[i]) << (i * 8));
-	}
-
-	encryptedLengthVec.clear();
-	decryptedLengthVec.clear();
-
-	std::cout << "DEBUG: Length: " << msgLengthValue << std::endl;
-
-	for (j = 0; j < BYTES_TO_COPY; ++j)
-	{
-		ri.buffer.insert(ri.buffer.begin() + j, static_cast<unsigned char>((msgLengthValue >> (8 * j)) & 0xFF));
-	}
+	ri.length = Helper::getLengthPartFromSocket(socket);
+	std::cout << "DEBUG: Length: " << ri.length << std::endl;
 
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
 	std::vector<uint8_t> encryptedMessageVec;
-	encryptedMessageVec.reserve(msgLengthValue * 256);
+	encryptedMessageVec.reserve(ri.length * 256);
 
-	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, msgLengthValue * 256, 0);
-	for (unsigned int i = 0; i < msgLengthValue * 256; i++)
+	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length * 256, 0);
+	for (unsigned int i = 0; i < ri.length * 256; i++)
 	{
 		encryptedMessageVec.emplace_back(encryptedMessage[i]);
 	}
@@ -272,9 +236,9 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	encryptedMessageVec.clear();
 	decryptedMessageVec.clear();
 
-	msg[msgLengthValue] = '\0';
+	msg[ri.length] = '\0';
 
-	for (i = 0; i < msgLengthValue; i++)
+	for (i = 0; i < ri.length; i++)
 	{
 		ri.buffer.emplace_back(static_cast<unsigned char>(msg[i]));
 	}
@@ -293,18 +257,41 @@ RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 vector<unsigned char> Helper::buildRR(const RequestInfo ri)
 {
 	vector<unsigned char> tmp;
+	unsigned int len = ri.length;
+	tmp.reserve(6 + ri.length);
+
+	//Insert Circuit id
 	tmp.emplace_back(unsigned char(ri.circuit_id));
+
+	//Insert Id
 	tmp.emplace_back(unsigned char(ri.id));
+	
+	//Insert Length
+	unsigned char* lengthBytes = reinterpret_cast<unsigned char*>(&len);
+	tmp.insert(tmp.end(), lengthBytes, lengthBytes + 4);
+
+	//Insert data
 	if (!ri.buffer.empty())
 		tmp.insert(tmp.end(), ri.buffer.begin(), ri.buffer.end());
 	return tmp;
 }
 
-vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int circuit_id)
+vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int length, unsigned int circuit_id)
 {
 	vector<unsigned char> tmp;
+	tmp.reserve(6 + length);
+
+	//Insert Circuit id
 	tmp.emplace_back(unsigned char(circuit_id));
+
+	//Insert ID
 	tmp.emplace_back(unsigned char(status));
+
+	//Insert length
+	unsigned char* lengthBytes = reinterpret_cast<unsigned char*>(&length);
+	tmp.insert(tmp.end(), lengthBytes, lengthBytes + 4);
+
+	//Insert data
 	tmp.insert(tmp.end(), buffer.begin(), buffer.end());
 	return tmp;
 }

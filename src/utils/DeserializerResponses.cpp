@@ -1,15 +1,12 @@
 #include "DeserializerResponses.h"
 
-RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(const std::vector<unsigned char>& buffer)
+RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(const RequestInfo ri)
 {
     RsaKeyExchangeResponse response;
 
-    unsigned int len = 0;
-    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
-    
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
     
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -24,16 +21,15 @@ RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(
     return response;
 }
 
-EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeResponse(const std::vector<unsigned char>& buffer)
+EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeResponse(const RequestInfo ri)
 {
     EcdheKeyExchangeResponse response;
 
-    unsigned int len = 0;
-    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
+ 
     
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
     
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -48,15 +44,13 @@ EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeRespo
     return response;
 }
 
-CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmationResponse(const std::vector<unsigned char>& buffer)
+CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmationResponse(const RequestInfo ri)
 {
     CircuitConfirmationResponse response;
 
-    unsigned int len = 0;
-    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -71,17 +65,12 @@ CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmatio
     return response;
 }
 
-HttpGetResponse DeserializerResponses::deserializeHttpGetResponse(const std::vector<unsigned char>& buffer)
+HttpGetResponse DeserializerResponses::deserializeHttpGetResponse(const RequestInfo ri)
 {
     HttpGetResponse response;
 
-    unsigned int len = 0;
-    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
-    
-
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
-    
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);

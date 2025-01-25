@@ -1,13 +1,10 @@
 #include "DeserializerRequests.h"
 
-RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(const std::vector<unsigned char>& buffer) // unsigned int circuit_id 
+RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(const RequestInfo ri) // unsigned int circuit_id 
 {
     RsaKeyExchangeRequest request;
-
-    unsigned int len = 0;
-    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -25,15 +22,12 @@ RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(con
     return request;
 }
 
-EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest(const std::vector<unsigned char>& buffer)
+EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest(const RequestInfo ri)
 {
 	EcdheKeyExchangeRequest request;
 
-    unsigned int len = 0;
-    std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
-
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(buffer.begin() + INIT_VEC_SIZE, buffer.begin() + INIT_VEC_SIZE + len);
+	std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -49,18 +43,15 @@ EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest
     return request;
 }
 
-NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const std::vector<unsigned char>& buffer)
+NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const RequestInfo ri)
 {
 	NodeOpenRequest request;
 	std::string jsonDataStr = "";
-	unsigned int len = 0, i = 0;
-
-	std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
-	std::cout << len << std::endl;
+	unsigned int i = 0;
     
-    for (i = 0; i < len; i++)
+    for (i = 0; i < ri.length; i++)
 	{
-		jsonDataStr += buffer[INIT_VEC_SIZE + i];
+		jsonDataStr += ri.buffer[i];
 	}
     
 	
@@ -79,18 +70,15 @@ NodeOpenRequest DeserializerRequests::deserializeNodeOpeningRequest(const std::v
 	return request;
 }
 
-LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsigned char>& buffer)
+LinkRequest DeserializerRequests::deserializeLinkRequest(const RequestInfo ri)
 {
 	LinkRequest request; 
 	std::string jsonDataStr = "";
-	unsigned int len = 0, i = 0;
-
-	std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
-	std::cout << len << std::endl;
+	unsigned int i = 0;
     
-    for (i = 0; i < len; i++)
+    for (i = 0; i < ri.length; i++)
 	{
-		jsonDataStr += buffer[INIT_VEC_SIZE + i];
+		jsonDataStr += ri.buffer[i];
 	}
     
 	
@@ -107,17 +95,15 @@ LinkRequest DeserializerRequests::deserializeLinkRequest(const std::vector<unsig
 
 	return request;
 }
-HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const std::vector<unsigned char>& buffer)
+HttpGetRequest DeserializerRequests::deserializeHttpGetRequest(const RequestInfo ri)
 {
 	HttpGetRequest request;
 	std::string jsonDataStr = "";
-	unsigned int len = 0, i = 0;
-	// 1 2 3 4
-	std::memcpy(&len, buffer.data(), INIT_VEC_SIZE);
+	unsigned int i = 0;
 
-    for (i = 0; i < len; i++)
+    for (i = 0; i < ri.length; i++)
 	{
-		jsonDataStr += buffer[INIT_VEC_SIZE + i];
+		jsonDataStr += ri.buffer[i];
 	}
     
 	

@@ -128,7 +128,7 @@ void Server::clientHandler(const SOCKET client_socket)
 				throw std::runtime_error("Did not get RSA key exchange request!");
 			}
 			std::cout << "rsa msg was sended\n";
-			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(ri.buffer);
+			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(ri);
 			std::cout << "Got public RSA key from client: " << rkeRequest.public_key << std::endl;
 			_rsaInfo[client_socket].second.first = rkeRequest.public_key;
 			_rsaInfo[client_socket].second.second = rkeRequest.product;
@@ -142,7 +142,8 @@ void Server::clientHandler(const SOCKET client_socket)
 			status = RSA_KEY_EXCHANGE_ERROR;
 		}
 		//GET REQUEST AND BUILD RSA RESPOSE END
-		rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(rkeResponse), status);
+		std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
+		rr.buffer = Helper::buildRR(data, status, data.size());
 		Helper::sendVector(client_socket, rr.buffer);
 
 
@@ -160,7 +161,7 @@ void Server::clientHandler(const SOCKET client_socket)
 				throw std::runtime_error("Did not get ECDHE key exchange request!");
 			}
 			std::cout << "ecdhe msg recved\n";
-			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(ri.buffer);
+			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(ri);
 			_ecdheInfo[client_socket].setG(ekeRequest.b);
 			_ecdheInfo[client_socket].setP(ekeRequest.m);
 			_ecdheInfo[client_socket].createTmpKey();
@@ -172,8 +173,8 @@ void Server::clientHandler(const SOCKET client_socket)
 		}
 		try
 		{
-			rr.buffer = Helper::buildRR(_rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second)
-				, status);
+			data = _rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second);
+			rr.buffer = Helper::buildRR(data, status, data.size());
 
 			std::cout << "ecdhe msg sended\n";
 			Helper::sendVector(client_socket, rr.buffer);
@@ -435,7 +436,9 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 
 						CircuitConfirmationResponse ccr;
 						ccr.nodesPath = newCircuit;
-						rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(ccr), CIRCUIT_CONFIRMATION_STATUS, circuitId);
+
+						std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
+						rr.buffer = Helper::buildRR(data, CIRCUIT_CONFIRMATION_STATUS, data.size(), circuitId);
 						Helper::sendVector(_clients[circuitId], rr.buffer);
 
 						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
