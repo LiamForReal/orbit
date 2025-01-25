@@ -22,10 +22,10 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 	{
 		unsigned int circuit_id = requestInfo.circuit_id;
 		rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(requestInfo.buffer);
-
 		if (_circuitData.find(circuit_id) == _circuitData.end())
 		{
 			_circuitData[circuit_id].first = _socket;
+			std::cout << "[RSA] client socket allocated!\n";
 		}
 
 		if (_circuitData[circuit_id].first == _socket)

@@ -49,4 +49,3 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     this->circuit_id++;
     return rr;
 }
-//get last id

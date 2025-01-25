@@ -23,9 +23,10 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo, bool& isRS
 {
 	if (isRSA)
 	{
-		requestInfo = Helper::waitForResponse_RSA(_socket, this->_rsaKeys[requestInfo.id].first);
+		//circuit id from previus request
+		std::cout << "[NODE REQUEST HANDLER] circuit id: " << requestInfo.circuit_id << "\n";
+		requestInfo = Helper::waitForResponse_RSA(_socket, this->_rsaKeys[requestInfo.circuit_id].first);
 		isRSA = false;
-		//call to decript 
 	}
 	if (lrh->isRequestRelevant(requestInfo))
 	{

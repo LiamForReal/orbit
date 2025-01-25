@@ -218,7 +218,6 @@ void Client::startConversation(const bool& openNodes)
 	{
 		nodeOpening();
 	}
-	
 	ri = Helper::waitForResponse(this->_clientSocketWithDS); //problem
 	if (openNodes)
 	{
@@ -301,7 +300,8 @@ void Client::startConversation(const bool& openNodes)
 		ekeRequest.b = ecdheInfo.first;
 		ekeRequest.m = ecdheInfo.second;
 		ekeRequest.calculationResult = _ecdhe.createDefiKey();
-		rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second), ECDHE_KEY_EXCHANGE_RC);
+		rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second), ECDHE_KEY_EXCHANGE_RC, circuit_id);
+		std::cout << "ecdhe with first node msg is now sending\n";
 		Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 
 		ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, _rsa);
@@ -340,10 +340,8 @@ void Client::startConversation(const bool& openNodes)
 			{
 				throw std::runtime_error("Could not build circuit.");
 			}
-			ri.buffer.clear();
-
 			
-			Helper::sendVector(_clientSocketWithFirstNode,rrRSA.buffer);
+			Helper::sendVector(_clientSocketWithFirstNode, rrRSA.buffer);
 			std::cout << "sent RSA msg\n";
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri.buffer);
@@ -359,7 +357,6 @@ void Client::startConversation(const bool& openNodes)
 			{
 				throw std::runtime_error("Could not exchange RSA keys, thus could not build circuit.");
 			}
-			ri.buffer.clear();
 
 			try
 			{
@@ -368,7 +365,7 @@ void Client::startConversation(const bool& openNodes)
 				ekeRequest.b = ecdheInfo.first;
 				ekeRequest.m = ecdheInfo.second;
 				ekeRequest.calculationResult = _ecdhe.createDefiKey();
-				rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second), ECDHE_KEY_EXCHANGE_RC);
+				rr.buffer = Helper::buildRR(_rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second), ECDHE_KEY_EXCHANGE_RC, circuit_id);
 				Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 				
 				ri = Helper::waitForResponse_RSA(_clientSocketWithFirstNode, _rsa);

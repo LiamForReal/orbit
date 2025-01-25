@@ -196,7 +196,6 @@ void Server::clientHandler(const SOCKET client_socket)
 		mutex.unlock(); 
 
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
-
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
 		mutex.lock();

@@ -117,7 +117,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
 			// send HTTP GET (hgRequest.msg) to Web Server
 			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            rr.buffer = Helper::buildRR(status, circuit_id);
+            rr.buffer = Helper::buildRR(SerializerResponses::serializeResponse(hgResponse),status, circuit_id);
             Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
 		}
 	}

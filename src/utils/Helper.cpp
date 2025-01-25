@@ -163,7 +163,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 	ri.id = Helper::getStatusCodeFromSocket(socket);
 	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
 
-	if (ri.id == ALIVE_MSG_RC || ri.id == NODE_OPEN_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
 		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
 		return ri;
 
@@ -204,10 +204,13 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	int j = 0;
 
 	ri.circuit_id = circuit_id;
-	ri.id = statusCode;
+	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
 
-	if (ri.id == ALIVE_MSG_RC || ri.id == NODE_OPEN_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
-		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+	ri.id = statusCode;
+	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
+
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC|| 
+		ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
 		return ri;
 	//length and data partes... TOFIX
 	std::vector<uint8_t> encryptedStatusCodeVec;
@@ -282,26 +285,6 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 
 RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 {
-	//std::vector<uint8_t> encryptedStatusCodeVec;
-	// 256 bytes because our RSA is 2048 bits
-	/*encryptedStatusCodeVec.reserve(256);
-
-	unsigned char* encryptedStatusCode = getUnsignedCharPartFromSocket(socket, 256, 0);
-	for (short i = 0; i < 256; i++)
-	{
-		encryptedStatusCodeVec.emplace_back(encryptedStatusCode[i]);
-	}
-
-	free(encryptedStatusCode);
-	encryptedStatusCode = NULL;
-
-	std::vector<uint8_t> decryptedStatusCodeVec = rsa.Decrypt(std::ref(encryptedStatusCodeVec));
-	std::cout << "Dec status code vec size: " << decryptedStatusCodeVec.size() << std::endl;
-
-	statusCode = decryptedStatusCodeVec[0];
-
-	encryptedStatusCodeVec.clear();
-	decryptedStatusCodeVec.clear();*/
 	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
 	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
 	return Helper::buildRI_RSA(socket, circuitId, statusCode, std::ref(rsa));

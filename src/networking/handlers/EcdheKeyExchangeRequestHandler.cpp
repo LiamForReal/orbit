@@ -23,7 +23,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 	{
 		ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo.buffer);
 		unsigned int circuit_id = requestInfo.circuit_id;
-
+		std::cout << "[ECDHE] circuit id: " << circuit_id << "\n";
 		if (_circuitData[circuit_id].first == _socket)
 		{
 			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
@@ -38,7 +38,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				rr.buffer = Helper::buildRR(ri);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
-			else 
+			else
 			{
 				// RSA HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE RSA AND SEND BACKWARDS
@@ -51,7 +51,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
 
 				rr.buffer = Helper::buildRR(_rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second)
-				, status, circuit_id);
+					, status, circuit_id);
 				std::cout << "[ECDHE] send to client rsa encripted msg\n";
 
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
