@@ -75,12 +75,10 @@ void RSA::pregenerateKeys(void)
 	} while (pcopy > 0 && qcopy > 0);
 	if (pcopy == 0)
 	{
-		// x0 is equals to totient, x1 is equals to private key
 		this->QINV = (uint2048_t)(euclideanMod(x1, this->Q));
 	}
 	if (qcopy == 0)
 	{
-		// x0 is equals to private key, x1 is equals to -totient
 		this->QINV = (uint2048_t)(euclideanMod(x0, this->Q));
 	}
 }
@@ -287,12 +285,12 @@ void RSA::selectPrivateKey()
 
 	if (E == 0)
 	{
-		// x0 is equals to totient, x1 is equals to private key
+		// x0 is equals to totient, x1 is equals number that used to get private key
 		this->D = (uint2048_t)(euclideanMod(x1, this->T));
 	}
 	if (T == 0)
 	{
-		// x0 is equals to private key, x1 is equals to -totient
+		// x0 is equals number that used to get private key, x1 is equals to -totient
 		this->D = (uint2048_t)(euclideanMod(x0, this->T));
 	}
 

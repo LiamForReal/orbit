@@ -236,9 +236,9 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	encryptedMessageVec.clear();
 	decryptedMessageVec.clear();
 
-	msg[ri.length] = '\0';
+	/*msg[ri.length] = '\0';*/
 
-	for (i = 0; i < ri.length; i++)
+	for (i = 0; i < ri.length / 256; i++)
 	{
 		ri.buffer.emplace_back(static_cast<unsigned char>(msg[i]));
 	}

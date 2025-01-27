@@ -6,7 +6,7 @@ RsaKeyExchangeResponse DeserializerResponses::deserializeRsaKeyExchangeResponse(
 
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
     
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -29,7 +29,7 @@ EcdheKeyExchangeResponse DeserializerResponses::deserializeEcdheKeyExchangeRespo
     
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
     
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -50,7 +50,7 @@ CircuitConfirmationResponse DeserializerResponses::deserializeCircuitConfirmatio
 
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -70,7 +70,7 @@ HttpGetResponse DeserializerResponses::deserializeHttpGetResponse(const RequestI
     HttpGetResponse response;
 
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);

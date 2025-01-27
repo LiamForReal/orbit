@@ -4,7 +4,7 @@ RsaKeyExchangeRequest DeserializerRequests::deserializeRsaKeyExchangeRequest(con
 {
     RsaKeyExchangeRequest request;
     // Convert the serialized JSON string from the buffer
-    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
+    std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
@@ -27,7 +27,7 @@ EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest
 	EcdheKeyExchangeRequest request;
 
     // Convert the serialized JSON string from the buffer
-	std::string jsonDataStr(ri.buffer.begin(), ri.buffer.begin() + ri.length);
+	std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
 
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
