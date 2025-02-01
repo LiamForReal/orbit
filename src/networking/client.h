@@ -17,6 +17,7 @@
 #include "../utils/Helper.h"
 #include "../utils/RSA.h"
 #include "../utils/ECDHE.h"
+#include "../utils/AES.h"
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
@@ -46,6 +47,8 @@ public:
 	void setPassedPathGetWait(const bool& passedPathGetWait);
 	void setRestartConversation(const bool& restartConversation);
 
+	void dataLayersEncription(std::vector<unsigned char>& data);
+	void dataLayersDecription(std::vector<unsigned char>& data);
 	void closeSocketWithFirstNode();
 	
 private:
@@ -65,7 +68,6 @@ private:
 
 	ECDHE _ecdhe; //self 
 
-	uint256_t _serverAes;
-	std::vector<uint256_t> _aesCircuitData;
-
+	AES _aes;
+	std::vector<AES> _aesCircuitData;
 };

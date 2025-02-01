@@ -3,8 +3,8 @@
 
 unsigned int NodeOpeningHandler::circuit_id = 1; //256 so take a space from there
 
-NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::map<unsigned int, SOCKET>& clients)
-    : dm(dockerManager), _controlList(controlList), _clients(clients)
+NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& controlList, std::map<unsigned int, SOCKET>& clients, AES& aes)
+    : dm(dockerManager), _controlList(controlList), _clients(clients), _aes(aes)
 {
     srand(time(NULL));
     NodeOpeningHandler::circuit_id = 1 + (rand() % 200);
@@ -21,13 +21,16 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
     std::vector<std::pair<std::string, std::string>> nodesInfo;
     std::vector<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
+    RequestInfo ri;
     this->rr.buffer.clear();
     unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
     try
     {
-        NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo);
+        ri = requestInfo;
+        ri.buffer = _aes.decrypt(ri.buffer);
+        NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(ri);
 
-        std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
+        std::cout << "client sent: " << ri.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
 
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);
@@ -46,6 +49,7 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         status = CIRCUIT_CONFIRMATION_ERROR;
     }
     std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
+    data = _aes.encrypt(data);
     rr.buffer = Helper::buildRR(data, status, data.size(), this->circuit_id);
     this->circuit_id++;
     return rr;

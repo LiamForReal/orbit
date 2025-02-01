@@ -22,6 +22,7 @@
 #include "../utils/RSA.h"
 #include "../utils/ECDHE.h"
 
+
 #define MAX_INT_OF_BYTE 256
 #define DEC 1
 #define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
@@ -55,5 +56,5 @@ class Server
                 //self, client's
         std::map<SOCKET, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>> _rsaInfo;
         std::map<SOCKET, ECDHE> _ecdheInfo;
-        std::map<SOCKET, uint256_t> _aesKeys;
+        AES _aes;
 };

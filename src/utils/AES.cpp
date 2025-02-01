@@ -12,44 +12,38 @@ AES& AES::operator=(const AES&)
     return *this;
 }
 
-void AES::generateRoundKeys(uint256_t key)
+void AES::generateRoundKeys(uint256_t& key)
 {
-    uint256_t keyCopy = this->_key;
     this->_key = key;
+    uint256_t keyCopy = this->_key;
+
     uint8_t roundKey = 1;
-    uint8_t index = 1;
+    uint8_t index = 1; 
 
-    //for (uint8_t i = 0; i < 8; i++)
-    //{
-    //    keyCopy += i;
-    //    keyCopy <<= 8;
-    //}
+    //this->_roundKeys[0][0][0] = 0x48; //not goot
+    //this->_roundKeys[0][1][0] = 0x65; 
+    //this->_roundKeys[0][2][0] = 0x6C; 
+    //this->_roundKeys[0][3][0] = 0x6C; 
+    //this->_roundKeys[0][0][1] = 0x6F; 
+    //this->_roundKeys[0][1][1] = 0x20; 
+    //this->_roundKeys[0][2][1] = 0x77; 
+    //this->_roundKeys[0][3][1] = 0x6F; 
+    //this->_roundKeys[0][0][2] = 0x72; 
+    //this->_roundKeys[0][1][2] = 0x6C; 
+    //this->_roundKeys[0][2][2] = 0x64; 
+    //this->_roundKeys[0][3][2] = 0x21; 
 
-    keyCopy = 0;
-    this->_roundKeys[0][0][0] = 0x48;
-    this->_roundKeys[0][1][0] = 0x65;
-    this->_roundKeys[0][2][0] = 0x6C;
-    this->_roundKeys[0][3][0] = 0x6C;
-    this->_roundKeys[0][0][1] = 0x6F;
-    this->_roundKeys[0][1][1] = 0x20;
-    this->_roundKeys[0][2][1] = 0x77;
-    this->_roundKeys[0][3][1] = 0x6F;
-    this->_roundKeys[0][0][2] = 0x72;
-    this->_roundKeys[0][1][2] = 0x6C;
-    this->_roundKeys[0][2][2] = 0x64;
-    this->_roundKeys[0][3][2] = 0x21;
+    std::cout << "The key copy value is " << keyCopy << std::endl;
 
-    //std::cout << "The key copy value is " << keyCopy << std::endl;
-
-    //for (uint8_t i = 0; i < AES_ROUND_KEYS_COLS; i++)
-    //{
-    //    for (uint8_t j = 0; j < AES_ROUND_KEYS_ROWS; j++)
-    //    {
-    //        // std::cout << std::hex << ((uint8_t)(keyCopy) & 0xFF) << std::endl;
-    //        this->_roundKeys[0][j][i] = (uint8_t)(keyCopy) & 0xFF;
-    //        keyCopy >>= 8;
-    //    }
-    //}
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_COLS; i++)
+    {
+        for (uint8_t j = 0; j < AES_ROUND_KEYS_ROWS; j++)
+        {
+            // std::cout << std::hex << ((uint8_t)(keyCopy) & 0xFF) << std::endl;
+            this->_roundKeys[0][j][i] = (uint8_t)(keyCopy) & 0xFF;
+            keyCopy >>= 8;
+        }
+    }
 
     std::cout << "<=== ROUND KEY START ===>\n";
     for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)

@@ -22,6 +22,7 @@ Server::Server()
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
 	//this->dm = DockerManager();
+	_aes = AES();
 	this->_circuitsToNotify = std::map<unsigned int, std::set<string>>();
 	_controlList = std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>();
 
@@ -183,19 +184,22 @@ void Server::clientHandler(const SOCKET client_socket)
 			//BUILD AES KEY START
 			_ecdheInfo[client_socket].setG(ekeRequest.calculationResult);
 			std::cout << "generate aes key!!!\n";
-			_aesKeys[client_socket] = _ecdheInfo[client_socket].createDefiKey();
-			std::cout << "shered sicret is: " << _aesKeys[client_socket] << "\n";
+			uint256_t sheredSicret = _ecdheInfo[client_socket].createDefiKey();
+			_aes.generateRoundKeys(sheredSicret);
+			std::cout << "shered sicret is: " << sheredSicret << "\n";
 		}
 		catch (std::runtime_error e)
 		{
 			std::cout << e.what() << std::endl;
 		}
 		//BUILD AES KEY END
-
+		//PREPER TOR REQUEST HANDLER START
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients)); // new Client circuit : INVALID_SOCKET 
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), _aes); // new Client circuit : INVALID_SOCKET 
 		mutex.unlock(); 
+		//PREPER TOR REQUEST HANDLER END
 
+		//SEND CIRCUIT INFO START
 		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
@@ -218,6 +222,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		{
 			throw std::runtime_error("failed to get nodes details");
 		}
+		//SEND CIRCUIT INFO END
 	}
 	catch (const std::runtime_error& e)
 	{
