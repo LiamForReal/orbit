@@ -20,21 +20,6 @@ void AES::generateRoundKeys(uint256_t& key)
     uint8_t roundKey = 1;
     uint8_t index = 1; 
 
-    //this->_roundKeys[0][0][0] = 0x48; //not goot
-    //this->_roundKeys[0][1][0] = 0x65; 
-    //this->_roundKeys[0][2][0] = 0x6C; 
-    //this->_roundKeys[0][3][0] = 0x6C; 
-    //this->_roundKeys[0][0][1] = 0x6F; 
-    //this->_roundKeys[0][1][1] = 0x20; 
-    //this->_roundKeys[0][2][1] = 0x77; 
-    //this->_roundKeys[0][3][1] = 0x6F; 
-    //this->_roundKeys[0][0][2] = 0x72; 
-    //this->_roundKeys[0][1][2] = 0x6C; 
-    //this->_roundKeys[0][2][2] = 0x64; 
-    //this->_roundKeys[0][3][2] = 0x21; 
-
-    std::cout << "The key copy value is " << keyCopy << std::endl;
-
     for (uint8_t i = 0; i < AES_ROUND_KEYS_COLS; i++)
     {
         for (uint8_t j = 0; j < AES_ROUND_KEYS_ROWS; j++)
@@ -45,16 +30,16 @@ void AES::generateRoundKeys(uint256_t& key)
         }
     }
 
-    std::cout << "<=== ROUND KEY START ===>\n";
-    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
-    {
-        for (uint8_t j = 0; j < AES_ROUND_KEYS_COLS; j++)
-        {
-            std::cout << std::hex << int(this->_roundKeys[0][i][j]) << "      ";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << "<=== ROUND KEY END ===>\n";
+    //std::cout << "<=== ROUND KEY START ===>\n";
+    //for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
+    //{
+    //    for (uint8_t j = 0; j < AES_ROUND_KEYS_COLS; j++)
+    //    {
+    //        std::cout << std::hex << int(this->_roundKeys[0][i][j]) << "      ";
+    //    }
+    //    std::cout << std::endl;
+    //}
+    //std::cout << "<=== ROUND KEY END ===>\n";
 
     uint8_t* roundKeyColCopy = new uint8_t[AES_ROUND_KEYS_ROWS];
 
@@ -99,7 +84,7 @@ void AES::generateRoundKeys(uint256_t& key)
 
     std::cout << "FINISHED KEY EXPANSION\n";
 
-    for (uint8_t key = 0; key <= AES_KEY_EXPANSION_ROUNDS; key++)
+   /* for (uint8_t key = 0; key <= AES_KEY_EXPANSION_ROUNDS; key++)
     {
         std::cout << "<=== ROUND KEY " << int(key) << " START ===>\n";
         for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
@@ -111,8 +96,7 @@ void AES::generateRoundKeys(uint256_t& key)
             std::cout << std::endl;
         }
         std::cout << "<=== ROUND  " << int(key) << " END ===>\n";
-    }
-
+    }*/
     delete[] roundKeyColCopy;
 }
 
@@ -180,7 +164,7 @@ void AES::addRoundKey(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS], const uint8_t&
 {
     uint8_t offset = (round != 0 && ((round + INC) % 2 == 0 || round == 1)) ? 4 : 0;
 
-    std::cout << "ADDING ROUND KEY " << std::dec << int(round) << " WITH OFFEST " << std::dec << int(offset) << std::endl;
+    //std::cout << "ADDING ROUND KEY " << std::dec << int(round) << " WITH OFFEST " << std::dec << int(offset) << std::endl;
 
     for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
     {
@@ -333,16 +317,16 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
             addRoundKey(chunkGrid, round);
         }
 
-        std::cout << "<=== CHUNK START ===>\n";
-        for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
-        {
-            for (uint8_t j = 0; j < AES_GRID_COLS; j++)
-            {
-                std::cout << std::hex << int(chunkGrid[i][j]) << "      ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << "<=== CHUNK END ===>\n";
+        //std::cout << "<=== CHUNK START ===>\n";
+        //for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
+        //{
+        //    for (uint8_t j = 0; j < AES_GRID_COLS; j++)
+        //    {
+        //        std::cout << std::hex << int(chunkGrid[i][j]) << "      ";
+        //    }
+        //    std::cout << std::endl;
+        //}
+        //std::cout << "<=== CHUNK END ===>\n";
 
         for (uint8_t i = 0; i < AES_GRID_COLS; i++)
         {
@@ -386,7 +370,7 @@ std::vector<uint8_t> AES::decrypt(std::vector<uint8_t> cipherTextVec)
             }
         }
 
-        std::cout << "<=== CHUNK START ===>\n";
+        /*std::cout << "<=== CHUNK START ===>\n";
         for (uint8_t i = 0; i < AES_GRID_ROWS; i++)
         {
             for (uint8_t j = 0; j < AES_GRID_COLS; j++)
@@ -395,7 +379,7 @@ std::vector<uint8_t> AES::decrypt(std::vector<uint8_t> cipherTextVec)
             }
             std::cout << std::endl;
         }
-        std::cout << "<=== CHUNK END ===>\n";
+        std::cout << "<=== CHUNK END ===>\n";*/
 
         for (uint8_t i = 0; i < AES_GRID_COLS; i++)
         {

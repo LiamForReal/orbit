@@ -337,6 +337,7 @@ void Client::startConversation(const bool& openNodes)
 		ekeRequest.m = ecdheInfo.second;
 		ekeRequest.calculationResult = _ecdhe.createDefiKey();
 		
+		std::cout << "public key " << nodePlaceIt->first << "\n";
 		data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second);
 		rr.buffer = Helper::buildRR(data, ECDHE_KEY_EXCHANGE_RC, data.size(), circuit_id);
 		std::cout << "ecdhe with first node msg is now sending\n";
