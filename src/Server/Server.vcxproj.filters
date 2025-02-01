@@ -69,6 +69,9 @@
     <ClInclude Include="..\utils\ECDHE.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\utils\AES.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\utils\DeserializerRequests.cpp">
@@ -108,6 +111,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\utils\ECDHE.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\utils\AES.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
