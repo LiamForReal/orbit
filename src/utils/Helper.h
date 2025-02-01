@@ -7,6 +7,12 @@
 #include "Requestes.hpp"
 #include "Responses.hpp"
 #include "RequestInfo.hpp"
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <sstream>
+#include <mutex>
+#include "AES.h"
 #include "RSA.h"
 
 #define INC 1
@@ -16,18 +22,23 @@
 class Helper
 {
 public:
-	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
 	static void sendVector(const SOCKET sc, const std::vector<unsigned char>& vec);
 
 	static unsigned int getStatusCodeFromSocket(const SOCKET sc); 
 	static unsigned int getCircuitIdFromSocket(const SOCKET sc); 
 	static unsigned int getLengthPartFromSocket(const SOCKET sc); 
-
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
+	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
+
 	static RequestInfo buildRI(SOCKET socket, unsigned int circuit_id);
 	static RequestInfo waitForResponse(SOCKET socket);
+
 	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa);
 	static RequestInfo waitForResponse_RSA(SOCKET socket, RSA& rsa);
+
+	static RequestInfo buildRI_AES(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, bool gotFromNext,AES& key);
+	static RequestInfo waitForResponse_AES(SOCKET socket, AES& key, bool isEncription);
+
 	static vector<unsigned char> buildRR(const RequestInfo ri);
 	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int length, unsigned int circuit_id = 0);
 	static vector<unsigned char> buildRR(unsigned int status, unsigned int circuit_id = 0);

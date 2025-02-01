@@ -136,6 +136,7 @@
     <ClInclude Include="..\networking\handlers\RsaKeyExchangeRequestHandler.h" />
     <ClInclude Include="..\networking\node.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
+    <ClInclude Include="..\utils\AES.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
     <ClInclude Include="..\utils\DeserializerResponses.h" />
     <ClInclude Include="..\utils\Helper.h" />
@@ -158,6 +159,7 @@
     <ClCompile Include="..\networking\handlers\RsaKeyExchangeRequestHandler.cpp" />
     <ClCompile Include="..\networking\node.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
+    <ClCompile Include="..\utils\AES.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />
     <ClCompile Include="..\utils\DeserializerResponses.cpp" />
     <ClCompile Include="..\utils\ECDHE.cpp" />

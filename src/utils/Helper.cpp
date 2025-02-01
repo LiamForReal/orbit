@@ -1,9 +1,5 @@
 #include "Helper.h"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <sstream>
-#include <mutex>
+
 
 using std::string;
 
@@ -252,6 +248,58 @@ RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
 	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
 	return Helper::buildRI_RSA(socket, circuitId, statusCode, std::ref(rsa));
+}
+
+RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, bool gotFromNext, AES& key)
+{
+	RequestInfo ri = RequestInfo();
+	ri.buffer = std::vector<unsigned char>();
+	std::string msg = "";
+	unsigned int msgLength = 0;
+	size_t i = 0;
+	int j = 0;
+
+	ri.circuit_id = circuit_id;
+	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
+
+	ri.id = statusCode;
+	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
+
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		return ri;
+
+	msgLength = Helper::getLengthPartFromSocket(socket);
+	ri.length = msgLength;
+	std::cout << "DEBUG: Length: " << msgLength << std::endl;
+
+	msg = Helper::getStringPartFromSocket(socket, msgLength);
+	msg[msgLength] = '\0';
+
+	for (i = 0; i < msgLength; i++)
+	{
+		ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
+	}
+
+	if (gotFromNext)
+	{
+		ri.buffer = key.encrypt(ri.buffer);
+	}
+	else
+	{
+		ri.buffer = key.decrypt(ri.buffer);
+	}
+	
+	std::cout << "DEBUG: The message is: " << msg << std::endl;
+
+	return ri;
+}
+
+RequestInfo Helper::waitForResponse_AES(SOCKET socket, AES& key, bool isEncription)
+{
+	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
+	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
+	return Helper::buildRI_AES(socket, circuitId, statusCode, isEncription, key);
 }
 
 vector<unsigned char> Helper::buildRR(const RequestInfo ri)

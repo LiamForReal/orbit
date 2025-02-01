@@ -1,7 +1,5 @@
 #include "node.h"
 // add request handler that muches 
-#define STATUS_INDEX 1
-#define CIRCUIT_ID_INDEX 0
 #define ENVE_MAX_LIMIT  32,766
 #define AMOUNT_OF_BYTES 1250
 // using static const instead of macros 
@@ -255,20 +253,12 @@ void Node::clientHandler(const SOCKET client_socket)
 		RequestInfo ri;
 		LinkRequest lr;
 		RequestResult rr;
-		bool isRSA = false,first_time = true;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaKeys), client_socket, std::ref(aesKeys));
+		bool isRSA = false,first_time = true, isAES = false;
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), client_socket, std::ref(_aesKeys));
 		while (true)
 		{
-			//wait for msg from main
-			if (!isRSA)
-				ri = Helper::waitForResponse(client_socket);
-
-			rr = nodeRequestHandler.handleMsg(ri, std::ref(isRSA));
-			if (unsigned int(rr.buffer[STATUS_INDEX]) == RSA_KEY_EXCHANGE_STATUS && first_time)
-			{
-				isRSA = true;
-				first_time = false;
-			}
+			ri = nodeRequestHandler.getMsg();
+			rr = nodeRequestHandler.handleMsg(ri);
 		}
 	}
 	catch (const std::runtime_error& e)

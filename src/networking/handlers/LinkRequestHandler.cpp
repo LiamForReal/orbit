@@ -1,6 +1,7 @@
 #include "LinkRequestHandler.h"
 
-LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : _circuitData(circuitData), _socket(s)
+LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s, std::map<unsigned int, AES>& aesKeys) 
+	: _circuitData(circuitData), _socket(s), _aesKeys(aesKeys)
 {
 	this->rr = RequestResult();
 }
@@ -43,14 +44,11 @@ bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 
 RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
-	LinkRequest lr;
 	RequestInfo ri;
 	unsigned int status = LINK_STATUS;
 	rr.buffer.clear();
 	try
 	{
-		lr = DeserializerRequests::deserializeLinkRequest(requestInfo);
-
 		unsigned int circuit_id = requestInfo.circuit_id;
 
 		if (_circuitData[circuit_id].first == _socket)
@@ -61,18 +59,21 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 				rr.buffer = Helper::buildRR(requestInfo);
 				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
 				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
+				//becouse ri contains only status and circuit id there is no need for encription
 				rr.buffer = Helper::buildRR(ri);
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 			else
 			{
+				LinkRequest lr = DeserializerRequests::deserializeLinkRequest(requestInfo);
 				std::cout << "[LINK] seconed is new and now generating\n";
 				_circuitData[requestInfo.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
 				if (_circuitData[requestInfo.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("[LINK] socket creation failed");
 				std::cout << "[LINK] next created\n";
 				rr.buffer.clear();
+				//becouse ri contains only status and circuit id there is no need for encription
 				rr.buffer = Helper::buildRR(status ,circuit_id);
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
