@@ -2,7 +2,7 @@
 using std::vector;
 
 std::mutex mtx;
-
+#define MAX_DATA_LENGTH 70000
 Client::Client()
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
@@ -40,9 +40,21 @@ void Client::connectToServer(std::string serverIP, int port)
 	sa.sin_family = AF_INET;   // must be AF_INET
 	sa.sin_addr.s_addr = inet_addr(serverIP.c_str());    // the IP of the server
 
+	int bufferSize = MAX_DATA_LENGTH;
+
+	if (setsockopt(_clientSocketWithDS, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set receive buffer size: " << WSAGetLastError() << std::endl;
+	}
+
+	if (setsockopt(_clientSocketWithDS, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set send buffer size: " << WSAGetLastError() << std::endl;
+	}
+
 	// the process will not continue until the server accepts the client
 	if (connect(_clientSocketWithDS, (struct sockaddr*)&sa, sizeof(sa)) == INVALID_SOCKET)
 		throw std::runtime_error("Cant connect to server");
+
+
 	//CREATE SELF RSA PAIR OF KEYS START
 	_rsa.pregenerateKeys(); 
 	std::cout << "Client finished pregenerating RSA keys...\n";
@@ -275,11 +287,15 @@ void Client::startConversation(const bool& openNodes)
 	if (_clientSocketWithFirstNode == INVALID_SOCKET)
 		throw std::runtime_error("Client run error socket");
 
-	int optval = 1;
-	if (setsockopt(_clientSocketWithFirstNode, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(optval)) != 0) {
-		perror("Failed to set socket option SO_REUSEADDR");
+	int bufferSize = MAX_DATA_LENGTH;
+
+	if (setsockopt(_clientSocketWithDS, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set receive buffer size: " << WSAGetLastError() << std::endl;
 	}
 
+	if (setsockopt(_clientSocketWithDS, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set send buffer size: " << WSAGetLastError() << std::endl;
+	}
 	std::cout << "Connecting to " << ccr.nodesPath.begin()->first << " " << ccr.nodesPath.begin()->second << std::endl;
 
 	struct sockaddr_in sa = { 0 };

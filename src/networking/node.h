@@ -39,7 +39,7 @@ private:
     SOCKET createSocketWithServer();
     void bindAndListen(const std::string& ip, uint16_t port);
     void acceptClient();
-    void clientHandler(const SOCKET client_socket);
+    void clientHandler(SOCKET client_socket);
     void controlReceiver(SOCKET& serverSock);
     void controlSender(SOCKET& serverSock);
 

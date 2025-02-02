@@ -1,4 +1,5 @@
 #include "LinkRequestHandler.h"
+#define MAX_DATA_LENGTH 70000
 
 LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s, std::map<unsigned int, AES>& aesKeys) 
 	: _circuitData(circuitData), _socket(s), _aesKeys(aesKeys)
@@ -15,6 +16,17 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 	if (sock == INVALID_SOCKET) {
 		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
 		return INVALID_SOCKET;
+	}
+
+	// Set buffer size before connecting
+	int bufferSize = MAX_DATA_LENGTH;
+
+	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set receive buffer size: " << WSAGetLastError() << std::endl;
+	}
+
+	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set send buffer size: " << WSAGetLastError() << std::endl;
 	}
 
 	// Set up the sockaddr_in structure
@@ -36,6 +48,7 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 
 	return sock;
 }
+
 
 bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 {

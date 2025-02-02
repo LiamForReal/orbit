@@ -2,6 +2,7 @@
 #include "handlers/TorRequestHandler.h"
 #define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
 #define AMOUNT_OF_BYTES 1250
+#define MAX_DATA_LENGTH 70000
 // using static const instead of macros 
 static const unsigned short PORT = 9787;
 static const unsigned short CONTROL_PORT = 9788;
@@ -99,6 +100,16 @@ void Server::acceptClient()
 		throw std::runtime_error("invalid socket accepted");
 
 	std::cout << "Client accepted !\n";
+	// Set buffer size before connecting
+	int bufferSize = MAX_DATA_LENGTH;
+
+	if (setsockopt(client_socket, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set receive buffer size: " << WSAGetLastError() << std::endl;
+	}
+
+	if (setsockopt(client_socket, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
+		std::cerr << "Failed to set send buffer size: " << WSAGetLastError() << std::endl;
+	}
 	// create new thread for client	and detach from it
 	std::thread tr(&Server::clientHandler, this, client_socket);
 	tr.detach();
