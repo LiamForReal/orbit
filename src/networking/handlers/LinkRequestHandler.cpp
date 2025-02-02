@@ -17,7 +17,7 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
 		return INVALID_SOCKET;
 	}
-
+	 
 	// Set buffer size before connecting
 	int bufferSize = MAX_DATA_LENGTH;
 
