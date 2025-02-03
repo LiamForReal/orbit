@@ -330,7 +330,6 @@ void Client::startConversation(const bool& openNodes)
 
 	if (Status::RSA_KEY_EXCHANGE_STATUS == ri.id)
 	{
-		std::cout << "Got FIRST NODE public_key: " << rkeResponse.public_key << std::endl;
 		_rsaCircuitData.emplace_back(rkeResponse.public_key, rkeResponse.product);
 		std::cout << "Saved FIRST NODE pubkey\n";
 	}
@@ -353,7 +352,7 @@ void Client::startConversation(const bool& openNodes)
 		ekeRequest.m = ecdheInfo.second;
 		ekeRequest.calculationResult = _ecdhe.createDefiKey();
 		
-		std::cout << "public key " << nodePlaceIt->first << "\n";
+		std::cout << "public key node1: " << nodePlaceIt->first << "\n";
 		data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second);
 		rr.buffer = Helper::buildRR(data, ECDHE_KEY_EXCHANGE_RC, data.size(), circuit_id);
 		std::cout << "ecdhe with first node msg is now sending\n";

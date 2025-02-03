@@ -292,8 +292,8 @@ int main()
 		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
 		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
 
-		std::thread aliveMsg(&Node::serveControl, node);
-		aliveMsg.detach();
+		//std::thread aliveMsg(&Node::serveControl, node);
+		//aliveMsg.detach(); - control 
 		node.serveProxy(ip_env, port);
 	}
 	catch (const std::runtime_error& e)

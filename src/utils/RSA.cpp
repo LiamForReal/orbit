@@ -30,7 +30,7 @@ void RSA::pregenerateKeys(void)
 	std::cout << "N and T created sucessfully!\n";
 	//std::cout << "T (totient) = " << this->T << std::endl;
 	selectPublicKey();
-	//std::cout << "E (public key) = " << this->E << std::endl;
+	std::cout << "E (public key) = " << this->E << std::endl;
 	selectPrivateKey();
 	//std::cout << "D (private key) = " << this->D << std::endl;
 	std::cout << "done making public and private keys!!!\n";

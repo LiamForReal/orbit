@@ -245,6 +245,7 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 
 RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
 {
+	std::cout << "<======== public key decription: " << rsa.getPublicKey() << " ==========>\n";
 	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
 	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
 	return Helper::buildRI_RSA(socket, circuitId, statusCode, std::ref(rsa));
