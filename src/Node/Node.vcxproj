@@ -139,6 +139,7 @@
     <ClInclude Include="..\utils\AES.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
     <ClInclude Include="..\utils\DeserializerResponses.h" />
+    <ClInclude Include="..\utils\ECDHE.h" />
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
     <ClInclude Include="..\utils\prime_numbers_manager.h" />

@@ -18,6 +18,7 @@ const uint256_t ECDHE::getTmpKey()
 {
 	return _tmpKey;
 }
+
 std::pair<uint256_t, uint256_t> ECDHE::createInfo()
 {
 	std::promise<uint256_t> promiseG;
@@ -33,9 +34,27 @@ std::pair<uint256_t, uint256_t> ECDHE::createInfo()
 
 	generateGThread.join();
 	generatePThread.join();
-
+		
 	_g = futurePromiseG.get();
 	_p = futurePromiseP.get();
+	
+	while (true)
+	{
+		try
+		{
+			if (!createDefiKey())
+			{
+				throw "calc result is 0!!! now fixing p (m)\n";
+			}
+			else break;
+		}
+		catch (std::runtime_error& e)
+		{
+			std::cout << e.what() << std::endl;
+			createElement(std::move(promiseP));
+			_p = futurePromiseP.get();
+		}
+	}
 	
 	return std::pair<uint256_t, uint256_t>(_g, _p);
 }

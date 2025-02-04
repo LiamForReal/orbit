@@ -142,7 +142,6 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 	plainTextVec.reserve(numBlocks);
 	uint2048_t encryptedBlock = 0;
 	uint2048_t decryptedBlock = 0;
-	std::cout << "decript text: ";
 	for (size_t i = 0; i < numBlocks; ++i)
 	{
 		encryptedBlock = 0;
@@ -165,7 +164,7 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 		std::cout << unsigned char(decryptedBlock);
 		plainTextVec.emplace_back(static_cast<unsigned char>(decryptedBlock));
 	}
-
+	std::cout << "\n";
 	return plainTextVec;
 }
 
@@ -247,30 +246,55 @@ void RSA::selectPrivateKey()
 {
 	cpp_int E = this->E;
 	cpp_int T = this->T;
-	cpp_int x0 = 1, y0 = 0;
-	cpp_int x1 = 0, y1 = 1;
-	cpp_int dividend, remainder;
 
-	while (E != 0 && T != 0)
+	cpp_int x0 = 1;
+	cpp_int y0 = 0;
+
+	cpp_int x1 = 0;
+	cpp_int y1 = 1;
+
+	cpp_int dividend = 0;
+	cpp_int remainder = 0;
+
+	do
 	{
 		if (T > E)
 		{
 			dividend = T / E;
 			remainder = T % E;
-			x1 -= dividend * x0;
-			y1 -= dividend * y0;
+
+			x1 = x1 - dividend * x0;
+			y1 = y1 - dividend * y0;
+
 			T = remainder;
 		}
 		else
 		{
 			dividend = E / T;
 			remainder = E % T;
-			x0 -= dividend * x1;
-			y0 -= dividend * y1;
+
+			x0 = x0 - dividend * x1;
+			y0 = y0 - dividend * y1;
+
 			E = remainder;
 		}
+	} while (E > 0 && T > 0);
+
+	if (E == 0)
+	{
+		// x0 is equals to totient, x1 is equals to private key
+		this->D = (uint2048_t)(euclideanMod(x1, this->T));
 	}
-	this->D = mod_inverse(this->E, this->T);
+	if (T == 0)
+	{
+		// x0 is equals to private key, x1 is equals to -totient
+		this->D = (uint2048_t)(euclideanMod(x0, this->T));
+	}
+	std::cout << "private key: " << this->D << "\n";
+	// std::cout << this->D << std::endl << std::endl;
+	// cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
+	// std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;
+
 }
 
 uint2048_t RSA::mod_inverse(uint2048_t a, uint2048_t m)

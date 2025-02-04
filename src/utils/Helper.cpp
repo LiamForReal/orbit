@@ -221,6 +221,7 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	free(encryptedMessage);
 	encryptedMessage = NULL;
 
+	std::cout << "DEBUG: The message is: ";
 	std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(std::ref(encryptedMessageVec));
 
 	for (uint8_t byte : decryptedMessageVec)
@@ -239,7 +240,6 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 		ri.buffer.emplace_back(static_cast<unsigned char>(msg[i]));
 	}
 
-	std::cout << "DEBUG: The message is: " << msg << std::endl;
 	return ri;
 }
 
