@@ -142,6 +142,7 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 	plainTextVec.reserve(numBlocks);
 	uint2048_t encryptedBlock = 0;
 	uint2048_t decryptedBlock = 0;
+	std::cout << "decript text: ";
 	for (size_t i = 0; i < numBlocks; ++i)
 	{
 		encryptedBlock = 0;
@@ -154,12 +155,14 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 
 		// Decrypt the block using CRT
 		decryptedBlock = CRTDecrypt(encryptedBlock);
-
+		
 		// Append decrypted byte to output
 		if (decryptedBlock > 255)
 		{
+			
 			throw std::runtime_error("Decrypted value exceeds valid byte range.");
 		}
+		std::cout << unsigned char(decryptedBlock);
 		plainTextVec.emplace_back(static_cast<unsigned char>(decryptedBlock));
 	}
 
@@ -178,14 +181,11 @@ uint2048_t RSA::getProduct() const
 
 uint2048_t RSA::CRTDecrypt(uint2048_t& encryptedBlock)
 {
-	// Decrypt modulo P
 	uint2048_t m1 = mod_exp<uint2048_t>(encryptedBlock, this->DP, this->P);
-
-	// Decrypt modulo Q
 	uint2048_t m2 = mod_exp<uint2048_t>(encryptedBlock, this->DQ, this->Q);
 
-	// Combine results using CRT
-	uint2048_t h = (this->QINV * (m1 - m2 + this->P)) % this->P;
+	// Ensure (m1 - m2) is always positive by adding P before taking modulo P
+	uint2048_t h = (this->QINV * ((m1 + P - m2) % P)) % P;
 	uint2048_t decryptedBlock = m2 + h * this->Q;
 
 	return decryptedBlock;
@@ -198,8 +198,7 @@ cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod)
 	{
 		result += mod;
 	}
-	cpp_int finalResult = result % mod;
-	return finalResult;
+	return result;
 }
 
 void RSA::generateP(std::promise<uint1024_t>&& promiseP)
@@ -236,10 +235,9 @@ void RSA::selectPublicKey()
 	while (true)
 	{
 		E = this->getRandomPrimeNumber<uint2048_t>(lb, ub);
-
-		if (E < T && E % T != 0)
+		if (E < T && boost::math::gcd(E, T) == 1) // Ensure E is coprime to T
 		{
-			std::cout << "finished to generate pubkey\n";
+			std::cout << "Finished generating public key\n";
 			return;
 		}
 	}
@@ -249,53 +247,54 @@ void RSA::selectPrivateKey()
 {
 	cpp_int E = this->E;
 	cpp_int T = this->T;
+	cpp_int x0 = 1, y0 = 0;
+	cpp_int x1 = 0, y1 = 1;
+	cpp_int dividend, remainder;
 
-	cpp_int x0 = 1;
-	cpp_int y0 = 0;
-
-	cpp_int x1 = 0;
-	cpp_int y1 = 1;
-
-	cpp_int dividend = 0;
-	cpp_int remainder = 0;
-
-	do
+	while (E != 0 && T != 0)
 	{
 		if (T > E)
 		{
 			dividend = T / E;
 			remainder = T % E;
-
-			x1 = x1 - dividend * x0;
-			y1 = y1 - dividend * y0;
-
+			x1 -= dividend * x0;
+			y1 -= dividend * y0;
 			T = remainder;
 		}
 		else
 		{
 			dividend = E / T;
 			remainder = E % T;
-
-			x0 = x0 - dividend * x1;
-			y0 = y0 - dividend * y1;
-
+			x0 -= dividend * x1;
+			y0 -= dividend * y1;
 			E = remainder;
 		}
-	} while (E > 0 && T > 0);
-
-	if (E == 0)
-	{
-		// x0 is equals to totient, x1 is equals number that used to get private key
-		this->D = (uint2048_t)(euclideanMod(x1, this->T));
 	}
-	if (T == 0)
-	{
-		// x0 is equals number that used to get private key, x1 is equals to -totient
-		this->D = (uint2048_t)(euclideanMod(x0, this->T));
+	this->D = mod_inverse(this->E, this->T);
+}
+
+uint2048_t RSA::mod_inverse(uint2048_t a, uint2048_t m)
+{
+	uint2048_t m0 = m, t, q;
+	uint2048_t x0 = 0, x1 = 1;
+
+	if (m == 1)
+		return 0;
+
+	while (a > 1) {
+		q = a / m;
+		t = m;
+
+		m = a % m;
+		a = t;
+		t = x0;
+
+		x0 = x1 - q * x0;
+		x1 = t;
 	}
 
-	// std::cout << this->D << std::endl << std::endl;
-	// cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
-	// std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;
+	if (x1 < 0)
+		x1 += m0;
 
+	return x1;
 }

@@ -40,7 +40,7 @@ class RSA
         void selectPublicKey();
         void selectPrivateKey();
         uint2048_t CRTDecrypt(uint2048_t& encryptedBlock);
-
+        uint2048_t mod_inverse(uint2048_t a, uint2048_t m);
 
         uint2048_t P;
         uint2048_t Q;
