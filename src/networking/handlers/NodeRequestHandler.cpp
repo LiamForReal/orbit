@@ -25,12 +25,13 @@ NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, 
 
 RequestInfo NodeRequestHandler::getMsg()
 {
-	if (_isRSA)
+	if (_isRSA && _isFirstTime)
 	{
 		//circuit id from previus request
 		std::cout << "[NODE REQUEST HANDLER] circuit id: " << ri.circuit_id << "\n";
 		ri = Helper::waitForResponse_RSA(_socket, this->_rsaKeys[ri.circuit_id].first);
 		_isRSA = false;
+		_isFirstTime = false;
 	}
 	else if (_isAES)
 	{
@@ -63,10 +64,7 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo)
 	{
 		rr = rkerh->handleRequest(requestInfo);
 		if (unsigned int(rr.buffer[STATUS_INDEX]) == RSA_KEY_EXCHANGE_STATUS && _isFirstTime)
-		{
 			_isRSA = true;
-			_isFirstTime = false;
-		}
 	}
 	else if (ekerh->isRequestRelevant(requestInfo))
 	{

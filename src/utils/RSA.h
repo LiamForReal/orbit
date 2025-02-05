@@ -15,7 +15,6 @@ class RSA
         RSA();
 
         void pregenerateKeys(void);
-
         static vector<unsigned char> Encrypt(vector<unsigned char> plainTextVec, const uint2048_t& pubkey, const uint2048_t& product);
         vector<unsigned char> Encrypt(vector<unsigned char>& plainTextVec);
         vector<unsigned char> Decrypt(vector<unsigned char>& cipherTextVec);

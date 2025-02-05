@@ -31,7 +31,6 @@ RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
         NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(ri);
 
         std::cout << "client sent: " << ri.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
-
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);
         if (nodesInfo.empty())
