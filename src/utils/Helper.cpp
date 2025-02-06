@@ -207,28 +207,23 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 
 	ri.length = Helper::getLengthPartFromSocket(socket);
 	std::cout << "DEBUG: Length: " << ri.length << std::endl;
-	std::cout << "\n1\n";
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
 	std::vector<uint8_t> encryptedMessageVec;
-	std::cout << "2\n";
 	encryptedMessageVec.reserve(ri.length);
-	std::cout << "3\n";
 	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
-	std::cout << "4\n";
 	for (unsigned int i = 0; i < ri.length; i++)
 	{
 		encryptedMessageVec.emplace_back(encryptedMessage[i]);
 	}
-	std::cout << "5\n";
+
 	free(encryptedMessage);
 	encryptedMessage = NULL;
-	std::cout << "6\n";
+
 	std::cout << "DEBUG: The message is: ";
-	std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(std::ref(encryptedMessageVec));
+	std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessageVec);
 
 	for (uint8_t byte : decryptedMessageVec)
 	{
-		std::cout << static_cast<int>(byte) << " ";
 		msg += byte;
 	}
 

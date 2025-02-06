@@ -142,34 +142,56 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 
 	size_t numBlocks = cipherTextVec.size() / 256;
 	vector<unsigned char> plainTextVec;
-	plainTextVec.reserve(numBlocks);
-	uint2048_t encryptedBlock = 0;
-	uint2048_t decryptedBlock = 0;
+
 	for (size_t i = 0; i < numBlocks; ++i)
 	{
-		encryptedBlock = 0;
+		uint2048_t encryptedBlock = 0;
 
-		// Reassemble the 256-byte block into a uint2048_t value
+		// Reconstruct the 256-byte block into a uint2048_t value
 		for (short j = 255; j >= 0; --j)
 		{
 			encryptedBlock = (encryptedBlock << 8) | cipherTextVec[(i * 256) + j];
 		}
 
 		// Decrypt the block using CRT
-		decryptedBlock = CRTDecrypt(encryptedBlock);
-		
-		// Append decrypted byte to output
-		if (decryptedBlock > 255)
+		uint2048_t decryptedBlock;
+		try
 		{
-			
-			throw std::runtime_error("Decrypted value exceeds valid byte range.");
+			decryptedBlock = CRTDecrypt(encryptedBlock);
 		}
-		std::cout << unsigned char(decryptedBlock);
-		plainTextVec.emplace_back(static_cast<unsigned char>(decryptedBlock));
+		catch (const std::exception& e)
+		{
+			throw std::runtime_error("Error during decryption: " + std::string(e.what()));
+		}
+
+		// Now handle the decrypted block correctly:
+		// Since it's a large number, we extract each byte.
+		try
+		{
+			while (decryptedBlock > 0)
+			{
+				unsigned char decryptedByte = static_cast<unsigned char>(decryptedBlock & 0xFF);
+
+				// Check if decryptedByte is a valid byte (0–255)
+				if (decryptedByte > 255)
+				{
+					throw std::out_of_range("Decrypted byte is out of valid byte range (0-255).");
+				}
+				std::cout << unsigned char(decryptedByte);
+				plainTextVec.push_back(decryptedByte);
+				decryptedBlock >>= 8;  // Right shift the decrypted block to get the next byte
+			}
+		}
+		catch (const std::out_of_range& e)
+		{
+			throw std::runtime_error("Decrypted value exceeds valid byte range: " + std::string(e.what()));
+		}
 	}
-	std::cout << "\n";
+	std::cout << std::endl;
 	return plainTextVec;
 }
+
+
 
 uint2048_t RSA::getPublicKey() const
 {
