@@ -164,30 +164,41 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 			throw std::runtime_error("Error during decryption: " + std::string(e.what()));
 		}
 
-		// Now handle the decrypted block correctly:
-		// Since it's a large number, we extract each byte.
-		try
-		{
-			while (decryptedBlock > 0)
-			{
-				unsigned char decryptedByte = static_cast<unsigned char>(decryptedBlock & 0xFF);
+		// DEBUG: Print raw decrypted value
+		//std::cout << "DEBUG: Decrypted Block " << i << " = " << decryptedBlock << std::endl;
 
-				// Check if decryptedByte is a valid byte (0–255)
-				if (decryptedByte > 255)
-				{
-					throw std::out_of_range("Decrypted byte is out of valid byte range (0-255).");
-				}
-				std::cout << unsigned char(decryptedByte);
-				plainTextVec.push_back(decryptedByte);
-				decryptedBlock >>= 8;  // Right shift the decrypted block to get the next byte
-			}
-		}
-		catch (const std::out_of_range& e)
+		// Extract the bytes correctly
+		vector<unsigned char> tempBuffer;
+		while (decryptedBlock > 0)
 		{
-			throw std::runtime_error("Decrypted value exceeds valid byte range: " + std::string(e.what()));
+			unsigned char decryptedByte = static_cast<unsigned char>(decryptedBlock & 0xFF);
+			tempBuffer.push_back(decryptedByte);
+			decryptedBlock >>= 8;
 		}
+
+		// Reverse because we extracted in little-endian order
+		std::reverse(tempBuffer.begin(), tempBuffer.end());
+
+		// DEBUG: Print raw bytes
+		//std::cout << "DEBUG: Decrypted Bytes Block " << i << " = ";
+		/*for (unsigned char byte : tempBuffer)
+		{
+			std::cout << std::hex << static_cast<int>(byte) << " ";
+		}
+		std::cout << std::endl;*/
+
+		// Append to the final plaintext
+		plainTextVec.insert(plainTextVec.end(), tempBuffer.begin(), tempBuffer.end());
+	}
+
+	// DEBUG: Print final decrypted message
+	std::cout << "DEBUG: Full Decrypted Message: ";
+	for (unsigned char byte : plainTextVec)
+	{
+		std::cout << byte;
 	}
 	std::cout << std::endl;
+
 	return plainTextVec;
 }
 

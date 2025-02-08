@@ -220,15 +220,23 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	encryptedMessage = NULL;
 
 	std::cout << "DEBUG: The message is: ";
-	std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessageVec);
-
-	for (uint8_t byte : decryptedMessageVec)
+	try
 	{
-		msg += byte;
+		std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessageVec);
+		for (uint8_t byte : decryptedMessageVec)
+		{
+			msg += byte;
+		}
+		std::cout << std::endl;
+		encryptedMessageVec.clear();
+		decryptedMessageVec.clear();
+	}
+	catch (std::exception e)
+	{
+		std::cout << e.what() << std::endl;
 	}
 
-	encryptedMessageVec.clear();
-	decryptedMessageVec.clear();
+
 
 	/*msg[ri.length] = '\0';*/
 

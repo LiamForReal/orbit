@@ -49,15 +49,15 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				// SAVE RSA AND SEND BACKWARDS
 				std::cout << "[RSA] Got from prev, there is no next, saving and sending backwards\n";
 				// TODO: HERE CREATE THE RSA OF THE NODE
-				RSA rsa;
-				rsa.pregenerateKeys();
+				RSA* rsa = new RSA();
+				rsa->pregenerateKeys();
 				std::cout << "[RSA] created for circuit " << circuit_id << std::endl;
 				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(
-					rsa, std::pair<uint2048_t, uint2048_t>(
+					*rsa, std::pair<uint2048_t, uint2048_t>(
 						rkeRequest.public_key, rkeRequest.product
 					));
-				rkeResponse.public_key = rsa.getPublicKey(); //309091
-				rkeResponse.product = rsa.getProduct();
+				rkeResponse.public_key = rsa->getPublicKey(); //309091
+				rkeResponse.product = rsa->getProduct();
 				std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
 				if (_aesKeys.find(circuit_id) != _aesKeys.end())
 					data = _aesKeys[circuit_id].encrypt(data);

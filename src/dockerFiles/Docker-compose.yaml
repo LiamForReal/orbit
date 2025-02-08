@@ -10,148 +10,148 @@ services:
     - entrypoint.bat
     container_name: node1
     environment:
-      NODE_IP: 192.168.2.141
-      NODE_PORT: 9097
+      NODE_IP: 192.168.2.109
+      NODE_PORT: 9057
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.141
+        ipv4_address: 192.168.2.109
     platform: windows/amd64
     ports:
-    - 9097:9050
-    - 9075:9051
+    - 9057:9050
+    - 9086:9051
   node10:
     command:
     - entrypoint.bat
     container_name: node10
     environment:
-      NODE_IP: 192.168.2.174
-      NODE_PORT: 9052
+      NODE_IP: 192.168.2.206
+      NODE_PORT: 9077
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.174
+        ipv4_address: 192.168.2.206
     platform: windows/amd64
     ports:
-    - 9052:9050
-    - 9072:9051
+    - 9077:9050
+    - 9071:9051
   node2:
     command:
     - entrypoint.bat
     container_name: node2
     environment:
-      NODE_IP: 192.168.2.43
-      NODE_PORT: 9086
+      NODE_IP: 192.168.2.238
+      NODE_PORT: 9095
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.43
+        ipv4_address: 192.168.2.238
     platform: windows/amd64
     ports:
-    - 9086:9050
-    - 9076:9051
+    - 9095:9050
+    - 9093:9051
   node3:
     command:
     - entrypoint.bat
     container_name: node3
     environment:
-      NODE_IP: 192.168.2.89
-      NODE_PORT: 9087
+      NODE_IP: 192.168.2.192
+      NODE_PORT: 9061
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.89
+        ipv4_address: 192.168.2.192
     platform: windows/amd64
     ports:
-    - 9087:9050
-    - 9089:9051
+    - 9061:9050
+    - 9097:9051
   node4:
     command:
     - entrypoint.bat
     container_name: node4
     environment:
-      NODE_IP: 192.168.2.220
-      NODE_PORT: 9079
+      NODE_IP: 192.168.2.253
+      NODE_PORT: 9052
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.220
+        ipv4_address: 192.168.2.253
     platform: windows/amd64
     ports:
-    - 9079:9050
-    - 9067:9051
+    - 9052:9050
+    - 9085:9051
   node5:
     command:
     - entrypoint.bat
     container_name: node5
     environment:
-      NODE_IP: 192.168.2.93
-      NODE_PORT: 9084
+      NODE_IP: 192.168.2.56
+      NODE_PORT: 9088
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.93
+        ipv4_address: 192.168.2.56
     platform: windows/amd64
     ports:
-    - 9084:9050
-    - 9081:9051
+    - 9088:9050
+    - 9100:9051
   node6:
     command:
     - entrypoint.bat
     container_name: node6
     environment:
-      NODE_IP: 192.168.2.178
-      NODE_PORT: 9099
+      NODE_IP: 192.168.2.132
+      NODE_PORT: 9060
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.178
+        ipv4_address: 192.168.2.132
     platform: windows/amd64
     ports:
-    - 9099:9050
-    - 9054:9051
+    - 9060:9050
+    - 9064:9051
   node7:
     command:
     - entrypoint.bat
     container_name: node7
     environment:
-      NODE_IP: 192.168.2.209
-      NODE_PORT: 9056
+      NODE_IP: 192.168.2.64
+      NODE_PORT: 9063
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.209
+        ipv4_address: 192.168.2.64
     platform: windows/amd64
     ports:
-    - 9056:9050
-    - 9068:9051
+    - 9063:9050
+    - 9092:9051
   node8:
     command:
     - entrypoint.bat
     container_name: node8
     environment:
-      NODE_IP: 192.168.2.242
-      NODE_PORT: 9058
+      NODE_IP: 192.168.2.157
+      NODE_PORT: 9067
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.242
+        ipv4_address: 192.168.2.157
     platform: windows/amd64
     ports:
-    - 9058:9050
-    - 9062:9051
+    - 9067:9050
+    - 9089:9051
   node9:
     command:
     - entrypoint.bat
     container_name: node9
     environment:
-      NODE_IP: 192.168.2.199
-      NODE_PORT: 9094
+      NODE_IP: 192.168.2.57
+      NODE_PORT: 9075
     image: gavrielnotbenigoren/node:latest
     networks:
       TOR_NETWORK:
-        ipv4_address: 192.168.2.199
+        ipv4_address: 192.168.2.57
     platform: windows/amd64
     ports:
-    - 9094:9050
-    - 9066:9051
+    - 9075:9050
+    - 9074:9051

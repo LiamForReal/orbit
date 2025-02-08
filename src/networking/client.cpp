@@ -132,6 +132,7 @@ void Client::nodeOpening()
 	NodeOpenRequest nor;
 	RequestResult rr;
 	std::vector<unsigned char> data;
+	std::cout << "node openning begins:\n";
 	do
 	{
 		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) + "): ";
@@ -142,7 +143,7 @@ void Client::nodeOpening()
 	data = SerializerRequests::serializeRequest(nor);
 	data = _aes.encrypt(data);
 	rr.buffer = Helper::buildRR(data, NODE_OPEN_RC, data.size());
-	Helper::sendVector(_clientSocketWithDS, rr.buffer);
+	Helper::sendVector(_clientSocketWithDS, rr.buffer);//PROBLEM HERE SOMTIMES!!!
 	std::cout << "Message send to server..." << std::endl;
 }
 
