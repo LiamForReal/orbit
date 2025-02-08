@@ -30,7 +30,7 @@ public:
 	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
 
-	static RequestInfo buildRI(SOCKET socket, unsigned int circuit_id);
+	static RequestInfo buildRI(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode);
 	static RequestInfo waitForResponse(SOCKET socket);
 
 	static RequestInfo buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa);

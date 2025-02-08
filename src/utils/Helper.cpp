@@ -10,14 +10,15 @@ string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
 	return getPartFromSocket(sc, bytesNum * sizeof(unsigned char), 0);
 }
 
-void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
+void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
 	std::cout << "Sending...\n";
-	const char* dataPtr = reinterpret_cast<const char*>(vec.data());
-	std::string str = dataPtr;
+	const char* dataPtr = reinterpret_cast<const char*>(vec.data()); // Correct: Binary data as char*
 	int dataSize = static_cast<int>(vec.size());
 	int totalBytesSent = 0;
-	std::cout << "socket to send: " << sc << std::endl;
+
+	std::cout << "socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
+
 	while (totalBytesSent < dataSize)
 	{
 		int bytesSent = send(sc, dataPtr + totalBytesSent, dataSize - totalBytesSent, 0);
@@ -41,6 +42,8 @@ void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
 		std::cerr << "Failed to send entire message to client\n";
 		throw std::runtime_error("Failed to send entire message to client");
 	}
+
+	std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 }
 
 unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
@@ -143,11 +146,10 @@ unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int 
 	return data;
 }
 
-RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
+RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
-	std::string msg = "";
 	unsigned int msgLength = 0;
 	size_t i = 0;
 	int j = 0;
@@ -155,7 +157,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 	ri.circuit_id = circuit_id;
 	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
 
-	ri.id = Helper::getStatusCodeFromSocket(socket);
+	ri.id = statusCode;
 	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
 
 	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
@@ -166,8 +168,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-	msg = Helper::getStringPartFromSocket(socket, msgLength);
-	msg[msgLength] = '\0';
+	unsigned char* msg = getUnsignedCharPartFromSocket(socket, ri.length, 0);
 
 	for (i = 0; i < msgLength; i++)
 	{
@@ -175,7 +176,7 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 	}
 
 	std::cout << "DEBUG: The message is: " << msg << std::endl;
-
+	delete[] msg;
 	return ri;
 }
 
@@ -183,14 +184,14 @@ RequestInfo Helper::buildRI(SOCKET socket, unsigned int circuit_id)
 RequestInfo Helper::waitForResponse(SOCKET socket)
 {
 	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
-	return Helper::buildRI(socket, circuitId);
+	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
+	return Helper::buildRI(socket, circuitId, statusCode);
 }
 
 RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode ,RSA& rsa)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
-	std::string msg = "";
 	unsigned int circuitId = 0;
 	size_t i = 0;
 	int j = 0;
@@ -223,28 +224,16 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	try
 	{
 		std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessageVec);
-		for (uint8_t byte : decryptedMessageVec)
-		{
-			msg += byte;
-		}
-		std::cout << std::endl;
 		encryptedMessageVec.clear();
-		decryptedMessageVec.clear();
+		for (auto it : decryptedMessageVec)
+		{
+			ri.buffer.emplace_back(it);
+		}
 	}
 	catch (std::exception e)
 	{
 		std::cout << e.what() << std::endl;
 	}
-
-
-
-	/*msg[ri.length] = '\0';*/
-
-	for (i = 0; i < ri.length / 256; i++)
-	{
-		ri.buffer.emplace_back(static_cast<unsigned char>(msg[i]));
-	}
-
 	return ri;
 }
 
@@ -260,7 +249,6 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
-	std::string msg = "";
 	unsigned int msgLength = 0;
 	size_t i = 0;
 	int j = 0;
@@ -279,12 +267,11 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-	msg = Helper::getStringPartFromSocket(socket, msgLength);
-	msg[msgLength] = '\0';
+	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
 
 	for (i = 0; i < msgLength; i++)
 	{
-		ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
+		ri.buffer.push_back(static_cast<unsigned char>(encryptedMessage[i]));
 	}
 
 	if (gotFromNext)
@@ -296,8 +283,9 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 		ri.buffer = key.decrypt(ri.buffer);
 	}
 	
-	std::cout << "DEBUG: The message is: " << msg << std::endl;
+	std::cout << "DEBUG: The message is: " << encryptedMessage << std::endl;
 
+	delete[] encryptedMessage;
 	return ri;
 }
 
