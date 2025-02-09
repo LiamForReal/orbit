@@ -355,6 +355,13 @@ void Client::startConversation(const bool& openNodes)
 		
 		std::cout << "public key node1: " << nodePlaceIt->first << "\n";
 		data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second);
+		
+		//std::cout << "<===== FULL ENCRIPTED MSG START =====>\n";
+		//for (auto it : data)
+		//{
+		//	std::cout << it;
+		//}
+		//std::cout << "\n<===== FULL ENCRIPTED MSG END =====>";
 		rr.buffer = Helper::buildRR(data, ECDHE_KEY_EXCHANGE_RC, data.size(), circuit_id);
 		std::cout << "ecdhe with first node msg is now sending\n";
 		Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);

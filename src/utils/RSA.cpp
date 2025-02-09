@@ -27,13 +27,13 @@ void RSA::pregenerateKeys(void)
 	this->N = calcProduct(q, p);
 	//std::cout << "N (product) = " << this->N << std::endl;
 	this->T = calcTotient(q, p);
-	std::cout << "p is: " << p << "\n" << "q is: " << q << "\n";
-	std::cout << "N and T created sucessfully!\n";
-	std::cout << "product is: " << this->N << std::endl;
-	std::cout << "totient is: " << this->T << std::endl;
+	//std::cout << "p is: " << p << "\n" << "q is: " << q << "\n";
+	//std::cout << "N and T created sucessfully!\n";
+	//std::cout << "product is: " << this->N << std::endl;
+	//std::cout << "totient is: " << this->T << std::endl;
 	//std::cout << "T (totient) = " << this->T << std::endl;
 	selectPublicKey();
-	std::cout << "public key: " << this->E << std::endl;
+	//std::cout << "public key: " << this->E << std::endl;
 	selectPrivateKey();
 	//std::cout << "D (private key) = " << this->D << std::endl;
 	std::cout << "done making public and private keys!!!\n";
@@ -177,7 +177,7 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 		}
 
 		// Reverse because we extracted in little-endian order
-		std::reverse(tempBuffer.begin(), tempBuffer.end());
+		//std::reverse(tempBuffer.begin(), tempBuffer.end());
 
 		// DEBUG: Print raw bytes
 		//std::cout << "DEBUG: Decrypted Bytes Block " << i << " = ";
@@ -188,17 +188,8 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 		std::cout << std::endl;*/
 
 		// Append to the final plaintext
-		plainTextVec.insert(plainTextVec.end(), tempBuffer.begin(), tempBuffer.end());
+		plainTextVec.emplace_back(uint8_t(*tempBuffer.begin()));
 	}
-
-	// DEBUG: Print final decrypted message
-	std::cout << "DEBUG: Full Decrypted Message: ";
-	for (unsigned char byte : plainTextVec)
-	{
-		std::cout << byte;
-	}
-	std::cout << std::endl;
-
 	return plainTextVec;
 }
 

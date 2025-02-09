@@ -27,7 +27,7 @@ public:
 	static unsigned int getStatusCodeFromSocket(const SOCKET sc); 
 	static unsigned int getCircuitIdFromSocket(const SOCKET sc); 
 	static unsigned int getLengthPartFromSocket(const SOCKET sc); 
-	static unsigned char* getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
+	static std::vector<unsigned char> getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
 
 	static RequestInfo buildRI(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode);

@@ -13,15 +13,19 @@ string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
 void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
 	std::cout << "Sending...\n";
-	const char* dataPtr = reinterpret_cast<const char*>(vec.data()); // Correct: Binary data as char*
-	int dataSize = static_cast<int>(vec.size());
-	int totalBytesSent = 0;
 
-	std::cout << "socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
+	size_t totalBytesSent = 0;
+	size_t dataSize = vec.size();  // Ensure size_t is used
+	int bytesSent;
 
+	std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
+	
 	while (totalBytesSent < dataSize)
 	{
-		int bytesSent = send(sc, dataPtr + totalBytesSent, dataSize - totalBytesSent, 0);
+		bytesSent = send(sc,
+			reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
+			dataSize - totalBytesSent,
+			0);
 
 		if (bytesSent == SOCKET_ERROR)
 		{
@@ -36,13 +40,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 
 		totalBytesSent += bytesSent;
 	}
-
-	if (totalBytesSent != dataSize)
-	{
-		std::cerr << "Failed to send entire message to client\n";
-		throw std::runtime_error("Failed to send entire message to client");
-	}
-
 	std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 }
 
@@ -79,15 +76,12 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 {
 	int i = 0;
 	unsigned int value = 0;
-	unsigned char* data = Helper::getUnsignedCharPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
+	std::vector<unsigned char> data = Helper::getUnsignedCharPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
 
 	for (i = 0; i < 4; i++)
 	{
 		value |= (static_cast<unsigned int>(data[i]) << (i * 8));
 	}
-
-	delete[] data;
-	data = NULL;
 
 	return value;
 }
@@ -123,28 +117,39 @@ std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum, const
 	return received;
 }
 
-unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
+std::vector<uint8_t> Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
 {
-	if (bytesNum == 0)
+	if (bytesNum <= 0)
 	{
-		return nullptr;
+		return {};
 	}
 
-	unsigned char* data = new unsigned char[bytesNum];
-	int res = recv(sc, (char*)(data), bytesNum, flags);
+	std::vector<uint8_t> data(bytesNum);
+	int totalReceived = 0;
 
-	if (res == SOCKET_ERROR)
+	while (totalReceived < bytesNum)
 	{
-		std::string s = "Error while receiving from socket: ";
-		s += std::to_string(sc);
-		throw std::runtime_error(s);
+		int res = recv(sc, reinterpret_cast<char*>(data.data()) + totalReceived,
+			bytesNum - totalReceived, flags);
+
+		if (res == SOCKET_ERROR)
+		{
+			std::cerr << "Error while receiving from socket: " << sc
+				<< ", Error Code: " << WSAGetLastError() << std::endl;
+			throw std::runtime_error("Error while receiving from socket");
+		}
+		else if (res == 0)
+		{
+			std::cerr << "Connection closed by the peer\n";
+			throw std::runtime_error("Connection closed by the peer");
+		}
+
+		totalReceived += res;
 	}
-	else if (res != bytesNum)
-	{
-		// Handle incomplete data reception if needed
-	}
+
 	return data;
 }
+
 
 RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode)
 {
@@ -168,15 +173,10 @@ RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const
 	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-	unsigned char* msg = getUnsignedCharPartFromSocket(socket, ri.length, 0);
+	ri.buffer = getUnsignedCharPartFromSocket(socket, ri.length, 0);
 
-	for (i = 0; i < msgLength; i++)
-	{
-		ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
-	}
 
-	std::cout << "DEBUG: The message is: " << msg << std::endl;
-	delete[] msg;
+	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
 	return ri;
 }
 
@@ -209,22 +209,20 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	ri.length = Helper::getLengthPartFromSocket(socket);
 	std::cout << "DEBUG: Length: " << ri.length << std::endl;
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
-	std::vector<uint8_t> encryptedMessageVec;
-	encryptedMessageVec.reserve(ri.length);
-	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
-	for (unsigned int i = 0; i < ri.length; i++)
-	{
-		encryptedMessageVec.emplace_back(encryptedMessage[i]);
-	}
+	std::vector<uint8_t> encryptedMessage;
+	encryptedMessage.reserve(ri.length);
+	encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
 
-	free(encryptedMessage);
-	encryptedMessage = NULL;
-
+	//std::cout << "<===== FULL ENCRIPTED MSG START =====>\n";
+	//for (auto it : encryptedMessageVec)
+	//{
+	//	std::cout << it;
+	//}
+	//std::cout << "\n<===== FULL ENCRIPTED MSG END =====>";
 	std::cout << "DEBUG: The message is: ";
 	try
 	{
-		std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessageVec);
-		encryptedMessageVec.clear();
+		std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessage);
 		for (auto it : decryptedMessageVec)
 		{
 			ri.buffer.emplace_back(it);
@@ -267,12 +265,7 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
-
-	for (i = 0; i < msgLength; i++)
-	{
-		ri.buffer.push_back(static_cast<unsigned char>(encryptedMessage[i]));
-	}
+	ri.buffer = getUnsignedCharPartFromSocket(socket, ri.length, 0);
 
 	if (gotFromNext)
 	{
@@ -283,9 +276,7 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 		ri.buffer = key.decrypt(ri.buffer);
 	}
 	
-	std::cout << "DEBUG: The message is: " << encryptedMessage << std::endl;
-
-	delete[] encryptedMessage;
+	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
 	return ri;
 }
 
