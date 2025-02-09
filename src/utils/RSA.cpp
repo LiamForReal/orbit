@@ -158,6 +158,7 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 		try
 		{
 			decryptedBlock = CRTDecrypt(encryptedBlock);
+			std::cout << unsigned char(decryptedBlock);
 		}
 		catch (const std::exception& e)
 		{
@@ -190,6 +191,7 @@ vector<unsigned char> RSA::Decrypt(vector<unsigned char>& cipherTextVec)
 		// Append to the final plaintext
 		plainTextVec.emplace_back(uint8_t(*tempBuffer.begin()));
 	}
+	std::cout << std::endl;
 	return plainTextVec;
 }
 

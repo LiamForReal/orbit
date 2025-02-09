@@ -269,10 +269,12 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 
 	if (gotFromNext)
 	{
+		std::cout << "encripting...\n";
 		ri.buffer = key.encrypt(ri.buffer);
 	}
 	else
 	{
+		std::cout << "decripting...\n";
 		ri.buffer = key.decrypt(ri.buffer);
 	}
 	
