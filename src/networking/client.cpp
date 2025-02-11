@@ -250,7 +250,7 @@ void Client::dataLayersDecription(std::vector<unsigned char>& data)
 	for (auto it : _aesCircuitData)
 	{
 		data = it.decrypt(data);
-		std::cout << "the data is: " << data.data() << std::endl;
+		std::cout << "the data is: " << std::hex << data.data() << std::endl;
 	}
 }
 
@@ -404,9 +404,7 @@ void Client::startConversation(const bool& openNodes)
 			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 			std::cout << "sent link msg\n";
 
-			
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-			dataLayersDecription(ri.buffer); //decript for all the previus nodes
 			if (Errors::LINK_ERROR == ri.id)
 			{
 				throw std::runtime_error("Could not build circuit.");

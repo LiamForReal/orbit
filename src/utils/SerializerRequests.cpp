@@ -6,15 +6,12 @@ std::vector<unsigned char> SerializerRequests::serializeRequest(const RsaKeyExch
     json public_key = rsaKeyExchangeRequest.public_key.str();
     json product = rsaKeyExchangeRequest.product.str();
 
-    std::cout << public_key << std::endl;
-
     json requestJson = {
         {"public_key", public_key},
         {"product", product},
     };
     
     std::string requestJsonStr = requestJson.dump();
-	std::cout << requestJsonStr << std::endl;
 
 	// Insert Message Into Vector
 	vec.insert(vec.end(), requestJsonStr.begin(), requestJsonStr.end());

@@ -27,11 +27,6 @@ void RSA::pregenerateKeys(void)
 	this->N = calcProduct(q, p);
 	//std::cout << "N (product) = " << this->N << std::endl;
 	this->T = calcTotient(q, p);
-	//std::cout << "p is: " << p << "\n" << "q is: " << q << "\n";
-	//std::cout << "N and T created sucessfully!\n";
-	//std::cout << "product is: " << this->N << std::endl;
-	//std::cout << "totient is: " << this->T << std::endl;
-	//std::cout << "T (totient) = " << this->T << std::endl;
 	selectPublicKey();
 	//std::cout << "public key: " << this->E << std::endl;
 	selectPrivateKey();
