@@ -74,6 +74,7 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
 				//becouse ri contains only status and circuit id there is no need for encription
 				ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer); //change
+				std::cout << "[LINK] msg encript by this aes layer\n";
 				rr.buffer = Helper::buildRR(ri);
 				std::cout << "[LINK] sending backwards!\n";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);

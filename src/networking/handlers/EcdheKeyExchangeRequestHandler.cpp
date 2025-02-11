@@ -35,7 +35,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				if (_aesKeys.find(circuit_id) != _aesKeys.end())
 				{
 					ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
-					std::cout << "[ECDHE] encripted layer with sucsses!\n";
+					std::cout << "[ECDHE] msg encript by this aes layer\n";
 				}
 				std::cout << "[ECDHE] sending backwards\n";
 				rr.buffer = Helper::buildRR(ri);

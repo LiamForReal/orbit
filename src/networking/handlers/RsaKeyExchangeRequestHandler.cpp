@@ -37,7 +37,10 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
 				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
 				if (_aesKeys.find(circuit_id) != _aesKeys.end())
+				{
 					ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
+					std::cout << "[RSA] msg encript by this aes layer\n";
+				}
 				std::cout << "[RSA] sending backwards\n";
 				rr.buffer = Helper::buildRR(ri);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
@@ -59,8 +62,6 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& req
 				rkeResponse.public_key = rsa.getPublicKey(); //309091
 				rkeResponse.product = rsa.getProduct();
 				std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
-				if (_aesKeys.find(circuit_id) != _aesKeys.end())
-					data = _aesKeys[circuit_id].encrypt(data);
 				rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}

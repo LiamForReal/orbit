@@ -237,9 +237,12 @@ void Client::dataLayersEncription(std::vector<unsigned char>& data)
 	std::reverse(reverseKeys.begin(), reverseKeys.end());
 	for (auto it : reverseKeys)
 	{
+		std::cout << "encripting with: ";
+		it.printKey();
 		data = it.encrypt(data);
 	}
 }
+
 /// <summary>
 /// dencript data with aes layers which in aesCircuits
 /// </summary>
@@ -247,11 +250,14 @@ void Client::dataLayersEncription(std::vector<unsigned char>& data)
 void Client::dataLayersDecription(std::vector<unsigned char>& data)
 {
 	std::cout << "data layer decriptor!!!\n";
-	for (auto it : _aesCircuitData)
+	std::vector<AES> keys = _aesCircuitData;
+	for (auto it : keys)
 	{
+		std::cout << "decripting with: ";
+		it.printKey();
 		data = it.decrypt(data);
-		std::cout << "the data is: " << std::hex << data.data() << std::endl;
 	}
+	std::cout << "data is: " << data.data() << std::endl;
 }
 
 void Client::startConversation(const bool& openNodes)
