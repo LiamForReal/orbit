@@ -267,6 +267,7 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 
 	ri.buffer = getUnsignedCharPartFromSocket(socket, ri.length, 0);
 
+	key.printKey();
 	if (gotFromNext)
 	{
 		std::cout << "encripting...\n";

@@ -33,7 +33,10 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
 				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
 				if (_aesKeys.find(circuit_id) != _aesKeys.end())
+				{
 					ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
+					std::cout << "[ECDHE] encripted layer with sucsses!\n";
+				}
 				std::cout << "[ECDHE] sending backwards\n";
 				rr.buffer = Helper::buildRR(ri);
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
@@ -52,8 +55,6 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				std::cout << "[ECDHE] created for circuit " << circuit_id << std::endl;
 
 				std::vector<unsigned char> data = _rsaKeys[circuit_id].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaKeys[circuit_id].second.first, _rsaKeys[circuit_id].second.second);
-				if (_aesKeys.find(circuit_id) != _aesKeys.end())
-					ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
 				rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
 				std::cout << "[ECDHE] send to client rsa encripted msg\n";
 
@@ -62,9 +63,11 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				_ecdheInfo[circuit_id].setG(ekeRequest.calculationResult);
 				std::cout << "[ECDHE] generate aes key!!!\n";
 				uint256_t sheredSicret = _ecdheInfo[circuit_id].createDefiKey();
-				AES key = AES();
-				key.generateRoundKeys(sheredSicret);
-				_aesKeys[circuit_id] = key;
+				AES* key = new AES();
+				key->generateRoundKeys(sheredSicret);
+				key->printKey();
+				_aesKeys[circuit_id] = *key;
+				_aesKeys[circuit_id].printKey();
 				std::cout << "[ECDHE] shered sicret is: " << sheredSicret << "\n";
 				rr.buffer = Helper::buildRR(status, circuit_id);
 				//nothing to send!!! 
