@@ -63,11 +63,9 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& r
 				_ecdheInfo[circuit_id].setG(ekeRequest.calculationResult);
 				std::cout << "[ECDHE] generate aes key!!!\n";
 				uint256_t sheredSicret = _ecdheInfo[circuit_id].createDefiKey();
-				AES* key = new AES();
-				key->generateRoundKeys(sheredSicret);
-				key->printKey();
-				_aesKeys[circuit_id] = *key;
-				_aesKeys[circuit_id].printKey();
+				AES key = AES();
+				key.generateRoundKeys(sheredSicret);
+				_aesKeys[circuit_id] = key;
 				std::cout << "[ECDHE] shered sicret is: " << sheredSicret << "\n";
 				rr.buffer = Helper::buildRR(status, circuit_id);
 				//nothing to send!!! 

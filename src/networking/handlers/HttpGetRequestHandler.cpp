@@ -106,8 +106,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
             Helper::sendVector(_circuitsData[circuit_id].second, rr.buffer);
             std::cout << "[HTTP GET] listening forward\n";
             ri = Helper::waitForResponse(_circuitsData[circuit_id].second);
-            if (_aesKeys.find(circuit_id) != _aesKeys.end())
-                ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
+            ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
             std::cout << "[HTTP GET] sending backwards!\n";
             rr.buffer = Helper::buildRR(ri);
             Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
@@ -121,8 +120,7 @@ RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInf
             std::cout << "[HTTP GET] sending backwards!\n";
 
             std::vector<unsigned char> data = SerializerResponses::serializeResponse(hgResponse);
-            if (_aesKeys.find(circuit_id) != _aesKeys.end())
-                data = _aesKeys[circuit_id].encrypt(data);
+            data = _aesKeys[circuit_id].encrypt(data);
             rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
             Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
         }

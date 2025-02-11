@@ -246,9 +246,11 @@ void Client::dataLayersEncription(std::vector<unsigned char>& data)
 /// <param name="data">cipher text</param>
 void Client::dataLayersDecription(std::vector<unsigned char>& data)
 {
+	std::cout << "data layer decriptor!!!\n";
 	for (auto it : _aesCircuitData)
 	{
 		data = it.decrypt(data);
+		std::cout << "the data is: " << data.data() << std::endl;
 	}
 }
 

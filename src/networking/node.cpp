@@ -11,7 +11,7 @@ using std::vector;
 
 std::mutex mutex;
 
-Node::Node()
+Node::Node() 
 {
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
@@ -265,7 +265,7 @@ void Node::clientHandler(const SOCKET client_socket)
 		RequestInfo ri;
 		LinkRequest lr;
 		RequestResult rr;
-		bool isRSA = false,first_time = true, isAES = false;
+		bool isRSA = false,first_time = true, isAES = false;	
 		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), client_socket, std::ref(_aesKeys));
 		while (true)
 		{

@@ -7,8 +7,10 @@ AES::~AES()
 
 AES::AES() { }
 
-AES& AES::operator=(const AES&)
+AES& AES::operator=(const AES& other)
 {
+    this->_roundKeys = other._roundKeys;
+    this->_key = other._key;
     return *this;
 }
 
