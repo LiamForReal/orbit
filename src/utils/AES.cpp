@@ -5,7 +5,7 @@ AES::~AES()
     this->_roundKeys.clear();
 }
 
-AES::AES() { }
+AES::AES() {}
 
 AES& AES::operator=(const AES& other)
 {
@@ -24,7 +24,7 @@ void AES::generateRoundKeys(uint256_t& key)
     uint256_t keyCopy = this->_key;
 
     uint8_t roundKey = 1;
-    uint8_t index = 1; 
+    uint8_t index = 1;
 
     for (uint8_t i = 0; i < AES_ROUND_KEYS_COLS; i++)
     {
@@ -90,26 +90,26 @@ void AES::generateRoundKeys(uint256_t& key)
 
     std::cout << "FINISHED KEY EXPANSION\n";
 
-   /* for (uint8_t key = 0; key <= AES_KEY_EXPANSION_ROUNDS; key++)
-    {
-        std::cout << "<=== ROUND KEY " << int(key) << " START ===>\n";
-        for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
-        {
-            for (uint8_t j = 0; j < AES_ROUND_KEYS_COLS; j++)
-            {
-                std::cout << std::hex << int(this->_roundKeys[key][i][j]) << "      ";
-            }
-            std::cout << std::endl;
-        }
-        std::cout << "<=== ROUND  " << int(key) << " END ===>\n";
-    }*/
+    /* for (uint8_t key = 0; key <= AES_KEY_EXPANSION_ROUNDS; key++)
+     {
+         std::cout << "<=== ROUND KEY " << int(key) << " START ===>\n";
+         for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS; i++)
+         {
+             for (uint8_t j = 0; j < AES_ROUND_KEYS_COLS; j++)
+             {
+                 std::cout << std::hex << int(this->_roundKeys[key][i][j]) << "      ";
+             }
+             std::cout << std::endl;
+         }
+         std::cout << "<=== ROUND  " << int(key) << " END ===>\n";
+     }*/
     delete[] roundKeyColCopy;
 }
 
-void AES::rotWord(uint8_t* roundKeyCol) 
+void AES::rotWord(uint8_t* roundKeyCol)
 {
     uint8_t temp = roundKeyCol[0];  // Save MSB
-    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS - DEC; ++i) 
+    for (uint8_t i = 0; i < AES_ROUND_KEYS_ROWS - DEC; ++i)
     {
         roundKeyCol[i] = roundKeyCol[i + INC];
     }
@@ -146,7 +146,7 @@ void AES::addRoundConstant(uint8_t* roundKeyCol, const uint8_t& index)
 uint8_t AES::galoisMult(uint8_t a, uint8_t b) const
 {
     uint8_t p = 0; /* accumulator for the product of the multiplication */
-    while (a != 0 && b != 0) 
+    while (a != 0 && b != 0)
     {
         if (b & 1) /* if the polynomial for b has a constant term, add the corresponding a to p */
         {
@@ -212,8 +212,8 @@ void AES::shiftRows(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
 void AES::mixColumns(uint8_t grid[AES_GRID_ROWS][AES_GRID_COLS])
 {
     uint8_t results[AES_GRID_ROWS][AES_GRID_COLS] = { {0} };
-    
-    for (uint8_t i = 0; i < AES_GRID_COLS; i++) 
+
+    for (uint8_t i = 0; i < AES_GRID_COLS; i++)
     {
         for (uint8_t j = 0; j < AES_GRID_ROWS; j++)
         {
@@ -291,15 +291,15 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 {
     std::vector<uint8_t> cipherTextVec;
     uint8_t chunkGrid[AES_GRID_ROWS][AES_GRID_COLS] = { { 0 } };
-    
+
     /* simple null padding */
     while (plainTextVec.size() % AES_CHUNK_SIZE_BYTES != 0)
     {
         plainTextVec.emplace_back(NULL);
     }
-    
+
     cipherTextVec.reserve(plainTextVec.size());
-    
+
     for (auto it = plainTextVec.begin(); it != plainTextVec.end(); it += AES_CHUNK_SIZE_BYTES)
     {
         for (uint8_t i = 0; i < AES_GRID_COLS; i++)
@@ -350,7 +350,7 @@ std::vector<uint8_t> AES::decrypt(std::vector<uint8_t> cipherTextVec)
 {
     std::vector<uint8_t> plainTextVec;
     uint8_t chunkGrid[AES_GRID_ROWS][AES_GRID_COLS] = { { 0 } };
-    
+
     plainTextVec.reserve(cipherTextVec.size());
 
     for (auto it = cipherTextVec.begin(); it != cipherTextVec.end(); it += AES_CHUNK_SIZE_BYTES)

@@ -55,7 +55,7 @@ bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 	return requestInfo.id == LINK_RC;
 }
 
-RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult LinkRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
 	RequestInfo ri;
 	unsigned int status = LINK_STATUS;

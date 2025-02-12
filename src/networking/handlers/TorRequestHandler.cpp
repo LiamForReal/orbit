@@ -13,7 +13,7 @@ TorRequestHandler::TorRequestHandler(DockerManager& newDm, std::map<unsigned int
 	//more...
 }
 
-RequestResult TorRequestHandler::directRequest(const RequestInfo& requestInfo)
+RequestResult TorRequestHandler::directRequest(RequestInfo& requestInfo)
 {
 	if (noh->isRequestRelevant(requestInfo))
 	{

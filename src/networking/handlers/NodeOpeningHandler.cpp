@@ -16,21 +16,19 @@ bool NodeOpeningHandler::isRequestRelevant(const RequestInfo& requestInfo)
     return requestInfo.id == NODE_OPEN_RC;
 }
 
-RequestResult NodeOpeningHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
 {
     std::vector<std::pair<std::string, std::string>> nodesInfo;
     std::vector<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
-    RequestInfo ri;
     this->rr.buffer.clear();
     unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
     try
     {
-        ri = requestInfo;
-        ri.buffer = _aes.decrypt(ri.buffer);
-        NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(ri);
+        requestInfo.buffer = _aes.decrypt(requestInfo.buffer);
+        NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo);
 
-        std::cout << "client sent: " << ri.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
+        std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);
         if (nodesInfo.empty())

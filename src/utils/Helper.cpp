@@ -3,13 +3,6 @@
 
 using std::string;
 
-// recieve data from socket according byteSize
-// returns the data as string
-string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
-{
-	return getPartFromSocket(sc, bytesNum * sizeof(unsigned char), 0);
-}
-
 void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
 	std::cout << "Sending...\n";
@@ -19,7 +12,7 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 	int bytesSent;
 
 	std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
-	
+
 	while (totalBytesSent < dataSize)
 	{
 		bytesSent = send(sc,
@@ -76,7 +69,7 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 {
 	int i = 0;
 	unsigned int value = 0;
-	std::vector<unsigned char> data = Helper::getUnsignedCharPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
+	std::vector<unsigned char> data = Helper::getDataPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
 
 	for (i = 0; i < 4; i++)
 	{
@@ -88,36 +81,8 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 
 // recieve data from socket according byteSize
 // this is private function
-std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum)
-{
-	return getPartFromSocket(sc, bytesNum, 0);
-}
 
-
-std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
-{
-	if (bytesNum == 0)
-	{
-		return "";
-	}
-
-	char* data = new char[bytesNum + 1];
-	int res = recv(sc, data, bytesNum, flags);
-	if (res == INVALID_SOCKET)
-	{
-		std::string s = "Error while recieving from socket: ";
-		s += std::to_string(sc);
-		throw std::runtime_error(s.c_str());
-	}
-	data[bytesNum] = 0;
-	std::string received(data);
-	delete[] data;
-	data = NULL;
-
-	return received;
-}
-
-std::vector<uint8_t> Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
+std::vector<uint8_t> Helper::getDataPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
 {
 	if (bytesNum <= 0)
 	{
@@ -173,7 +138,7 @@ RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const
 	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-	ri.buffer = getUnsignedCharPartFromSocket(socket, ri.length, 0);
+	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
 
 
 	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
@@ -188,7 +153,7 @@ RequestInfo Helper::waitForResponse(SOCKET socket)
 	return Helper::buildRI(socket, circuitId, statusCode);
 }
 
-RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode ,RSA& rsa)
+RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
@@ -211,7 +176,7 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
 	std::vector<uint8_t> encryptedMessage;
 	encryptedMessage.reserve(ri.length);
-	encryptedMessage = getUnsignedCharPartFromSocket(socket, ri.length, 0);
+	encryptedMessage = getDataPartFromSocket(socket, ri.length, 0);
 
 	//std::cout << "<===== FULL ENCRIPTED MSG START =====>\n";
 	//for (auto it : encryptedMessageVec)
@@ -265,7 +230,7 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 	ri.length = msgLength;
 	std::cout << "DEBUG: Length: " << msgLength << std::endl;
 
-	ri.buffer = getUnsignedCharPartFromSocket(socket, ri.length, 0);
+	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
 
 	if (gotFromNext)
 	{
@@ -277,7 +242,7 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 		std::cout << "decripting...\n";
 		ri.buffer = key.decrypt(ri.buffer);
 	}
-	
+
 	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
 	return ri;
 }
@@ -289,18 +254,21 @@ RequestInfo Helper::waitForResponse_AES(SOCKET socket, AES& key, bool isEncripti
 	return Helper::buildRI_AES(socket, circuitId, statusCode, isEncription, key);
 }
 
-vector<unsigned char> Helper::buildRR(const RequestInfo ri)
+vector<unsigned char> Helper::buildRR(RequestInfo& ri)
 {
 	vector<unsigned char> tmp;
-	unsigned int len = ri.length;
-	tmp.reserve(6 + ri.length);
+	unsigned int len;
+
+	len = ri.buffer.size();
+	ri.length = len; //when encripting sometimes rsa and esa add nulls padding
+	tmp.reserve(6 + len);
 
 	//Insert Circuit id
 	tmp.emplace_back(unsigned char(ri.circuit_id));
 
 	//Insert Id
 	tmp.emplace_back(unsigned char(ri.id));
-	
+
 	//Insert Length
 	unsigned char* lengthBytes = reinterpret_cast<unsigned char*>(&len);
 	tmp.insert(tmp.end(), lengthBytes, lengthBytes + 4);

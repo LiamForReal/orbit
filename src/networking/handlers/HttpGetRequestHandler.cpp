@@ -89,7 +89,7 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
     return htmlCode;
 }
 
-RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult HttpGetRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
     this->rr.buffer.clear();
     HttpGetResponse hgResponse;

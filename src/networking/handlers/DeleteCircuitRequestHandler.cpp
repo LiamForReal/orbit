@@ -23,7 +23,7 @@ bool DeleteCircuitRequestHandler::isRequestRelevant(const RequestInfo& requestIn
 	return requestInfo.id == DELETE_CIRCUIT_RC;
 }
 
-RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult DeleteCircuitRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
 	this->rr.buffer.clear();
 	unsigned int circuit_id = requestInfo.circuit_id,status = DELETE_CIRCUIT_STATUS;

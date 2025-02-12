@@ -233,6 +233,7 @@ void Client::closeSocketWithFirstNode()
 /// <param name="data">plain text</param>
 void Client::dataLayersEncription(std::vector<unsigned char>& data)
 {
+	std::cout << "data layer encriptor - size: " << _aesCircuitData.size() << "\n";
 	std::vector<AES> reverseKeys = _aesCircuitData;
 	std::reverse(reverseKeys.begin(), reverseKeys.end());
 	for (auto it : reverseKeys)
@@ -249,7 +250,6 @@ void Client::dataLayersEncription(std::vector<unsigned char>& data)
 /// <param name="data">cipher text</param>
 void Client::dataLayersDecription(std::vector<unsigned char>& data)
 {
-	std::cout << "data layer decriptor!!!\n";
 	std::vector<AES> keys = _aesCircuitData;
 	for (auto it : keys)
 	{

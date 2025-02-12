@@ -27,8 +27,7 @@ public:
 	static unsigned int getStatusCodeFromSocket(const SOCKET sc); 
 	static unsigned int getCircuitIdFromSocket(const SOCKET sc); 
 	static unsigned int getLengthPartFromSocket(const SOCKET sc); 
-	static std::vector<unsigned char> getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
-	static std::string getStringPartFromSocket(SOCKET sc, const int bytesNum);
+	static std::vector<unsigned char> getDataPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 
 	static RequestInfo buildRI(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode);
 	static RequestInfo waitForResponse(SOCKET socket);
@@ -39,11 +38,7 @@ public:
 	static RequestInfo buildRI_AES(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, bool gotFromNext,AES& key);
 	static RequestInfo waitForResponse_AES(SOCKET socket, AES& key, bool isEncription);
 
-	static vector<unsigned char> buildRR(const RequestInfo ri);
+	static vector<unsigned char> buildRR(RequestInfo& ri);
 	static vector<unsigned char> buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int length, unsigned int circuit_id = 0);
 	static vector<unsigned char> buildRR(unsigned int status, unsigned int circuit_id = 0);
-
-private:
-	static std::string getPartFromSocket(const SOCKET sc, const int bytesNum);
-	static std::string getPartFromSocket(const SOCKET sc, const int bytesNum, const int flags);
 };

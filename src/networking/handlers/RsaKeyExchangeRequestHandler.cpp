@@ -11,7 +11,7 @@ bool RsaKeyExchangeRequestHandler::isRequestRelevant(const RequestInfo& requestI
 	return requestInfo.id == RSA_KEY_EXCHANGE_RC;
 }
 
-RequestResult RsaKeyExchangeRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
 	RequestInfo ri;
 	RsaKeyExchangeResponse rkeResponse;

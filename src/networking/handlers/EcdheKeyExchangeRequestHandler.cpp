@@ -12,7 +12,7 @@ bool EcdheKeyExchangeRequestHandler::isRequestRelevant(const RequestInfo& reques
 	return requestInfo.id == ECDHE_KEY_EXCHANGE_RC;
 }
 
-RequestResult EcdheKeyExchangeRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult EcdheKeyExchangeRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
 	RequestInfo ri;
 	EcdheKeyExchangeResponse ekeResponse;

@@ -13,7 +13,7 @@ class HttpGetRequestHandler : virtual public IRequestHandler
 		HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock, std::map<unsigned int, AES>& aesKeys);
 		bool isRequestRelevant(const RequestInfo& requestInfo) override;
 		
-		RequestResult handleRequest(const RequestInfo& requestInfo) override;
+		RequestResult handleRequest(RequestInfo& requestInfo) override;
 		
 
 	private:
