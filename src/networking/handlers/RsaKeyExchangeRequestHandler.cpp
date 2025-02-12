@@ -43,7 +43,15 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestIn
 				}
 				std::cout << "[RSA] sending backwards\n";
 				rr.buffer = Helper::buildRR(ri);
-				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
+				try
+				{
+					Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
+				}
+				catch (std::exception& e)
+				{
+					std::cout << e.what() << std::endl;
+				}
+				
 			}
 			else
 			{
