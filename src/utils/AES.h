@@ -28,7 +28,6 @@ class AES
 		~AES();
 		AES();
 		AES& operator=(const AES& other);
-		void printKey() const;
 		void generateRoundKeys(uint256_t& key);
 		
 		std::vector<uint8_t> encrypt(std::vector<uint8_t> plainTextVec);

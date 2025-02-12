@@ -14,10 +14,6 @@ AES& AES::operator=(const AES& other)
     return *this;
 }
 
-void AES::printKey() const
-{
-    std::cout << "the key is: " << this->_key << std::endl;
-}
 void AES::generateRoundKeys(uint256_t& key)
 {
     this->_key = key;

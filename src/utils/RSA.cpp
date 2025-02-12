@@ -27,6 +27,7 @@ void RSA::pregenerateKeys(void)
 	this->N = calcProduct(q, p);
 	//std::cout << "N (product) = " << this->N << std::endl;
 	this->T = calcTotient(q, p);
+
 	selectPublicKey();
 	//std::cout << "public key: " << this->E << std::endl;
 	selectPrivateKey();
@@ -314,7 +315,6 @@ void RSA::selectPrivateKey()
 		// x0 is equals to private key, x1 is equals to -totient
 		this->D = (uint2048_t)(euclideanMod(x0, this->T));
 	}
-	std::cout << "private key: " << this->D << "\n";
 	// std::cout << this->D << std::endl << std::endl;
 	// cpp_int mulmod = cpp_int(this->D) * cpp_int(this->E) % cpp_int(this->T);
 	// std::cout << this->D << " * " << this->E << " % " << this->T << " = " << (mulmod) << std::endl;

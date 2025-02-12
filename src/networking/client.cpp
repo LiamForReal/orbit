@@ -233,15 +233,14 @@ void Client::closeSocketWithFirstNode()
 /// <param name="data">plain text</param>
 void Client::dataLayersEncription(std::vector<unsigned char>& data)
 {
-	std::cout << "data layer encriptor - size: " << _aesCircuitData.size() << "\n";
+	std::cout << "data layer encription!!!\n";
 	std::vector<AES> reverseKeys = _aesCircuitData;
 	std::reverse(reverseKeys.begin(), reverseKeys.end());
 	for (auto it : reverseKeys)
 	{
-		std::cout << "encripting with: ";
-		it.printKey();
 		data = it.encrypt(data);
 	}
+	std::cout << "data is: " << data.data() << "\n";
 }
 
 /// <summary>
@@ -250,11 +249,9 @@ void Client::dataLayersEncription(std::vector<unsigned char>& data)
 /// <param name="data">cipher text</param>
 void Client::dataLayersDecription(std::vector<unsigned char>& data)
 {
-	std::vector<AES> keys = _aesCircuitData;
-	for (auto it : keys)
+	std::cout << "data layer decription!!!\n";
+	for (auto it : _aesCircuitData)
 	{
-		std::cout << "decripting with: ";
-		it.printKey();
 		data = it.decrypt(data);
 	}
 	std::cout << "data is: " << data.data() << std::endl;
@@ -361,7 +358,6 @@ void Client::startConversation(const bool& openNodes)
 		ekeRequest.m = ecdheInfo.second;
 		ekeRequest.calculationResult = _ecdhe.createDefiKey();
 		
-		std::cout << "public key node1: " << nodePlaceIt->first << "\n";
 		data = _rsa.Encrypt(SerializerRequests::serializeRequest(ekeRequest), nodePlaceIt->first, nodePlaceIt->second);
 		
 		//std::cout << "<===== FULL ENCRIPTED MSG START =====>\n";
@@ -454,7 +450,7 @@ void Client::startConversation(const bool& openNodes)
 				
 				ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 				dataLayersDecription(ri.buffer); //decript for all the previus nodes
-				_rsa.Decrypt(ri.buffer); //decript the rsa himself
+				ri.buffer = _rsa.Decrypt(ri.buffer); //decript the rsa himself
 				if (ECDHE_KEY_EXCHANGE_STATUS != ri.id)
 				{
 					throw std::runtime_error("Did not get ECDHE key exchange response status!");

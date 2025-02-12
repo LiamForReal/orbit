@@ -69,7 +69,6 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo)
 	else if (ekerh->isRequestRelevant(requestInfo))
 	{
 		rr = ekerh->handleRequest(requestInfo);
-		_aesKeys[rr.buffer[CIRCUIT_ID_INDEX]].printKey();
 		if (unsigned int(rr.buffer[STATUS_INDEX]) == ECDHE_KEY_EXCHANGE_STATUS)
 		{
 			_isAES = true;

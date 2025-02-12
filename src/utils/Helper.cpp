@@ -260,6 +260,7 @@ vector<unsigned char> Helper::buildRR(RequestInfo& ri)
 	unsigned int len;
 
 	len = ri.buffer.size();
+	//std::cout << "msg len: " << len << ", ri.length: " << ri.length << "\n";
 	ri.length = len; //when encripting sometimes rsa and esa add nulls padding
 	tmp.reserve(6 + len);
 
