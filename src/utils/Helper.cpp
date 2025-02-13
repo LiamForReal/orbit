@@ -139,8 +139,14 @@ RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const
 
 	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
 
-
-	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
+	std::cout << "DEBUG: The message is: ";
+	if (ri.buffer.size() < 2000)
+	{
+		for (auto it : ri.buffer)
+			std::cout << it;
+		std::cout << std::endl;
+	}
+	else std::cout << "the cipher text is roghly a 69000 bytes encripted by rsa2048 that I dont print.\n";
 	return ri;
 }
 
@@ -239,6 +245,15 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 	else
 	{
 		std::cout << "decripting...\n";
+		if (ri.buffer.size() < 2000)
+		{
+			std::cout << "cipher text: ";
+			for (auto it : ri.buffer)
+				std::cout << it;
+			std::cout << "\n";
+		}
+		else std::cout << "the cipher text is roghly a 69000 bytes encripted by rsa2048 that I dont print.\n";
+		
 		ri.buffer = key.decrypt(ri.buffer);
 	}
 
