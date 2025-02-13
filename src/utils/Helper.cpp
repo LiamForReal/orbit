@@ -30,7 +30,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 			std::cerr << "Connection closed by the client\n";
 			throw std::runtime_error("Connection closed by the client");
 		}
-
 		totalBytesSent += bytesSent;
 	}
 	std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
