@@ -276,7 +276,6 @@ vector<unsigned char> Helper::buildRR(RequestInfo& ri)
 	len = ri.buffer.size();
 	//std::cout << "msg len: " << len << ", ri.length: " << ri.length << "\n";
 	ri.length = len; //when encripting sometimes rsa and esa add nulls padding
-	tmp.reserve(6 + len);
 
 	//Insert Circuit id
 	tmp.emplace_back(unsigned char(ri.circuit_id));
@@ -297,7 +296,6 @@ vector<unsigned char> Helper::buildRR(RequestInfo& ri)
 vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int length, unsigned int circuit_id)
 {
 	vector<unsigned char> tmp;
-	tmp.reserve(6 + length);
 
 	//Insert Circuit id
 	tmp.emplace_back(unsigned char(circuit_id));

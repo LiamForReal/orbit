@@ -417,6 +417,7 @@ void Client::startConversation(const bool& openNodes)
 			rr.buffer = Helper::buildRR(data, RSA_KEY_EXCHANGE_RC, data.size(), circuit_id);
 			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
 			std::cout << "sent RSA msg\n";
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
 			dataLayersDecription(ri.buffer); //decript for all the previus nodes
 			rkeResponse = DeserializerResponses::deserializeRsaKeyExchangeResponse(ri);
