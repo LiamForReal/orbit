@@ -7,7 +7,7 @@ NodeOpeningHandler::NodeOpeningHandler(DockerManager& dockerManager, std::map<un
     : dm(dockerManager), _controlList(controlList), _clients(clients), _aes(aes)
 {
     srand(time(NULL));
-    NodeOpeningHandler::circuit_id = 1 + (rand() % 200);
+    NodeOpeningHandler::circuit_id = 1 + (rand() % 255);
     this->rr = RequestResult();
 }
 
@@ -48,6 +48,10 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
     data = _aes.encrypt(data);
     rr.buffer = Helper::buildRR(data, status, data.size(), this->circuit_id);
-    this->circuit_id++;
+    this->circuit_id = (this->circuit_id + 1) % 255;
+    while (_controlList.find(this->circuit_id) != _controlList.end())
+    {
+        this->circuit_id = (this->circuit_id + 1) % 255;
+    }
     return rr;
 }

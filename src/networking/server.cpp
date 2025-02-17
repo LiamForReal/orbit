@@ -206,7 +206,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		//BUILD AES KEY END
 		//PREPER TOR REQUEST HANDLER START
 		mutex.lock();
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), _aes); // new Client circuit : INVALID_SOCKET 
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes)); // new Client circuit : INVALID_SOCKET 
 		mutex.unlock(); 
 		//PREPER TOR REQUEST HANDLER END
 
