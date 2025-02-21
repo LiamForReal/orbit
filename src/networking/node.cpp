@@ -1,8 +1,7 @@
 #include "node.h"
 // add request handler that muches 
 #define ENVE_MAX_LIMIT  32,766
-#define AMOUNT_OF_BYTES 1250
-#define MAX_DATA_LENGTH 70000
+
 // using static const instead of macros 
 static const unsigned int IFACE = 0;
 
@@ -221,16 +220,8 @@ void Node::acceptClient()
 
 	std::cout << "Client accepted!\n";
 
-	// Define buffer size (70,000 bytes) to handle the longest msg of 69632 bytes data + 6 bytes headers
-	int bufferSize = MAX_DATA_LENGTH;
-
-	// Set the receive buffer size
-	if (setsockopt(client_socket, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR)
-		std::cerr << "Failed to set receive buffer size: " << WSAGetLastError() << std::endl;
-
-	// Set the send buffer size
-	if (setsockopt(client_socket, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR)
-		std::cerr << "Failed to set send buffer size: " << WSAGetLastError() << std::endl;
+	int flag = 1;
+	setsockopt(client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
 
 	// Create new thread for client and detach from it
 	std::thread tr(&Node::clientHandler, this, client_socket);

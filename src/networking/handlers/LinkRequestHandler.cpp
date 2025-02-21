@@ -1,5 +1,4 @@
 #include "LinkRequestHandler.h"
-#define MAX_DATA_LENGTH 70000
 
 LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s, std::map<unsigned int, AES>& aesKeys) 
 	: _circuitData(circuitData), _socket(s), _aesKeys(aesKeys)
@@ -17,17 +16,6 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
 		return INVALID_SOCKET;
 	}
-	 
-	// Set buffer size before connecting
-	int bufferSize = MAX_DATA_LENGTH;
-
-	if (setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
-		std::cerr << "Failed to set receive buffer size: " << WSAGetLastError() << std::endl;
-	}
-
-	if (setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&bufferSize, sizeof(bufferSize)) == SOCKET_ERROR) {
-		std::cerr << "Failed to set send buffer size: " << WSAGetLastError() << std::endl;
-	}
 
 	// Set up the sockaddr_in structure
 	sockaddr_in serverAddr;
@@ -38,6 +26,9 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 		closesocket(sock);
 		return INVALID_SOCKET;
 	}
+
+	int flag = 1;
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
 
 	// Connect to the server
 	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {

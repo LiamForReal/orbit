@@ -26,7 +26,6 @@
 #define MAX_INT_OF_BYTE 256
 #define DEC 1
 #define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
-#define AMOUNT_OF_BYTES 1250
 
 class Server
 {
