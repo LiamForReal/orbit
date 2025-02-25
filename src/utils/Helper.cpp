@@ -16,9 +16,9 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 	while (totalBytesSent < dataSize)
 	{
 		bytesSent = send(sc,
-			reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
-			dataSize - totalBytesSent,
-			0);
+						reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
+						dataSize - totalBytesSent,
+						0);
 
 		if (bytesSent == SOCKET_ERROR)
 		{

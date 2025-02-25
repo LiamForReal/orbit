@@ -51,10 +51,10 @@ Server::~Server()
 void Server::serve()
 {
 	std::thread serveClientsThread(&Server::serveClients, this);
-	//std::thread serveControlThread(&Server::serveControl, this); - control
+	std::thread serveControlThread(&Server::serveControl, this);
 
 	serveClientsThread.join();
-	//serveControlThread.join();
+	serveControlThread.join();
 }
 
 void Server::serveClients()
@@ -383,117 +383,18 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 {
 	try
 	{
-		char buffer[100];
-		RequestInfo ri;
-		DWORD timeout = SECONDS_TO_WAIT * 1000;
-		RequestResult rr;
-		setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-
+		setupSocketTimeout(node_sock);
 		std::cout << "Enter to control with socket " << node_sock << std::endl;
 
 		while (true)
 		{
-			// Wait for notifications or timeout
+			if (handleCircuitNotifications(circuits, nodeIp, node_sock))
+				return;
+
+			if (!receiveAliveMessage(node_sock, nodeIp))
 			{
-				std::unique_lock<std::mutex> lock(circuitMutex);
-
-				// Check circuit-specific notifications for the current node
-				circuitCondition.wait_for(lock, std::chrono::milliseconds(SECONDS_TO_WAIT * 500), [&]()
-					{
-						for (unsigned int circuitId : circuits)
-						{
-							// Ensure only affected circuits for the current node are checked
-							if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
-							{
-								return true; // Break when a relevant notification is found
-							}
-						}
-						return false; // No relevant notifications
-					});
-
-				// Process circuit notifications if any
-				for (unsigned int circuitId : circuits)
-				{
-					if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
-					{
-						// Remove the node from the notifications
-						_circuitsToNotify[circuitId].erase(nodeIp);
-						if (_circuitsToNotify[circuitId].empty())
-						{
-							_circuitsToNotify.erase(circuitId); // Clean up if no more nodes are affected
-						}
-
-						// Handle delete circuit logic
-						rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
-						// Notify the remaining nodes
-						Helper::sendVector(node_sock, rr.buffer);
-						std::cerr << "Node " << nodeIp << " notified for circuit " << circuitId << ".\n";
-
-						std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-						Helper::sendVector(_clients[circuitId], rr.buffer);
-						std::cerr << "Client " << _clients[circuitId] << " notified for circuit " << circuitId << ".\n";
-
-						// Regenerate the circuit for the remaining nodes
-						std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
-						_controlList[circuitId] = newCircuit;
-
-						CircuitConfirmationResponse ccr;
-						ccr.nodesPath = newCircuit;
-
-						std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
-						rr.buffer = Helper::buildRR(data, CIRCUIT_CONFIRMATION_STATUS, data.size(), circuitId);
-						Helper::sendVector(_clients[circuitId], rr.buffer);
-
-						std::cerr << "Node " << nodeIp << " regenerated and circuit updated for circuit " << circuitId << ".\n";
-						return; //close this socket does not exsist
-					}
-				}
+				handleNodeTimeout(circuits, nodeIp, node_sock);
 			}
-
-			// Receive alive message
-			mutex.lock();
-			int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-			mutex.unlock();
-
-			if (bytesRead <= 0)
-			{
-				if (WSAGetLastError() == WSAETIMEDOUT)
-				{
-					std::cerr << "TIMEOUT: Node " << nodeIp << " did not send alive message.\n";
-
-					for (unsigned int circuitId : circuits)
-					{
-						std::unique_lock<std::mutex> lock(circuitMutex);
-
-						// Add the failed node to the notification list
-						_circuitsToNotify[circuitId].insert(nodeIp);
-
-						// Notify all threads handling this circuit
-						circuitCondition.notify_all();
-					}
-
-					timeout = SECONDS_TO_WAIT * 1000;
-					setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-				}
-				else
-				{
-					std::cerr << "Error receiving from socket: " << WSAGetLastError() << std::endl;
-					throw std::runtime_error("Error receiving from node.");
-				}
-			}
-
-			// Validate the received message
-			if (static_cast<unsigned int>(buffer[0]) != ALIVE_MSG_RC)
-			{
-				std::cerr << "ERROR: Unexpected message code received. -> " << buffer[0] << "\n";
-				throw std::runtime_error("Unexpected message code received.");
-			}
-
-			//std::cout << "Alive sent (" << nodeIp << ")\n";
-
-			timeout = SECONDS_TO_WAIT * 1000;
-			setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 		}
 	}
 	catch (const std::runtime_error& e)
@@ -506,6 +407,119 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 		std::cout << "Unexpected problem caught!\n";
 	}
 }
+
+void Server::setupSocketTimeout(const SOCKET node_sock)
+{
+	DWORD timeout = SECONDS_TO_WAIT * 1000;
+	setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
+}
+
+bool Server::handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET node_sock)
+{
+	std::unique_lock<std::mutex> lock(circuitMutex);
+
+	circuitCondition.wait_for(lock, std::chrono::milliseconds(SECONDS_TO_WAIT * 500), [&]() {
+		return checkNotifications(circuits, nodeIp);
+		});
+
+	return processCircuitNotifications(circuits, nodeIp, node_sock);
+}
+
+bool Server::checkNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp)
+{
+	for (unsigned int circuitId : circuits)
+	{
+		if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Server::processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET node_sock)
+{
+	for (unsigned int circuitId : circuits)
+	{
+		if (_circuitsToNotify.count(circuitId) && _circuitsToNotify[circuitId].count(nodeIp))
+		{
+			_circuitsToNotify[circuitId].erase(nodeIp);
+			if (_circuitsToNotify[circuitId].empty())
+			{
+				_circuitsToNotify.erase(circuitId);
+			}
+
+			notifyNodeDeletion(node_sock, circuitId);
+			notifyClientDeletion(circuitId);
+			regenerateCircuit(circuitId, nodeIp);
+			return true;
+		}
+	}
+	return false;
+}
+
+void Server::notifyNodeDeletion(const SOCKET node_sock, unsigned int circuitId)
+{
+	RequestResult rr;
+	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
+	Helper::sendVector(node_sock, rr.buffer);
+	std::cerr << "Node notified for circuit " << circuitId << ".\n";
+}
+
+void Server::notifyClientDeletion(unsigned int circuitId)
+{
+	RequestResult rr;
+	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
+	Helper::sendVector(_clients[circuitId], rr.buffer);
+	std::cerr << "Client notified for circuit " << circuitId << ".\n";
+}
+
+void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp)
+{
+	std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
+	_controlList[circuitId] = newCircuit;
+
+	CircuitConfirmationResponse ccr;
+	ccr.nodesPath = newCircuit;
+	std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
+	RequestResult rr;
+	rr.buffer = Helper::buildRR(data, CIRCUIT_CONFIRMATION_STATUS, data.size(), circuitId);
+	Helper::sendVector(_clients[circuitId], rr.buffer);
+	std::cerr << "Circuit regenerated for circuit " << circuitId << ".\n";
+}
+
+bool Server::receiveAliveMessage(const SOCKET node_sock, const std::string& nodeIp)
+{
+	char buffer[100];
+	mutex.lock();
+	int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
+	mutex.unlock();
+
+	if (bytesRead <= 0)
+	{
+		return false;
+	}
+
+	if (static_cast<unsigned int>(buffer[0]) != ALIVE_MSG_RC)
+	{
+		std::cerr << "ERROR: Unexpected message code received -> " << buffer[0] << "\n";
+		throw std::runtime_error("Unexpected message code received.");
+	}
+	return true;
+}
+
+void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET node_sock)
+{
+	std::cerr << "TIMEOUT: Node " << nodeIp << " did not send alive message.\n";
+	for (unsigned int circuitId : circuits)
+	{
+		std::unique_lock<std::mutex> lock(circuitMutex);
+		_circuitsToNotify[circuitId].insert(nodeIp);
+		circuitCondition.notify_all();
+	}
+	setupSocketTimeout(node_sock);
+}
+
 
 int main()
 {

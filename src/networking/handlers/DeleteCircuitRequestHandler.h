@@ -4,13 +4,12 @@
 class DeleteCircuitRequestHandler : virtual public IRequestHandler
 {
 public:
-	DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock);
+	DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData);
 	bool isRequestRelevant(const RequestInfo& requestInfo) override;
 	RequestResult handleRequest(RequestInfo& requestInfo) override;
 
 private:		
 	RequestResult rr;
 	void closeSocket(SOCKET sockToClose);
-	SOCKET& _socket;
 	std::map<unsigned int, std::pair<SOCKET, SOCKET>>& cd;
 };

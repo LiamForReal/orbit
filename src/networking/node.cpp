@@ -83,7 +83,8 @@ void Node::controlReceiver(SOCKET& serverSock)
 			mutex.lock();
 			std::cout << "delete sended!\n\n";
 			//ERROR!!!
-			//rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
+			NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), std::ref(_client_socket), std::ref(_aesKeys));
+			rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
 
 			if (DELETE_CIRCUIT_STATUS == rr.buffer[STATUS_INDEX])
 			{
@@ -126,7 +127,7 @@ void Node::controlSender(SOCKET& serverSock)
 			mutex.unlock();
 			if (bytesSent <= 0)
 			{
-				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
+				std::cout << "\n\n\nalive msg wasn't send \n\n\n";
 				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
 				break;
 			}
@@ -156,10 +157,10 @@ void Node::serveControl()
 		ioctlsocket(serverSock, FIONREAD, &l);
 
 		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
-		//std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
+		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
 
 		controlSenderThread.join();
-		//controlReceiverThread.join();
+		controlReceiverThread.join();
 	}
 	catch (std::runtime_error& e)
 	{
@@ -283,8 +284,8 @@ int main()
 		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
 		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
 
-		//std::thread aliveMsg(&Node::serveControl, node);
-		//aliveMsg.detach(); - control 
+		std::thread aliveMsg(&Node::serveControl, node);
+		aliveMsg.detach();
 		node.serveProxy(ip_env, port);
 	}
 	catch (const std::runtime_error& e)

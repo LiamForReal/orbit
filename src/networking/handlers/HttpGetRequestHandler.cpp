@@ -3,8 +3,8 @@
 #include <curl/curl.h>
 #include <string>
 
-HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock, std::map<unsigned int, AES>& aesKeys)
-    : _circuitsData(circuitsData), _socket(clientSock), _aesKeys(aesKeys)
+HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, std::map<unsigned int, AES>& aesKeys)
+    : _circuitsData(circuitsData), _aesKeys(aesKeys)
 {
     this->rr = RequestResult();
 }
@@ -115,7 +115,7 @@ RequestResult HttpGetRequestHandler::handleRequest(RequestInfo& requestInfo)
         else
         {
             HttpGetRequest hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo);
-            _circuitsData[requestInfo.circuit_id].first = _socket;
+            //_circuitsData[requestInfo.circuit_id].first = _socket;
             // send HTTP GET (hgRequest.msg) to Web Server
             hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";

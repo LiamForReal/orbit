@@ -494,7 +494,6 @@ int main()
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client();
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
-		//client.startConversation();
 
 		std::thread startConversationThread(&Client::startConversation, std::ref(client), true);
 		startConversationThread.detach();
@@ -503,8 +502,8 @@ int main()
 		{
 			if (client.getPassedPathGetWait())
 			{
-				//std::thread listenToServerInfoThread(&Client::listenToServerInfo, std::ref(client));
-				//listenToServerInfoThread.detach();
+				std::thread listenToServerInfoThread(&Client::listenToServerInfo, std::ref(client));
+				listenToServerInfoThread.detach();
 				client.setPassedPathGetWait(false);
 			}
 			if (client.getRestartConversation())

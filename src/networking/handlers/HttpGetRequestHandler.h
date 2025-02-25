@@ -10,7 +10,7 @@ typedef struct CurlResponse
 class HttpGetRequestHandler : virtual public IRequestHandler
 {
 	public:
-		HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock, std::map<unsigned int, AES>& aesKeys);
+		HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, std::map<unsigned int, AES>& aesKeys);
 		bool isRequestRelevant(const RequestInfo& requestInfo) override;
 		
 		RequestResult handleRequest(RequestInfo& requestInfo) override;
@@ -23,5 +23,4 @@ class HttpGetRequestHandler : virtual public IRequestHandler
 		std::string sendHttpRequest(const std::string& httpRequest);
 		std::map<unsigned int, std::pair<SOCKET, SOCKET>>& _circuitsData;
 		std::map<unsigned int, AES>& _aesKeys;
-		SOCKET& _socket;
 };

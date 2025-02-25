@@ -13,8 +13,8 @@ NodeRequestHandler::NodeRequestHandler(std::map<unsigned int, std::pair<SOCKET, 
 	_circuitData(circuits), _rsaKeys(rsaKeys), _aesKeys(aesKeys), _socket(cs)
 {
 	this->lrh = new LinkRequestHandler(_circuitData, _socket, _aesKeys);
-	this->hgrh = new HttpGetRequestHandler(_circuitData, _socket, _aesKeys);
-	this->dcrh = new DeleteCircuitRequestHandler(_circuitData, _socket);
+	this->hgrh = new HttpGetRequestHandler(_circuitData, _aesKeys);
+	this->dcrh = new DeleteCircuitRequestHandler(_circuitData);
 	this->rkerh = new RsaKeyExchangeRequestHandler(_circuitData, _socket, _rsaKeys, _aesKeys);
 	this->ekerh = new EcdheKeyExchangeRequestHandler(_circuitData, _socket, _rsaKeys, _aesKeys);
 

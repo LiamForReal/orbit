@@ -1,7 +1,7 @@
 #include "DeleteCircuitRequestHandler.h"
 
-DeleteCircuitRequestHandler::DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock)
-	: cd(circuitsData), _socket(clientSock)
+DeleteCircuitRequestHandler::DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData)
+	: cd(circuitsData)
 {
 	this->rr = RequestResult();
 }
