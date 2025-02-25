@@ -1,7 +1,7 @@
 #include "DeleteCircuitRequestHandler.h"
 
-DeleteCircuitRequestHandler::DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData)
-	: cd(circuitsData)
+DeleteCircuitRequestHandler::DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& rsaKeys, std::map<unsigned int, AES>& aesKeys)
+	: cd(circuitsData), _rsaKeys(rsaKeys), _aesKeys(aesKeys)
 {
 	this->rr = RequestResult();
 }
@@ -25,13 +25,15 @@ bool DeleteCircuitRequestHandler::isRequestRelevant(const RequestInfo& requestIn
 
 RequestResult DeleteCircuitRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
-	this->rr.buffer.clear();
+	rr.buffer.clear();
 	unsigned int circuit_id = requestInfo.circuit_id,status = DELETE_CIRCUIT_STATUS;
 	try
 	{
-		closeSocket(this->cd[requestInfo.circuit_id].first);
-		closeSocket(this->cd[requestInfo.circuit_id].second);
-		this->cd.erase(requestInfo.circuit_id);
+		closeSocket(cd[requestInfo.circuit_id].first);
+		closeSocket(cd[requestInfo.circuit_id].second);
+		cd.erase(requestInfo.circuit_id);
+		_rsaKeys.erase(requestInfo.circuit_id);
+		_aesKeys.erase(requestInfo.circuit_id);
 	}
 	catch (std::runtime_error& e)
 	{

@@ -80,10 +80,9 @@ void Node::controlReceiver(SOCKET& serverSock)
 		{
 			ri = Helper::waitForResponse(serverSock);
 
-			mutex.lock();
-			std::cout << "delete sended!\n\n";
+			std::cout << "delete recved!\n\n";
 			//ERROR!!!
-			NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), std::ref(_client_socket), std::ref(_aesKeys));
+			NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), INVALID_SOCKET, std::ref(_aesKeys)); // dont need sock for delete
 			rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
 
 			if (DELETE_CIRCUIT_STATUS == rr.buffer[STATUS_INDEX])
@@ -94,8 +93,6 @@ void Node::controlReceiver(SOCKET& serverSock)
 			{
 				std::cerr << "Failed to delete circuit!\n";
 			}
-			mutex.unlock();
-
 		}
 	}
 	catch (std::runtime_error& e)
@@ -115,26 +112,26 @@ void Node::controlSender(SOCKET& serverSock)
 
 	try
 	{
+		RequestResult rr;
 		data = new char[1];
 		data[0] = (char)(ALIVE_MSG_RC);
-
-		int bytesSent = 0;
-
+		rr.buffer = Helper::buildRR((unsigned char)(ALIVE_MSG_RC)); //without circuit id - unneccecery
 		while (true)
 		{
-			mutex.lock();
-			bytesSent = send(serverSock, data, sizeof(data), 0);
-			mutex.unlock();
-			if (bytesSent <= 0)
+			
+			try
 			{
-				std::cout << "\n\n\nalive msg wasn't send \n\n\n";
-				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
+				Helper::sendVector(serverSock, rr.buffer);
+				std::cout << "\nalive msg was sended!\n";
+			}
+			catch(std::runtime_error e)
+			{
+				std::cout << e.what() << std::endl;
 				break;
 			}
-			//else std::cout << "\nalive msg was sended!\n";
 			//return; node crush
 			// add node crush exe to check
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 		}
 	}
 	catch (std::runtime_error& e)

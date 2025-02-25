@@ -1,6 +1,6 @@
 #include "server.h"
 #include "handlers/TorRequestHandler.h"
-#define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
+#define SECONDS_TO_WAIT 5 //the maximum time we wait for node alives
 // using static const instead of macros 
 static const unsigned short PORT = 9787;
 static const unsigned short CONTROL_PORT = 9788;
@@ -383,17 +383,19 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 {
 	try
 	{
-		setupSocketTimeout(node_sock);
+		
 		std::cout << "Enter to control with socket " << node_sock << std::endl;
 
 		while (true)
 		{
-			if (handleCircuitNotifications(circuits, nodeIp, node_sock))
+			setupSocketTimeout(std::ref(node_sock));
+
+			if (handleCircuitNotifications(circuits, nodeIp, std::ref(node_sock)))
 				return;
 
-			if (!receiveAliveMessage(node_sock, nodeIp))
+			if (!receiveAliveMessage(std::ref(node_sock), nodeIp))
 			{
-				handleNodeTimeout(circuits, nodeIp, node_sock);
+				handleNodeTimeout(circuits, nodeIp, std::ref(node_sock));
 			}
 		}
 	}
@@ -408,13 +410,13 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 	}
 }
 
-void Server::setupSocketTimeout(const SOCKET node_sock)
+void Server::setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait)
 {
-	DWORD timeout = SECONDS_TO_WAIT * 1000;
+	DWORD timeout = DWORD(seconeds_to_wait * 1000);
 	setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 }
 
-bool Server::handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET node_sock)
+bool Server::handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
 {
 	std::unique_lock<std::mutex> lock(circuitMutex);
 
@@ -437,7 +439,7 @@ bool Server::checkNotifications(const std::vector<unsigned int>& circuits, const
 	return false;
 }
 
-bool Server::processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET node_sock)
+bool Server::processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
 {
 	for (unsigned int circuitId : circuits)
 	{
@@ -458,7 +460,7 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 	return false;
 }
 
-void Server::notifyNodeDeletion(const SOCKET node_sock, unsigned int circuitId)
+void Server::notifyNodeDeletion(const SOCKET& node_sock, unsigned int circuitId)
 {
 	RequestResult rr;
 	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
@@ -480,35 +482,38 @@ void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp
 	_controlList[circuitId] = newCircuit;
 
 	CircuitConfirmationResponse ccr;
+	RequestResult rr;
+
 	ccr.nodesPath = newCircuit;
 	std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
-	RequestResult rr;
 	rr.buffer = Helper::buildRR(data, CIRCUIT_CONFIRMATION_STATUS, data.size(), circuitId);
 	Helper::sendVector(_clients[circuitId], rr.buffer);
 	std::cerr << "Circuit regenerated for circuit " << circuitId << ".\n";
 }
 
-bool Server::receiveAliveMessage(const SOCKET node_sock, const std::string& nodeIp)
+bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nodeIp)
 {
-	char buffer[100];
-	mutex.lock();
-	int bytesRead = recv(node_sock, buffer, sizeof(buffer), 0);
-	mutex.unlock();
-
-	if (bytesRead <= 0)
+	try
 	{
+		std::lock_guard<std::mutex> lock(mutex);
+		std::cout << "recv from node: " << nodeIp << std::endl;
+		RequestInfo ri = Helper::waitForResponse(node_sock);
+		std::cout << std::endl;
+		if (ri.id != ALIVE_MSG_RC)
+		{
+			std::cerr << "ERROR: Unexpected message code received -> " << ri.id << "\n";
+			throw std::runtime_error("Unexpected message code received.");
+		}
+		return true;
+	}
+	catch (std::runtime_error e)
+	{
+		std::cout << e.what() << std::endl;
 		return false;
 	}
-
-	if (static_cast<unsigned int>(buffer[0]) != ALIVE_MSG_RC)
-	{
-		std::cerr << "ERROR: Unexpected message code received -> " << buffer[0] << "\n";
-		throw std::runtime_error("Unexpected message code received.");
-	}
-	return true;
 }
 
-void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET node_sock)
+void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
 {
 	std::cerr << "TIMEOUT: Node " << nodeIp << " did not send alive message.\n";
 	for (unsigned int circuitId : circuits)
@@ -517,7 +522,7 @@ void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const 
 		_circuitsToNotify[circuitId].insert(nodeIp);
 		circuitCondition.notify_all();
 	}
-	setupSocketTimeout(node_sock);
+	setupSocketTimeout(node_sock, SECONDS_TO_WAIT * 2);
 }
 
 

@@ -44,7 +44,6 @@ private:
     void controlSender(SOCKET& serverSock);
 
     //NodeRequestHandler nodeRequestHandler;
-    SOCKET _client_socket;
     std::map<unsigned int, std::pair<SOCKET, SOCKET>> circuits;
     SOCKET _socket;
     //                                  clients RSA public_key and product
