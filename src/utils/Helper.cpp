@@ -1,36 +1,50 @@
 #include "Helper.h"
 
-
 using std::string;
 
 void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
 	std::cout << "Sending...\n";
 
-	size_t totalBytesSent = 0;
-	size_t dataSize = vec.size();  // Ensure size_t is used
+	int totalBytesSent = 0;
+	int dataSize = vec.size();  
 	int bytesSent;
 
-	std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
-
-	while (totalBytesSent < dataSize)
+	try
 	{
-		bytesSent = send(sc,
-			reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
-			dataSize - totalBytesSent,
-			0);
+		std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
+		std::cout << "total bytes before send: " << totalBytesSent << "\n";
 
-		if (bytesSent == SOCKET_ERROR)
+		while (totalBytesSent < dataSize)
 		{
-			std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
-			throw std::runtime_error("Error while sending message to client");
+			std::cout << "1";
+			bytesSent = send(sc,
+				reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
+				dataSize - totalBytesSent,
+				0);
+			std::cout << "2";
+			if (bytesSent == SOCKET_ERROR)
+			{
+				std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
+				throw std::runtime_error("Error while sending message to client");
+			}
+			else if (bytesSent == 0)
+			{
+				std::cerr << "Connection closed by the client\n";
+				throw std::runtime_error("Connection closed by the client");
+			}
+			totalBytesSent += bytesSent;
+			std::cout << "3\n";
 		}
-		else if (bytesSent == 0)
-		{
-			std::cerr << "Connection closed by the client\n";
-			throw std::runtime_error("Connection closed by the client");
-		}
-		totalBytesSent += bytesSent;
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
+		std::cout << "\ncatched an error!!!\n";
+	}
+	catch (...)
+	{
+		std::cout << "unecpected error!!!";
 	}
 	std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 }

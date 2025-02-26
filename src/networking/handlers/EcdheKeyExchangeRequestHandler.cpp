@@ -76,7 +76,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(RequestInfo& request
 	}
 	catch (std::runtime_error& e)
 	{
-		status = RSA_KEY_EXCHANGE_ERROR;
+		status = ECDHE_KEY_EXCHANGE_ERROR;
 		std::cout << e.what() << std::endl;
 	}
 	catch (...)
