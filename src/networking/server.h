@@ -44,7 +44,7 @@ class Server
         void acceptControlClient();
         void clientHandler(const SOCKET client_socket);
 
-        void clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp);
+        void clientControlHandler(const SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp);
         void setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait = SECONDS_TO_WAIT);
         bool handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock);
         bool checkNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp);

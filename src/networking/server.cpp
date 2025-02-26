@@ -291,7 +291,7 @@ void Server::acceptControlClient()
 	{
 		throw std::runtime_error("Failed to accept client connection.");
 	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(500));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	mutex.lock(); // update
 	for (auto it : _controlList)
 	{
@@ -379,7 +379,7 @@ SOCKET Server::createSocket(const std::string& ip, unsigned int port)
 	return sock;
 }
 
-void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp)
+void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp)
 {
 	try
 	{
@@ -388,8 +388,6 @@ void Server::clientControlHandler(const SOCKET node_sock, const std::vector<unsi
 
 		while (true)
 		{
-			setupSocketTimeout(std::ref(node_sock));
-
 			if (handleCircuitNotifications(circuits, nodeIp, std::ref(node_sock)))
 				return;
 
@@ -450,13 +448,14 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 			{
 				_circuitsToNotify.erase(circuitId);
 			}
-
+			std::cout << "this node has notified\n";
 			notifyNodeDeletion(node_sock, circuitId);
 			notifyClientDeletion(circuitId);
 			regenerateCircuit(circuitId, nodeIp);
 			return true;
 		}
 	}
+	std::cout << "no notifications\n";
 	return false;
 }
 
@@ -495,7 +494,9 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 {
 	try
 	{
-		std::lock_guard<std::mutex> lock(mutex);
+		//std::lock_guard<std::mutex> lock(mutex);
+		std::cout << "set time out of " << SECONDS_TO_WAIT << " seconds\n";
+		setupSocketTimeout(std::ref(node_sock));
 		std::cout << "recv from node: " << nodeIp << std::endl;
 		RequestInfo ri = Helper::waitForResponse(node_sock);
 		std::cout << std::endl;
@@ -522,7 +523,7 @@ void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const 
 		_circuitsToNotify[circuitId].insert(nodeIp);
 		circuitCondition.notify_all();
 	}
-	setupSocketTimeout(node_sock, SECONDS_TO_WAIT * 2);
+	setupSocketTimeout(node_sock);
 }
 
 

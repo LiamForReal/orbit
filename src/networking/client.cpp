@@ -157,18 +157,16 @@ void Client::listenToServerInfo()
 		while (true)
 		{
 			this->_passedListenWait = false;
+			std::cout << "waiting for server control msges!\n";
 			ri = Helper::waitForResponse(this->_clientSocketWithDS);
 			this->_passedListenWait = true;
-			if (ri.buffer.empty())
-				continue;
-			else if (ri.id == DELETE_CIRCUIT_RC)
+			if (ri.id == DELETE_CIRCUIT_RC)
 			{
 				//TOCHANGE BY MAIN 
-				std::cout << "got delete!!!\n";
+				std::cout << "[INFO] got delete msg\n";
 				this->_restartConversation = true;
 				throw std::runtime_error("the circuit is corrupted!");
 			}
-			std::cout << "server sends " << ri.id << " request tipe\n";
 		}
 	}
 	catch (std::runtime_error& e)
@@ -248,7 +246,6 @@ void Client::dataLayersDecription(std::vector<unsigned char>& data)
 
 void Client::startConversation(const bool& openNodes)
 {
-	char buffer[100];
 	std::string domain;
 	RequestInfo ri;
 	RequestResult rr;
@@ -268,7 +265,7 @@ void Client::startConversation(const bool& openNodes)
 	unsigned int circuit_id = ri.circuit_id;
 	CircuitConfirmationResponse ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri);
 	_rsaCircuitData.reserve(ccr.nodesPath.size());
-
+	
 	for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 	{
 		std::cout << "Node: " << it->first << " " << it->second << std::endl;
@@ -494,7 +491,7 @@ int main()
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client();
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
-
+		
 		std::thread startConversationThread(&Client::startConversation, std::ref(client), true);
 		startConversationThread.detach();
 
