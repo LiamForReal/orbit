@@ -29,7 +29,7 @@ class AES
 		AES();
 		AES& operator=(const AES& other);
 		void generateRoundKeys(uint256_t& key);
-		
+		bool isInishialized() const;
 		std::vector<uint8_t> encrypt(std::vector<uint8_t> plainTextVec);
 		std::vector<uint8_t> decrypt(std::vector<uint8_t> cipherTextVec);
 

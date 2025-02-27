@@ -1,6 +1,5 @@
 #include "server.h"
 #include "handlers/TorRequestHandler.h"
-#define SECONDS_TO_WAIT 5 //the maximum time we wait for node alives
 // using static const instead of macros 
 static const unsigned short PORT = 9787;
 static const unsigned short CONTROL_PORT = 9788;
@@ -65,7 +64,7 @@ void Server::serveClients()
 	{
 		// the main thread is only accepting clients 
 		// and add then to the list of handlers
-		std::cout << "accepting client...\n" ;
+		std::cout << "[CIRCUITS] accepting client...\n" ;
 		acceptClient();
 
 	}
@@ -81,12 +80,12 @@ void Server::bindAndListen()
 	sa.sin_addr.s_addr = IFACE;
 	// again stepping out to the global namespace
 	if (::bind(_socket, (struct sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
-		throw std::runtime_error("server bind error");
-	std::cout << "binded\n";
+		throw std::runtime_error("[CIRCUITS] server bind error");
+	std::cout << "[CIRCUITS] binded\n";
 
 	if (::listen(_socket, SOMAXCONN) == SOCKET_ERROR)
-		throw std::runtime_error("server listen error");
-	std::cout << "listening...\n";
+		throw std::runtime_error("[CIRCUITS] server listen error");
+	std::cout << "[CIRCUITS] listening...\n";
 
 }
 
@@ -95,9 +94,9 @@ void Server::acceptClient()
 {
 	SOCKET client_socket = accept(_socket, NULL, NULL);
 	if (client_socket == INVALID_SOCKET)
-		throw std::runtime_error("invalid socket accepted");
+		throw std::runtime_error("[CIRCUITS] invalid socket accepted");
 
-	std::cout << "Client accepted !\n";
+	std::cout << "[CIRCUITS] Client accepted !\n";
 	// create new thread for client	and detach from it
 	std::thread tr(&Server::clientHandler, this, client_socket);
 	tr.detach();
@@ -125,11 +124,11 @@ void Server::clientHandler(const SOCKET client_socket)
 			
 			if (RSA_KEY_EXCHANGE_RC != ri.id)
 			{
-				throw std::runtime_error("Did not get RSA key exchange request!");
+				throw std::runtime_error("[CIRCUITS] Did not get RSA key exchange request!");
 			}
-			std::cout << "rsa msg was sended\n";
+			std::cout << "[CIRCUITS] rsa msg was sended\n";
 			rkeRequest = DeserializerRequests::deserializeRsaKeyExchangeRequest(ri);
-			std::cout << "Got public RSA key from client: " << rkeRequest.public_key << std::endl;
+			std::cout << "[CIRCUITS] Got public RSA key from client: " << rkeRequest.public_key << std::endl;
 			_rsaInfo[client_socket].second.first = rkeRequest.public_key;
 			_rsaInfo[client_socket].second.second = rkeRequest.product;
 
@@ -158,9 +157,9 @@ void Server::clientHandler(const SOCKET client_socket)
 
 			if (ECDHE_KEY_EXCHANGE_RC != ri.id)
 			{
-				throw std::runtime_error("Did not get ECDHE key exchange request!");
+				throw std::runtime_error("[CIRCUITS] Did not get ECDHE key exchange request!");
 			}
-			std::cout << "ecdhe msg recved\n";
+			std::cout << "[CIRCUITS] ecdhe msg recved\n";
 			ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(ri);
 			_ecdheInfo[client_socket].setG(ekeRequest.b);
 			_ecdheInfo[client_socket].setP(ekeRequest.m);
@@ -176,16 +175,16 @@ void Server::clientHandler(const SOCKET client_socket)
 			data = _rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second);
 			rr.buffer = Helper::buildRR(data, status, data.size());
 
-			std::cout << "ecdhe msg sended\n";
+			std::cout << "[CIRCUITS] ecdhe msg sended\n";
 			Helper::sendVector(client_socket, rr.buffer);
 			//GET REQUEST AND BUILD ECDHE INFO END
 
 			//BUILD AES KEY START
 			_ecdheInfo[client_socket].setG(ekeRequest.calculationResult);
-			std::cout << "generate aes key!!!\n";
+			std::cout << "[CIRCUITS] generate aes key!!!\n";
 			uint256_t sheredSicret = _ecdheInfo[client_socket].createDefiKey();
 			_aes.generateRoundKeys(sheredSicret);
-			std::cout << "shered sicret is: " << sheredSicret << "\n";
+			std::cout << "[CIRCUITS] shered sicret is: " << sheredSicret << "\n";
 		}
 		catch (std::runtime_error e)
 		{
@@ -199,7 +198,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		//PREPER TOR REQUEST HANDLER END
 
 		//SEND CIRCUIT INFO START
-		std::cout << "get msg from client " + std::to_string(client_socket) << std::endl;
+		std::cout << "[CIRCUITS] get msg from client " + std::to_string(client_socket) << std::endl;
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
 		mutex.lock();
@@ -210,22 +209,22 @@ void Server::clientHandler(const SOCKET client_socket)
 				circuit_id = it.first;
 				_clients[circuit_id] = client_socket;
 				
-				std::cout << "new client allocated\n\n";
+				std::cout << "[CIRCUITS] new client allocated\n\n";
 				break;
 			}
 		}
 		mutex.unlock();
 		Helper::sendVector(client_socket, rr.buffer);
-		std::cout << "sending msg...\n";
+		std::cout << "[CIRCUITS] sending msg...\n";
 		if (static_cast<unsigned int>(rr.buffer[1]) == CIRCUIT_CONFIRMATION_ERROR)
 		{
-			throw std::runtime_error("failed to get nodes details");
+			throw std::runtime_error("[CIRCUITS] failed to get nodes details");
 		}
 		//SEND CIRCUIT INFO END
 	}
 	catch (const std::runtime_error& e)
 	{
-		std::cout << "client handler crushes!!!";
+		std::cout << "[CIRCUITS] client handler crushes!!!";
 		std::cerr << e.what() << std::endl;
 	}
 }
@@ -245,7 +244,7 @@ void Server::serveControl() //check if its one of the nodes
 			//client -> nodes 
 			if (!_controlList.empty())
 			{
-				std::cout << "accepting nodes for control from client" << clientsAmount << "...\n";
+				std::cout << "[CONTROL] accepting nodes from " << clientsAmount << " amount of client...\n";
 				this->acceptControlClient(); //give all the exisiting nodes
 			}
 			
@@ -271,12 +270,12 @@ void Server::bindAndListenControl()
 	sa.sin_family = AF_INET;
 	sa.sin_addr.s_addr = IFACE;
 	if (::bind(this->_controlSocket, (struct sockaddr*)&sa, sizeof(sa)) == SOCKET_ERROR)
-		throw std::runtime_error("server control bind error");
-	std::cout << "binded control\n";
+		throw std::runtime_error("[CONTROL] server bind error");
+	std::cout << "[CONTROL] binded\n";
 
 	if (::listen(this->_controlSocket, SOMAXCONN) == SOCKET_ERROR)
-		throw std::runtime_error("server control listen error");
-	std::cout << "listening control...\n";
+		throw std::runtime_error("[CONTROL] server listen error");
+	std::cout << "[CONTROL] listening...\n";
 }
 
 void Server::acceptControlClient()
@@ -289,9 +288,9 @@ void Server::acceptControlClient()
 	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);//wait here
 	if (nodeSocket == INVALID_SOCKET)
 	{
-		throw std::runtime_error("Failed to accept client connection.");
+		throw std::runtime_error("[CONTROL] Failed to accept client connection.");
 	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 	mutex.lock(); // update
 	for (auto it : _controlList)
 	{
@@ -322,7 +321,7 @@ void Server::acceptControlClient()
 	if (isAllowed)
 	{
 		mutex.lock();
-		std::cout << "Node " << nodeIPStr << " accepted." << std::endl;
+		std::cout << "[CONTROL] Node " << nodeIPStr << " accepted." << std::endl;
 		mutex.unlock();
 		for (auto it : _controlList)
 		{
@@ -341,7 +340,7 @@ void Server::acceptControlClient()
 	else
 	{
 		mutex.lock();
-		std::cout << "Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
+		std::cout << "[CONTROL] Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
 		mutex.unlock();
 		closesocket(nodeSocket);
 	}
@@ -384,7 +383,7 @@ void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<uns
 	try
 	{
 		
-		std::cout << "Enter to control with socket " << node_sock << std::endl;
+		std::cout << "[CONTROL] Enter to control with socket " << node_sock << std::endl;
 
 		while (true)
 		{
@@ -404,12 +403,13 @@ void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<uns
 	}
 	catch (...)
 	{
-		std::cout << "Unexpected problem caught!\n";
+		std::cout << "[CONTROL] Unexpected problem caught!\n";
 	}
 }
 
 void Server::setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait)
 {
+	std::cout << "[CONTROL] set time out of " << seconeds_to_wait << " seconds\n";
 	DWORD timeout = DWORD(seconeds_to_wait * 1000);
 	setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 }
@@ -448,14 +448,14 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 			{
 				_circuitsToNotify.erase(circuitId);
 			}
-			std::cout << "this node has notified\n";
+			std::cout << "[CONTROL] this node has notified\n";
 			notifyNodeDeletion(node_sock, circuitId);
 			notifyClientDeletion(circuitId);
 			regenerateCircuit(circuitId, nodeIp);
 			return true;
 		}
 	}
-	std::cout << "no notifications\n";
+	std::cout << "[CONTROL] no notifications\n";
 	return false;
 }
 
@@ -464,7 +464,7 @@ void Server::notifyNodeDeletion(const SOCKET& node_sock, unsigned int circuitId)
 	RequestResult rr;
 	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
 	Helper::sendVector(node_sock, rr.buffer);
-	std::cerr << "Node notified for circuit " << circuitId << ".\n";
+	std::cerr << "[CONTROL] Node notified for circuit " << circuitId << ".\n";
 }
 
 void Server::notifyClientDeletion(unsigned int circuitId)
@@ -472,7 +472,7 @@ void Server::notifyClientDeletion(unsigned int circuitId)
 	RequestResult rr;
 	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
 	Helper::sendVector(_clients[circuitId], rr.buffer);
-	std::cerr << "Client notified for circuit " << circuitId << ".\n";
+	std::cerr << "[CONTROL] Client notified for circuit " << circuitId << ".\n";
 }
 
 void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp)
@@ -485,9 +485,14 @@ void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp
 
 	ccr.nodesPath = newCircuit;
 	std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
+	if (_aes.isInishialized())
+	{
+		std::cout << "[CONTROL] aes not inishialize\n";
+		data = _aes.encrypt(data);
+	}
 	rr.buffer = Helper::buildRR(data, CIRCUIT_CONFIRMATION_STATUS, data.size(), circuitId);
 	Helper::sendVector(_clients[circuitId], rr.buffer);
-	std::cerr << "Circuit regenerated for circuit " << circuitId << ".\n";
+	std::cerr << "[CONTROL] Circuit regenerated for circuit " << circuitId << ".\n";
 }
 
 bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nodeIp)
@@ -495,16 +500,15 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 	try
 	{
 		//std::lock_guard<std::mutex> lock(mutex);
-		std::cout << "set time out of " << SECONDS_TO_WAIT << " seconds\n";
-		setupSocketTimeout(std::ref(node_sock));
-		std::cout << "recv from node: " << nodeIp << std::endl;
+		setupSocketTimeout(node_sock);
+		std::cout << "[CONTROL] recv from node: " << nodeIp << std::endl;
 		RequestInfo ri = Helper::waitForResponse(node_sock);
-		std::cout << std::endl;
 		if (ri.id != ALIVE_MSG_RC)
 		{
-			std::cerr << "ERROR: Unexpected message code received -> " << ri.id << "\n";
-			throw std::runtime_error("Unexpected message code received.");
+			std::cerr << "[CONTROL] ERROR: Unexpected message code received -> " << ri.id << "\n";
+			throw std::runtime_error("[CONTROL] Unexpected message code received.");
 		}
+		std::cout << "[CONTROL] Successfully recved alive msg!!!\n";
 		return true;
 	}
 	catch (std::runtime_error e)
@@ -512,11 +516,15 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 		std::cout << e.what() << std::endl;
 		return false;
 	}
+	catch (...)
+	{
+		return false;
+	}
 }
 
 void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
 {
-	std::cerr << "TIMEOUT: Node " << nodeIp << " did not send alive message.\n";
+	std::cerr << "[CONTROL] Node " << nodeIp << " did not send alive message.\n";
 	for (unsigned int circuitId : circuits)
 	{
 		std::unique_lock<std::mutex> lock(circuitMutex);

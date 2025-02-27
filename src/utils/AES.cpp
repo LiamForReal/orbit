@@ -14,6 +14,11 @@ AES& AES::operator=(const AES& other)
     return *this;
 }
 
+bool AES::isInishialized() const
+{
+    return !_key.str().empty();
+}
+
 void AES::generateRoundKeys(uint256_t& key)
 {
     this->_key = key;
@@ -344,6 +349,8 @@ std::vector<uint8_t> AES::encrypt(std::vector<uint8_t> plainTextVec)
 
 std::vector<uint8_t> AES::decrypt(std::vector<uint8_t> cipherTextVec)
 {
+    if (cipherTextVec.size() % 16 != 0)
+        throw std::runtime_error("the decripted vector doesn't encripted");
     std::vector<uint8_t> plainTextVec;
     uint8_t chunkGrid[AES_GRID_ROWS][AES_GRID_COLS] = { { 0 } };
 

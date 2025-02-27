@@ -11,27 +11,39 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 	size_t dataSize = vec.size();  // Ensure size_t is used
 	int bytesSent;
 
-	std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
-
-	while (totalBytesSent < dataSize)
+	try
 	{
-		bytesSent = send(sc,
-						reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
-						dataSize - totalBytesSent,
-						0);
+		std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
 
-		if (bytesSent == SOCKET_ERROR)
+		while (totalBytesSent < dataSize)
 		{
-			std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
-			throw std::runtime_error("Error while sending message to client");
+			bytesSent = send(sc,
+				reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
+				dataSize - totalBytesSent,
+				0);
+
+			if (bytesSent == SOCKET_ERROR)
+			{
+				std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
+				throw std::runtime_error("Error while sending message to client");
+			}
+			else if (bytesSent == 0)
+			{
+				std::cerr << "Connection closed by the client\n";
+				throw std::runtime_error("Connection closed by the client");
+			}
+			totalBytesSent += bytesSent;
 		}
-		else if (bytesSent == 0)
-		{
-			std::cerr << "Connection closed by the client\n";
-			throw std::runtime_error("Connection closed by the client");
-		}
-		totalBytesSent += bytesSent;
 	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << "run time error: " << e.what() << std::endl;
+	}
+	catch(...)
+	{
+		std::cout << "unecpected error while sending" << std::endl;
+	}
+	
 	std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 }
 
@@ -115,11 +127,10 @@ std::vector<uint8_t> Helper::getDataPartFromSocket(const SOCKET sc, const int by
 }
 
 
-RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode)
+RequestInfo Helper::buildRI(const SOCKET& socket, const unsigned int& circuit_id, const unsigned int& statusCode)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
-	unsigned int msgLength = 0;
 	size_t i = 0;
 	int j = 0;
 
@@ -129,13 +140,9 @@ RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const
 	ri.id = statusCode;
 	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
 
-	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
-		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
-		return ri;
+	ri.length = Helper::getLengthPartFromSocket(socket);
 
-	msgLength = Helper::getLengthPartFromSocket(socket);
-	ri.length = msgLength;
-	std::cout << "DEBUG: Length: " << msgLength << std::endl;
+	std::cout << "DEBUG: Length: " << ri.length << std::endl;
 
 	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
 
@@ -151,14 +158,19 @@ RequestInfo Helper::buildRI(SOCKET socket, const unsigned int& circuit_id, const
 }
 
 
-RequestInfo Helper::waitForResponse(SOCKET socket)
+RequestInfo Helper::waitForResponse(const SOCKET& socket)
 {
-	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
-	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
-	return Helper::buildRI(socket, circuitId, statusCode);
+	RequestInfo ri;
+	ri.circuit_id = Helper::getCircuitIdFromSocket(socket);
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		return ri;
+	return Helper::buildRI(socket, ri.circuit_id, ri.id);
 }
 
-RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa)
+RequestInfo Helper::buildRI_RSA(const SOCKET& socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
@@ -171,10 +183,6 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 
 	ri.id = statusCode;
 	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
-
-	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
-		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
-		return ri;
 
 	ri.length = Helper::getLengthPartFromSocket(socket);
 	std::cout << "DEBUG: Length: " << ri.length << std::endl;
@@ -205,19 +213,22 @@ RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& circuit_id, c
 	return ri;
 }
 
-RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
+RequestInfo Helper::waitForResponse_RSA(const SOCKET& socket, RSA& rsa)
 {
-	std::cout << "<======== public key decription: " << rsa.getPublicKey() << " ==========>\n";
-	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
-	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
-	return Helper::buildRI_RSA(socket, circuitId, statusCode, std::ref(rsa));
+	RequestInfo ri;
+	ri.circuit_id = Helper::getCircuitIdFromSocket(socket);
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		return ri;
+	return Helper::buildRI_RSA(socket, ri.circuit_id, ri.id, std::ref(rsa));
 }
 
-RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, const unsigned int& statusCode, bool gotFromNext, AES& key)
+RequestInfo Helper::buildRI_AES(const SOCKET& socket, const unsigned int& circuit_id, const unsigned int& statusCode, bool gotFromNext, AES& key)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
-	unsigned int msgLength = 0;
 	size_t i = 0;
 	int j = 0;
 
@@ -227,13 +238,8 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 	ri.id = statusCode;
 	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
 
-	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
-		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS || ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
-		return ri;
-
-	msgLength = Helper::getLengthPartFromSocket(socket);
-	ri.length = msgLength;
-	std::cout << "DEBUG: Length: " << msgLength << std::endl;
+	ri.length = Helper::getLengthPartFromSocket(socket);
+	std::cout << "DEBUG: Length: " << ri.length << std::endl;
 
 	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
 
@@ -261,11 +267,16 @@ RequestInfo Helper::buildRI_AES(SOCKET socket, const unsigned int& circuit_id, c
 	return ri;
 }
 
-RequestInfo Helper::waitForResponse_AES(SOCKET socket, AES& key, bool isEncription)
+RequestInfo Helper::waitForResponse_AES(const SOCKET& socket, AES& key, bool isEncription)
 {
-	unsigned int circuitId = Helper::getCircuitIdFromSocket(socket);
-	unsigned int statusCode = Helper::getStatusCodeFromSocket(socket);
-	return Helper::buildRI_AES(socket, circuitId, statusCode, isEncription, key);
+	RequestInfo ri;
+	ri.circuit_id = Helper::getCircuitIdFromSocket(socket);
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		return ri;
+	return Helper::buildRI_AES(socket, ri.circuit_id, ri.id, isEncription, key);
 }
 
 vector<unsigned char> Helper::buildRR(RequestInfo& ri)
