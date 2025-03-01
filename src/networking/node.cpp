@@ -266,6 +266,11 @@ void Node::clientHandler(const SOCKET client_socket)
 	{
 		std::cerr << e.what() << '\n';
 	}
+	catch (...)
+	{
+		std::cout << "the socket c"
+		clientHandler(client_socket);
+	}
 }
 
 

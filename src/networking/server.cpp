@@ -98,30 +98,21 @@ void Server::acceptClient()
 
 	std::cout << "[CIRCUITS] Client accepted !\n";
 	// create new thread for client	and detach from it
-	std::thread tr(&Server::clientHandler, this, client_socket);
-	tr.detach();
-
-}
-
-void Server::clientHandler(const SOCKET client_socket)
-{
-	try
+	//KEY EXCHANGE PROCESS WITH CLIENT START
+	while (true)
 	{
 		_rsaInfo[client_socket].first.pregenerateKeys(); // generate rsa keys for circuit
-		std::list<std::pair<std::string, std::string>> control_info;
 		RequestInfo ri;
-		std::string msg = "";
-		unsigned int circuit_id = 0,status = 0;
+		unsigned int status = 0;
 		RequestResult rr = RequestResult();
 
-	
 		//GET REQUEST AND BUILD RSA RESPOSE START
 		RsaKeyExchangeRequest rkeRequest;
 		RsaKeyExchangeResponse rkeResponse;
 		try
 		{
 			ri = Helper::waitForResponse(client_socket);
-			
+
 			if (RSA_KEY_EXCHANGE_RC != ri.id)
 			{
 				throw std::runtime_error("[CIRCUITS] Did not get RSA key exchange request!");
@@ -169,6 +160,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		catch (std::runtime_error e)
 		{
 			status = ECDHE_KEY_EXCHANGE_ERROR;
+			break;
 		}
 		try
 		{
@@ -189,8 +181,24 @@ void Server::clientHandler(const SOCKET client_socket)
 		catch (std::runtime_error e)
 		{
 			std::cout << e.what() << std::endl;
+			break;
 		}
 		//BUILD AES KEY END
+		//KEY EXCHANGE PROCESS WITH CLIENT END 
+		std::thread tr(&Server::clientHandler, this, client_socket);
+		tr.detach();
+		break;
+	}
+}
+
+void Server::clientHandler(const SOCKET client_socket)
+{
+	try
+	{
+		RequestInfo ri;
+		unsigned int circuit_id = 0, status = 0;
+		RequestResult rr = RequestResult();
+	
 		//PREPER TOR REQUEST HANDLER START
 		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes)); // new Client circuit : INVALID_SOCKET 
@@ -339,9 +347,8 @@ void Server::acceptControlClient()
 	}
 	else
 	{
-		mutex.lock();
+		std::lock_guard<std::mutex> lock(mutex);
 		std::cout << "[CONTROL] Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
-		mutex.unlock();
 		closesocket(nodeSocket);
 	}
 
@@ -450,8 +457,9 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 			}
 			std::cout << "[CONTROL] this node has notified\n";
 			notifyNodeDeletion(node_sock, circuitId);
-			notifyClientDeletion(circuitId);
-			regenerateCircuit(circuitId, nodeIp);
+			//notifyClientDeletion(circuitId); no need
+			regenerateCircuit(circuitId, nodeIp); //changed
+			clientHandler(_clients[circuitId]);
 			return true;
 		}
 	}
@@ -479,20 +487,7 @@ void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp
 {
 	std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
 	_controlList[circuitId] = newCircuit;
-
-	CircuitConfirmationResponse ccr;
-	RequestResult rr;
-
-	ccr.nodesPath = newCircuit;
-	std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
-	if (_aes.isInishialized())
-	{
-		std::cout << "[CONTROL] aes not inishialize\n";
-		data = _aes.encrypt(data);
-	}
-	rr.buffer = Helper::buildRR(data, CIRCUIT_CONFIRMATION_STATUS, data.size(), circuitId);
-	Helper::sendVector(_clients[circuitId], rr.buffer);
-	std::cerr << "[CONTROL] Circuit regenerated for circuit " << circuitId << ".\n";
+	std::cout << "[CONTROL] Circuit " << circuitId << " regenerated.\n";
 }
 
 bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nodeIp)

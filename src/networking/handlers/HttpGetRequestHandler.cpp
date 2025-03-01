@@ -132,5 +132,10 @@ RequestResult HttpGetRequestHandler::handleRequest(RequestInfo& requestInfo)
         status = Errors::HTTP_MSG_ERROR;
         hgResponse.content = "";
     }
+    catch (...)
+    {
+        std::cout << "[HTTP GET] unecpected error!!!\n";
+        throw;
+    }
     return this->rr;
 }

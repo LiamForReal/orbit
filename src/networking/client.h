@@ -55,9 +55,7 @@ private:
 	
 	std::string generateHttpGetRequest(const std::string& domain);
 
-	bool _passedListenWait;
-	bool _passedPathGetWait;
-	bool _restartConversation;
+z
 
 	SOCKET _clientSocketWithDS;
 	SOCKET _clientSocketWithFirstNode;

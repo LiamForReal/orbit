@@ -81,7 +81,8 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(RequestInfo& request
 	}
 	catch (...)
 	{
-		std::cout << "unecpected error!!!";
+		std::cout << "[ECDHE] unecpected error!!!\n";
+		throw;
 	}
 	return rr;
 }

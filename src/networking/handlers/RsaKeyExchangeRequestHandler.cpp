@@ -75,7 +75,8 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestIn
 	}
 	catch (...)
 	{
-		std::cout << "unecpected error!!!";
+		std::cout << "[RSA] unecpected error!!!";
+		throw;
 	}
 	return rr;
 }

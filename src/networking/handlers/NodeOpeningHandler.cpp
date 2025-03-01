@@ -23,11 +23,21 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     CircuitConfirmationResponse ccr;
     this->rr.buffer.clear();
     unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
+    unsigned int circuit_id = requestInfo.circuit_id;
+
+    if (_controlList.find(circuit_id) != _controlList.end() && requestInfo.length == 0) //the circuit already exsisting in case of crush 
+    {
+        ccr.nodesPath = _controlList[circuit_id];
+        std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
+        data = _aes.encrypt(data);
+        rr.buffer = Helper::buildRR(data, status, data.size(), this->circuit_id);
+        return rr;
+    }
+
     try
     {
         requestInfo.buffer = _aes.decrypt(requestInfo.buffer);
         NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo);
-
         std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);

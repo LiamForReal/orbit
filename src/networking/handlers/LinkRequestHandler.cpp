@@ -92,5 +92,10 @@ RequestResult LinkRequestHandler::handleRequest(RequestInfo& requestInfo)
 	{
 		status = LINK_ERROR;
 	}
+	catch (...)
+	{
+		std::cout << "[LINK] unecpected error!!!\n";
+		throw;
+	}
 	return rr;
 }
