@@ -30,7 +30,7 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
         ccr.nodesPath = _controlList[circuit_id];
         std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
         data = _aes.encrypt(data);
-        rr.buffer = Helper::buildRR(data, status, data.size(), this->circuit_id);
+        rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
         return rr;
     }
 
@@ -48,8 +48,8 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
         ccr.nodesPath = nodesInfo;
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
-        std::cout << "\n\nthe circuit chosen is " << circuit_id << "\n\n";
-        _clients[circuit_id] = INVALID_SOCKET;
+        std::cout << "\n\nthe circuit chosen is " << this->circuit_id << "\n\n";
+        _clients[this->circuit_id] = INVALID_SOCKET;
     }
     catch (std::runtime_error e)
     {

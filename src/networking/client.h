@@ -35,17 +35,9 @@ public:
 	Client();
 	~Client();
 	void connectToServer(std::string serverIP, int port);
-	void startConversation(const bool& openNodes = true);
-	void nodeOpening();
+	void HandleTorClient(const bool& regular = true);
+	void nodeOpening(const bool& regular);
 	bool domainValidationCheck(std::string domain);
-	void listenToServerInfo();
-
-	bool getPassedListenWait() const;
-	bool getPassedPathGetWait() const;
-	bool getRestartConversation() const;
-
-	void setPassedPathGetWait(const bool& passedPathGetWait);
-	void setRestartConversation(const bool& restartConversation);
 
 	void dataLayersEncription(std::vector<unsigned char>& data);
 	void dataLayersDecription(std::vector<unsigned char>& data);
@@ -55,8 +47,7 @@ private:
 	
 	std::string generateHttpGetRequest(const std::string& domain);
 
-z
-
+	unsigned int circuit_id;
 	SOCKET _clientSocketWithDS;
 	SOCKET _clientSocketWithFirstNode;
 

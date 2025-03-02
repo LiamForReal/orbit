@@ -200,35 +200,36 @@ void Server::clientHandler(const SOCKET client_socket)
 		RequestResult rr = RequestResult();
 	
 		//PREPER TOR REQUEST HANDLER START
-		mutex.lock();
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes)); // new Client circuit : INVALID_SOCKET 
-		mutex.unlock(); 
 		//PREPER TOR REQUEST HANDLER END
 
 		//SEND CIRCUIT INFO START
+		mutex.lock();
 		std::cout << "[CIRCUITS] get msg from client " + std::to_string(client_socket) << std::endl;
+		mutex.unlock();
 		ri = Helper::waitForResponse(client_socket);
 		rr = torRequestHandler.directRequest(ri);
-		mutex.lock();
 		for (auto it : _clients)
 		{
 			if (it.second == INVALID_SOCKET)
 			{
+				std::lock_guard<std::mutex> lock(mutex);
 				circuit_id = it.first;
 				_clients[circuit_id] = client_socket;
-				
 				std::cout << "[CIRCUITS] new client allocated\n\n";
 				break;
 			}
 		}
-		mutex.unlock();
 		Helper::sendVector(client_socket, rr.buffer);
+		mutex.lock();
 		std::cout << "[CIRCUITS] sending msg...\n";
+		mutex.unlock();
 		if (static_cast<unsigned int>(rr.buffer[1]) == CIRCUIT_CONFIRMATION_ERROR)
 		{
 			throw std::runtime_error("[CIRCUITS] failed to get nodes details");
 		}
 		//SEND CIRCUIT INFO END
+		clientHandler(client_socket);
 	}
 	catch (const std::runtime_error& e)
 	{
@@ -252,7 +253,9 @@ void Server::serveControl() //check if its one of the nodes
 			//client -> nodes 
 			if (!_controlList.empty())
 			{
+				mutex.lock();
 				std::cout << "[CONTROL] accepting nodes from " << clientsAmount << " amount of client...\n";
+				mutex.unlock();
 				this->acceptControlClient(); //give all the exisiting nodes
 			}
 			
@@ -299,7 +302,6 @@ void Server::acceptControlClient()
 		throw std::runtime_error("[CONTROL] Failed to accept client connection.");
 	}
 	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-	mutex.lock(); // update
 	for (auto it : _controlList)
 	{
 		for (auto it2 : it.second)
@@ -307,8 +309,6 @@ void Server::acceptControlClient()
 			AlowdeNodes.emplace_back(it2.first);
 		}
 	}
-	mutex.unlock();
-
 	// Get the client's IP and port
 	char nodeIP[INET_ADDRSTRLEN + INC] = { 0 };
 	inet_ntop(AF_INET, &nodeAddr.sin_addr, nodeIP, INET_ADDRSTRLEN);
@@ -389,9 +389,9 @@ void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<uns
 {
 	try
 	{
-		
+		mutex.lock();
 		std::cout << "[CONTROL] Enter to control with socket " << node_sock << std::endl;
-
+		mutex.unlock();
 		while (true)
 		{
 			if (handleCircuitNotifications(circuits, nodeIp, std::ref(node_sock)))
@@ -416,6 +416,7 @@ void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<uns
 
 void Server::setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait)
 {
+	std::lock_guard<std::mutex> lock(mutex);
 	std::cout << "[CONTROL] set time out of " << seconeds_to_wait << " seconds\n";
 	DWORD timeout = DWORD(seconeds_to_wait * 1000);
 	setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
@@ -455,15 +456,18 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 			{
 				_circuitsToNotify.erase(circuitId);
 			}
+			mutex.lock();
 			std::cout << "[CONTROL] this node has notified\n";
-			notifyNodeDeletion(node_sock, circuitId);
+			mutex.unlock();
+			notifyNodeDeletion(node_sock, circuitId); //stays as is
 			//notifyClientDeletion(circuitId); no need
 			regenerateCircuit(circuitId, nodeIp); //changed
-			clientHandler(_clients[circuitId]);
 			return true;
 		}
 	}
+	mutex.lock();
 	std::cout << "[CONTROL] no notifications\n";
+	mutex.unlock();
 	return false;
 }
 
@@ -472,19 +476,22 @@ void Server::notifyNodeDeletion(const SOCKET& node_sock, unsigned int circuitId)
 	RequestResult rr;
 	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
 	Helper::sendVector(node_sock, rr.buffer);
-	std::cerr << "[CONTROL] Node notified for circuit " << circuitId << ".\n";
+	mutex.lock();
+	std::cout << "[CONTROL] Node notified for circuit " << circuitId << ".\n";
+	mutex.unlock();
 }
 
-void Server::notifyClientDeletion(unsigned int circuitId)
-{
-	RequestResult rr;
-	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
-	Helper::sendVector(_clients[circuitId], rr.buffer);
-	std::cerr << "[CONTROL] Client notified for circuit " << circuitId << ".\n";
-}
+//void Server::notifyClientDeletion(unsigned int circuitId)
+//{
+//	RequestResult rr;
+//	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
+//	Helper::sendVector(_clients[circuitId], rr.buffer);
+//	std::cerr << "[CONTROL] Client notified for circuit " << circuitId << ".\n";
+//}
 
 void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp)
 {
+	std::lock_guard<std::mutex> lock(mutex);
 	std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
 	_controlList[circuitId] = newCircuit;
 	std::cout << "[CONTROL] Circuit " << circuitId << " regenerated.\n";
@@ -496,14 +503,13 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 	{
 		//std::lock_guard<std::mutex> lock(mutex);
 		setupSocketTimeout(node_sock);
-		std::cout << "[CONTROL] recv from node: " << nodeIp << std::endl;
 		RequestInfo ri = Helper::waitForResponse(node_sock);
 		if (ri.id != ALIVE_MSG_RC)
 		{
 			std::cerr << "[CONTROL] ERROR: Unexpected message code received -> " << ri.id << "\n";
 			throw std::runtime_error("[CONTROL] Unexpected message code received.");
 		}
-		std::cout << "[CONTROL] Successfully recved alive msg!!!\n";
+		//std::cout << "[CONTROL] Successfully recved alive msg!!!\n";
 		return true;
 	}
 	catch (std::runtime_error e)
@@ -519,7 +525,9 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 
 void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
 {
+	mutex.lock();
 	std::cerr << "[CONTROL] Node " << nodeIp << " did not send alive message.\n";
+	mutex.unlock();
 	for (unsigned int circuitId : circuits)
 	{
 		std::unique_lock<std::mutex> lock(circuitMutex);

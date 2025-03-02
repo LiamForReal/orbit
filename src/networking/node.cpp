@@ -108,13 +108,9 @@ void Node::controlReceiver(SOCKET& serverSock)
 
 void Node::controlSender(SOCKET& serverSock)
 {
-	char* data = NULL;
-
 	try
 	{
 		RequestResult rr;
-		data = new char[1];
-		data[0] = (char)(ALIVE_MSG_RC);
 		rr.buffer = Helper::buildRR((unsigned char)(ALIVE_MSG_RC)); //without circuit id - unneccecery
 		while (true)
 		{
@@ -268,7 +264,7 @@ void Node::clientHandler(const SOCKET client_socket)
 	}
 	catch (...)
 	{
-		std::cout << "the socket c"
+		std::cout << "[MAIN] one circuit closed\n[MAIN]reopen handler\n";
 		clientHandler(client_socket);
 	}
 }
