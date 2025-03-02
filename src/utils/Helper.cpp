@@ -112,12 +112,12 @@ std::vector<uint8_t> Helper::getDataPartFromSocket(const SOCKET sc, const int by
 		{
 			std::cerr << "Error while receiving from socket: " << sc
 				<< ", Error Code: " << WSAGetLastError() << std::endl;
-			throw std::runtime_error("Error while receiving from socket");
+			throw - 1;
 		}
 		else if (res == 0)
 		{
 			std::cerr << "Connection closed by the peer\n";
-			throw std::runtime_error("Connection closed by the peer");
+			throw - 1;//std::system_error(EBADF, std::generic_category(), "Connection closed by the peer");
 		}
 
 		totalReceived += res;

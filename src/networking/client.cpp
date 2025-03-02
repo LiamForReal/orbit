@@ -426,7 +426,6 @@ void Client::HandleTorClient(const bool& regular)
 	catch(const std::runtime_error& e)
 	{
 		std::cout << "[HANDLER] catched problem: " << e.what() << std::endl;
-		std::cout << "[HANDLER] starting new conversation\n";
 	}
 	catch (...)
 	{

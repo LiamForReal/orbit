@@ -16,7 +16,7 @@ DockerManager dm = DockerManager();
 Server::Server()
 {
 	std::cout << "Server finished pregenerating RSA keys...\n";
-	
+
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
 	//this->dm = DockerManager();
@@ -24,7 +24,7 @@ Server::Server()
 	this->_circuitsToNotify = std::map<unsigned int, std::set<string>>();
 	_controlList = std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>();
 
-	_socket = socket(AF_INET,  SOCK_STREAM,  IPPROTO_TCP); 
+	_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (_socket == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 
@@ -64,7 +64,7 @@ void Server::serveClients()
 	{
 		// the main thread is only accepting clients 
 		// and add then to the list of handlers
-		std::cout << "[CIRCUITS] accepting client...\n" ;
+		std::cout << "[CIRCUITS] accepting client...\n";
 		acceptClient();
 
 	}
@@ -198,7 +198,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		RequestInfo ri;
 		unsigned int circuit_id = 0, status = 0;
 		RequestResult rr = RequestResult();
-	
+
 		//PREPER TOR REQUEST HANDLER START
 		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes)); // new Client circuit : INVALID_SOCKET 
 		//PREPER TOR REQUEST HANDLER END
@@ -208,6 +208,8 @@ void Server::clientHandler(const SOCKET client_socket)
 		std::cout << "[CIRCUITS] get msg from client " + std::to_string(client_socket) << std::endl;
 		mutex.unlock();
 		ri = Helper::waitForResponse(client_socket);
+
+
 		rr = torRequestHandler.directRequest(ri);
 		for (auto it : _clients)
 		{
@@ -245,7 +247,7 @@ void Server::serveControl() //check if its one of the nodes
 	try
 	{
 		bindAndListenControl();
-		int clientsAmount = 0; 
+		int clientsAmount = 0;
 		while (true)
 		{
 			// the main thread is only accepting clients 
@@ -258,7 +260,7 @@ void Server::serveControl() //check if its one of the nodes
 				mutex.unlock();
 				this->acceptControlClient(); //give all the exisiting nodes
 			}
-			
+
 			// IMPORTANT NOTE FOR FUTURE DEBUGGING [25.12.2024]:
 			// THE ASSIGNMENTS OF CLIENTS ALLOWED COULD AND HAPPENING
 			// AFTER _CONTROL_LIST IS UPDATED, AND IT FORGETS THE NEW NODES IN THE CIRCUIT,
@@ -301,7 +303,7 @@ void Server::acceptControlClient()
 	{
 		throw std::runtime_error("[CONTROL] Failed to accept client connection.");
 	}
-	std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	for (auto it : _controlList)
 	{
 		for (auto it2 : it.second)
@@ -317,9 +319,9 @@ void Server::acceptControlClient()
 
 	// Check if the client is in the allowed list
 	bool isAllowed = false;
-	for (auto allowedClient : AlowdeNodes) 
+	for (auto allowedClient : AlowdeNodes)
 	{
-		if (allowedClient == nodeIPStr) 
+		if (allowedClient == nodeIPStr)
 		{
 			isAllowed = true;
 			break;
@@ -501,7 +503,6 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 {
 	try
 	{
-		//std::lock_guard<std::mutex> lock(mutex);
 		setupSocketTimeout(node_sock);
 		RequestInfo ri = Helper::waitForResponse(node_sock);
 		if (ri.id != ALIVE_MSG_RC)
@@ -542,16 +543,16 @@ int main()
 {
 	srand(time(NULL));
 
-    try
-    {
-        WSAInitializer wsa = WSAInitializer();
-        Server server = Server(); 
-        server.serve(); //RUN ON THREAD 
-    }
-    catch(const std::runtime_error& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    system("pause");
-    return 0; 
+	try
+	{
+		WSAInitializer wsa = WSAInitializer();
+		Server server = Server();
+		server.serve(); //RUN ON THREAD 
+	}
+	catch (const std::runtime_error& e)
+	{
+		std::cerr << e.what() << '\n';
+	}
+	system("pause");
+	return 0;
 }
