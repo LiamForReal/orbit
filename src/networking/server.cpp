@@ -184,14 +184,14 @@ void Server::acceptClient()
 		}
 		//BUILD AES KEY END
 		//KEY EXCHANGE PROCESS WITH CLIENT END 
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes));
-		std::thread tr(&Server::clientHandler, this, client_socket, std::ref(torRequestHandler));
+		
+		std::thread tr(&Server::clientHandler, this, client_socket);
 		tr.detach();
 		break;
 	}
 }
 
-void Server::clientHandler(const SOCKET client_socket, TorRequestHandler& trh)
+void Server::clientHandler(const SOCKET client_socket)
 {
 	try
 	{
@@ -199,21 +199,28 @@ void Server::clientHandler(const SOCKET client_socket, TorRequestHandler& trh)
 		unsigned int circuit_id = 0, status = 0;
 		RequestResult rr = RequestResult();
 
+		char error = 0;
+		socklen_t len = sizeof(error);
+		int retval = getsockopt(client_socket, SOL_SOCKET, SO_ERROR, &error, &len);
+		if (retval != 0 || error != 0) {
+			std::cout << "[CLIENT] Socket is not valid!\n";
+		}
+
 		//PREPER TOR REQUEST HANDLER START
 		mutex.lock();
 		std::cout << "[CIRCUITS] inishialize tor request handler\n";
 		mutex.unlock();
 		// new Client circuit : INVALID_SOCKET 
 		//PREPER TOR REQUEST HANDLER END
-
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes));
 		//SEND CIRCUIT INFO START
 		mutex.lock();
 		std::cout << "[CIRCUITS] get msg from client " + std::to_string(client_socket) << std::endl;
 		mutex.unlock();
 		ri = Helper::waitForResponse(client_socket);
 
+		rr = torRequestHandler.directRequest(ri);
 
-		rr = trh.directRequest(ri);
 		for (auto it : _clients)
 		{
 			if (it.second == INVALID_SOCKET)
@@ -234,7 +241,7 @@ void Server::clientHandler(const SOCKET client_socket, TorRequestHandler& trh)
 			throw std::runtime_error("[CIRCUITS] failed to get nodes details");
 		}
 		//SEND CIRCUIT INFO END
-		clientHandler(client_socket, trh);
+		clientHandler(client_socket);
 	}
 	catch (...)
 	{
@@ -496,7 +503,6 @@ void Server::notifyNodeDeletion(const SOCKET& node_sock, unsigned int circuitId)
 
 void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp)
 {
-	std::lock_guard<std::mutex> lock(mutex);
 	std::vector<std::pair<std::string, std::string>> newCircuit = dm.giveCircuitAfterCrush(nodeIp, _controlList[circuitId].size(), circuitId);
 	_controlList[circuitId] = newCircuit;
 	std::cout << "[CONTROL] Circuit " << circuitId << " regenerated.\n";

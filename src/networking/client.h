@@ -35,7 +35,7 @@ public:
 	Client();
 	~Client();
 	void connectToServer(std::string serverIP, int port);
-	void HandleTorClient(const bool& regular = true);
+	void HandleTorClient(const bool regular = true);
 	void nodeOpening(const bool& regular);
 	bool domainValidationCheck(std::string domain);
 

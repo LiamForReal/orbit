@@ -188,7 +188,7 @@ void Client::dataLayersDecription(std::vector<unsigned char>& data)
 	std::cout << "[AES DECRIPTION] data is: " << data.data() << std::endl;
 }
 
-void Client::HandleTorClient(const bool& regular)
+void Client::HandleTorClient(const bool regular)
 {
 	std::string domain;
 	RequestInfo ri;
