@@ -17,6 +17,7 @@ RequestResult TorRequestHandler::directRequest(RequestInfo& requestInfo)
 {
 	if (noh->isRequestRelevant(requestInfo))
 	{
+		//std::cout << "\n\n\nIm here1\n\n\n";
 		return noh->handleRequest(requestInfo);
 	}//more...
 	else

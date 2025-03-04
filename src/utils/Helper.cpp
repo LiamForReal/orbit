@@ -167,6 +167,8 @@ RequestInfo Helper::waitForResponse(const SOCKET& socket)
 		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
 		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
 		return ri;
+	else if (ri.circuit_id != 0 && ri.id == NODE_OPEN_RC)
+		return ri;
 	return Helper::buildRI(socket, ri.circuit_id, ri.id);
 }
 
@@ -220,7 +222,7 @@ RequestInfo Helper::waitForResponse_RSA(const SOCKET& socket, RSA& rsa)
 	ri.id = Helper::getStatusCodeFromSocket(socket);
 	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
 		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
-		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS)//in case of regenerate circuit //request how has no data
 		return ri;
 	return Helper::buildRI_RSA(socket, ri.circuit_id, ri.id, std::ref(rsa));
 }

@@ -24,7 +24,9 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     this->rr.buffer.clear();
     unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
     unsigned int circuit_id = requestInfo.circuit_id;
-
+    std::cout << "clients: " << std::to_string(_clients.find(circuit_id) != _clients.end())  << std::endl;
+    std::cout << "control list: " << std::to_string(_controlList.find(circuit_id) != _controlList.end()) << std::endl;
+    std::cout << "length: " << requestInfo.length << std::endl;
     if (_controlList.find(circuit_id) != _controlList.end() && requestInfo.length == 0) //the circuit already exsisting in case of crush 
     {
         std::cout << "the circuit already exist\n";

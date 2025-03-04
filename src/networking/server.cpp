@@ -428,8 +428,9 @@ void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<uns
 
 void Server::setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait)
 {
-	std::lock_guard<std::mutex> lock(mutex);
+	mutex.lock();
 	std::cout << "[CONTROL] set time out of " << seconeds_to_wait << " seconds\n";
+	mutex.unlock();
 	DWORD timeout = DWORD(seconeds_to_wait * 1000);
 	setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 }
@@ -536,7 +537,7 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
 {
 	mutex.lock();
-	std::cerr << "[CONTROL] Node " << nodeIp << " did not send alive message.\n";
+	std::cout << "[CONTROL] Node " << nodeIp << " did not send alive message.\n";
 	mutex.unlock();
 	for (unsigned int circuitId : circuits)
 	{

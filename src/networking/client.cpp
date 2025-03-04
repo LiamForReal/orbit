@@ -200,7 +200,6 @@ void Client::HandleTorClient(const bool regular)
 	
 	try
 	{
-		std::cout << "here!!!\n";
 		//NODE OPPENING START
 		nodeOpening(regular);
 		ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
