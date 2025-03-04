@@ -27,6 +27,7 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
 
     if (_controlList.find(circuit_id) != _controlList.end() && requestInfo.length == 0) //the circuit already exsisting in case of crush 
     {
+        std::cout << "the circuit already exist\n";
         ccr.nodesPath = _controlList[circuit_id];
         std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
         data = _aes.encrypt(data);

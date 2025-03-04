@@ -127,7 +127,7 @@ void Server::acceptClient()
 			rkeResponse.product = this->_rsaInfo[client_socket].first.getProduct();
 			status = RSA_KEY_EXCHANGE_STATUS;
 		}
-		catch (std::runtime_error e)
+		catch (...)
 		{
 			status = RSA_KEY_EXCHANGE_ERROR;
 		}
@@ -157,7 +157,7 @@ void Server::acceptClient()
 			_ecdheInfo[client_socket].createTmpKey();
 			ekeResponse.calculationResult = _ecdheInfo[client_socket].createDefiKey();
 		}
-		catch (std::runtime_error e)
+		catch (...)
 		{
 			status = ECDHE_KEY_EXCHANGE_ERROR;
 			break;
@@ -178,20 +178,20 @@ void Server::acceptClient()
 			_aes.generateRoundKeys(sheredSicret);
 			std::cout << "[CIRCUITS] shered sicret is: " << sheredSicret << "\n";
 		}
-		catch (std::runtime_error e)
+		catch (...)
 		{
-			std::cout << e.what() << std::endl;
 			break;
 		}
 		//BUILD AES KEY END
 		//KEY EXCHANGE PROCESS WITH CLIENT END 
-		std::thread tr(&Server::clientHandler, this, client_socket);
+		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes));
+		std::thread tr(&Server::clientHandler, this, client_socket, std::ref(torRequestHandler));
 		tr.detach();
 		break;
 	}
 }
 
-void Server::clientHandler(const SOCKET client_socket)
+void Server::clientHandler(const SOCKET client_socket, TorRequestHandler& trh)
 {
 	try
 	{
@@ -200,7 +200,10 @@ void Server::clientHandler(const SOCKET client_socket)
 		RequestResult rr = RequestResult();
 
 		//PREPER TOR REQUEST HANDLER START
-		TorRequestHandler torRequestHandler = TorRequestHandler(std::ref(dm), std::ref(this->_controlList), std::ref(this->_clients), std::ref(_aes)); // new Client circuit : INVALID_SOCKET 
+		mutex.lock();
+		std::cout << "[CIRCUITS] inishialize tor request handler\n";
+		mutex.unlock();
+		// new Client circuit : INVALID_SOCKET 
 		//PREPER TOR REQUEST HANDLER END
 
 		//SEND CIRCUIT INFO START
@@ -210,7 +213,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		ri = Helper::waitForResponse(client_socket);
 
 
-		rr = torRequestHandler.directRequest(ri);
+		rr = trh.directRequest(ri);
 		for (auto it : _clients)
 		{
 			if (it.second == INVALID_SOCKET)
@@ -231,12 +234,12 @@ void Server::clientHandler(const SOCKET client_socket)
 			throw std::runtime_error("[CIRCUITS] failed to get nodes details");
 		}
 		//SEND CIRCUIT INFO END
-		clientHandler(client_socket);
+		clientHandler(client_socket, trh);
 	}
-	catch (const std::runtime_error& e)
+	catch (...)
 	{
+		std::lock_guard<std::mutex> lock(mutex);
 		std::cout << "[CIRCUITS] client handler crushes!!!";
-		std::cerr << e.what() << std::endl;
 	}
 }
 

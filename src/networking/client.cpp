@@ -305,9 +305,9 @@ void Client::HandleTorClient(const bool& regular)
 			_aesCircuitData.emplace_back(aes_tmp);
 			std::cout << "[HANDLER] shered sicret with first node is: " << sheredSicret << "\n";
 		}
-		catch (std::runtime_error e)
+		catch (...)
 		{
-			std::cout << e.what() << std::endl;
+			std::cout << "[HANDLER] client crush " << std::endl;
 		}
 		//SEND ECDHE KEY EXCHANGE TO FIRST NODE END
 
@@ -384,9 +384,9 @@ void Client::HandleTorClient(const bool& regular)
 					_aesCircuitData.emplace_back(aes_tmp);
 					std::cout << "[HANDLER] shered sicret with node " << counter << " is: " << sheredSicret << "\n";
 				}
-				catch (std::runtime_error e)
+				catch (...)
 				{
-					std::cout << e.what() << std::endl;
+					std::cout << "[HANDLER] client crush ";
 				}
 			}
 		}
