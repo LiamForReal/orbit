@@ -184,7 +184,7 @@ void Server::acceptClient()
 		}
 		//BUILD AES KEY END
 		//KEY EXCHANGE PROCESS WITH CLIENT END 
-		
+
 		std::thread tr(&Server::clientHandler, this, client_socket);
 		tr.detach();
 		break;
@@ -241,7 +241,6 @@ void Server::clientHandler(const SOCKET client_socket)
 			throw std::runtime_error("[CIRCUITS] failed to get nodes details");
 		}
 		//SEND CIRCUIT INFO END
-		clientHandler(client_socket);
 	}
 	catch (...)
 	{
@@ -397,7 +396,7 @@ SOCKET Server::createSocket(const std::string& ip, unsigned int port)
 	return sock;
 }
 
-void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp)
+void Server::clientControlHandler(SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp)
 {
 	try
 	{
@@ -426,7 +425,7 @@ void Server::clientControlHandler(const SOCKET& node_sock, const std::vector<uns
 	}
 }
 
-void Server::setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait)
+void Server::setupSocketTimeout(SOCKET& node_sock, int seconeds_to_wait)
 {
 	mutex.lock();
 	std::cout << "[CONTROL] set time out of " << seconeds_to_wait << " seconds\n";
@@ -435,7 +434,7 @@ void Server::setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait)
 	setsockopt(node_sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
 }
 
-bool Server::handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
+bool Server::handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock)
 {
 	std::unique_lock<std::mutex> lock(circuitMutex);
 
@@ -458,7 +457,7 @@ bool Server::checkNotifications(const std::vector<unsigned int>& circuits, const
 	return false;
 }
 
-bool Server::processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
+bool Server::processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock)
 {
 	for (unsigned int circuitId : circuits)
 	{
@@ -473,8 +472,6 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 			std::cout << "[CONTROL] this node has notified\n";
 			mutex.unlock();
 			notifyNodeDeletion(node_sock, circuitId); //stays as is
-			//notifyClientDeletion(circuitId); no need
-			regenerateCircuit(circuitId, nodeIp); //changed
 			return true;
 		}
 	}
@@ -484,7 +481,7 @@ bool Server::processCircuitNotifications(const std::vector<unsigned int>& circui
 	return false;
 }
 
-void Server::notifyNodeDeletion(const SOCKET& node_sock, unsigned int circuitId)
+void Server::notifyNodeDeletion(SOCKET& node_sock, unsigned int circuitId)
 {
 	RequestResult rr;
 	rr.buffer = Helper::buildRR(DELETE_CIRCUIT_RC, circuitId);
@@ -509,7 +506,7 @@ void Server::regenerateCircuit(unsigned int circuitId, const std::string& nodeIp
 	std::cout << "[CONTROL] Circuit " << circuitId << " regenerated.\n";
 }
 
-bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nodeIp)
+bool Server::receiveAliveMessage(SOCKET& node_sock, const std::string& nodeIp)
 {
 	try
 	{
@@ -534,18 +531,36 @@ bool Server::receiveAliveMessage(const SOCKET& node_sock, const std::string& nod
 	}
 }
 
-void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock)
+void Server::handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock)
 {
 	mutex.lock();
 	std::cout << "[CONTROL] Node " << nodeIp << " did not send alive message.\n";
 	mutex.unlock();
+	std::set<string> nodesToNotify;
 	for (unsigned int circuitId : circuits)
 	{
 		std::unique_lock<std::mutex> lock(circuitMutex);
-		_circuitsToNotify[circuitId].insert(nodeIp);
+		for (auto it : _controlList[circuitId])
+		{
+			if (it.first == nodeIp)
+			{
+				for (auto it2 : _controlList[circuitId])
+				{
+					if (it2.first != nodeIp)
+					{
+						_circuitsToNotify[circuitId].insert(it2.first);
+					}
+				}
+				break;
+			}
+		}
+			
 		circuitCondition.notify_all();
+		regenerateCircuit(circuitId, nodeIp); //changed
+		std::thread tr(&Server::clientHandler, this, _clients[circuitId]);
+		tr.detach();
 	}
-	setupSocketTimeout(node_sock);
+	setupSocketTimeout(std::ref(node_sock));
 }
 
 

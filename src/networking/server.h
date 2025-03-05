@@ -44,16 +44,16 @@ class Server
         void acceptControlClient();
         void clientHandler(const SOCKET client_socket);
 
-        void clientControlHandler(const SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp);
-        void setupSocketTimeout(const SOCKET& node_sock, int seconeds_to_wait = SECONDS_TO_WAIT);
-        bool handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock);
+        void clientControlHandler(SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp);
+        void setupSocketTimeout(SOCKET& node_sock, int seconeds_to_wait = SECONDS_TO_WAIT);
+        bool handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock);
         bool checkNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp);
-        bool processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock);
-        void notifyNodeDeletion(const SOCKET& node_sock, unsigned int circuitId);
+        bool processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp,SOCKET& node_sock);
+        void notifyNodeDeletion(SOCKET& node_sock, unsigned int circuitId);
         //void notifyClientDeletion(unsigned int circuitId);
         void regenerateCircuit(unsigned int circuitId, const std::string& nodeIp);
-        bool receiveAliveMessage(const SOCKET& node_sock, const std::string& nodeIp);
-        void handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, const SOCKET& node_sock);
+        bool receiveAliveMessage(SOCKET& node_sock, const std::string& nodeIp);
+        void handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock);
 
 
         std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> _controlList; // nodes data

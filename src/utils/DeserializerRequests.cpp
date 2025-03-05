@@ -28,7 +28,7 @@ EcdheKeyExchangeRequest DeserializerRequests::deserializeEcdheKeyExchangeRequest
 
     // Convert the serialized JSON string from the buffer
 	std::string jsonDataStr(ri.buffer.begin(), ri.buffer.end());
-
+	std::cout << "data is: " << jsonDataStr << "\n";
     // Parse the JSON string
     json jsonData = json::parse(jsonDataStr);
     try {

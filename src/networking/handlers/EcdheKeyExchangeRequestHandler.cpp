@@ -21,7 +21,6 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(RequestInfo& request
 	try
 	{
 		unsigned int circuit_id = requestInfo.circuit_id;
-		std::cout << "[ECDHE] circuit id: " << circuit_id << "\n";
 		if (_circuitData[circuit_id].first == _socket)
 		{
 			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
@@ -43,6 +42,7 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(RequestInfo& request
 			}
 			else
 			{
+				std::cout << "1. " << requestInfo.buffer.size() << "\n";
 				EcdheKeyExchangeRequest ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo);
 				// ECDHE HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE ECDHE AND SEND BACKWARDS

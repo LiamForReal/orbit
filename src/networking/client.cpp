@@ -430,6 +430,11 @@ void Client::HandleTorClient(const bool regular)
 	{
 		std::cout << "[HANDLER] catched unexpected error\n";
 		closeSocketWithFirstNode();
+		_rsaCircuitData.clear();
+		_aesCircuitData.clear();
+		_rsa = RSA();
+		_aes = AES();
+		_ecdhe = ECDHE();
 		std::cout << "[HANDLER] closed socket with first node\n";
 		std::cout << "[HANDLER] restarting convertation\n";
 		HandleTorClient(false);

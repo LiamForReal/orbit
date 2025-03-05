@@ -33,7 +33,7 @@ public:
     ~Node();
     void serveProxy(const std::string& ip, uint16_t port);
     void serveControl();
-    std::string getEnvVar(const LPCSTR& key);
+    static std::string getEnvVar(const LPCSTR& key);
 
 private:
     SOCKET createSocketWithServer();

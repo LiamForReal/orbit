@@ -5,15 +5,14 @@ using std::string;
 
 void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
-	std::cout << "Sending...\n";
-
 	size_t totalBytesSent = 0;
 	size_t dataSize = vec.size();  // Ensure size_t is used
 	int bytesSent;
 
 	try
 	{
-		std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
+		if(vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+			std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
 
 		while (totalBytesSent < dataSize)
 		{
@@ -43,8 +42,8 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 	{
 		std::cout << "unecpected error while sending" << std::endl;
 	}
-	
-	std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
+	if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+		std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 }
 
 unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
@@ -168,7 +167,11 @@ RequestInfo Helper::waitForResponse(const SOCKET& socket)
 		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
 		return ri;
 	else if (ri.circuit_id != 0 && ri.id == NODE_OPEN_RC)
+	{
+		ri.length = 0;
 		return ri;
+	}
+		
 	return Helper::buildRI(socket, ri.circuit_id, ri.id);
 }
 

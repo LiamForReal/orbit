@@ -59,7 +59,7 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestIn
 					rsa, std::pair<uint2048_t, uint2048_t>(
 						rkeRequest.public_key, rkeRequest.product
 					));
-				rkeResponse.public_key = rsa.getPublicKey(); //309091
+				rkeResponse.public_key = rsa.getPublicKey();
 				rkeResponse.product = rsa.getProduct();
 				std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
 				rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);

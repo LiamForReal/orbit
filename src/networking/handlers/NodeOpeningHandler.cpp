@@ -24,12 +24,10 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     this->rr.buffer.clear();
     unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
     unsigned int circuit_id = requestInfo.circuit_id;
-    std::cout << "clients: " << std::to_string(_clients.find(circuit_id) != _clients.end())  << std::endl;
-    std::cout << "control list: " << std::to_string(_controlList.find(circuit_id) != _controlList.end()) << std::endl;
-    std::cout << "length: " << requestInfo.length << std::endl;
+
     if (_controlList.find(circuit_id) != _controlList.end() && requestInfo.length == 0) //the circuit already exsisting in case of crush 
     {
-        std::cout << "the circuit already exist\n";
+        std::cout << "[NODE OPENING] the circuit already exist\n";
         ccr.nodesPath = _controlList[circuit_id];
         std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
         data = _aes.encrypt(data);
@@ -41,17 +39,17 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     {
         requestInfo.buffer = _aes.decrypt(requestInfo.buffer);
         NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo);
-        std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
+        std::cout << "[NODE OPENING] client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);
         if (nodesInfo.empty())
-            throw std::runtime_error("the failed to take nodes details");
+            throw std::runtime_error("[NODE OPENING] the failed to take nodes details");
         controlNodesInfo = dm.GetControlInfo();
 
         ccr.nodesPath = nodesInfo;
         this->_controlList[this->circuit_id] = controlNodesInfo;
 
-        std::cout << "\n\nthe circuit chosen is " << this->circuit_id << "\n\n";
+        std::cout << "[NODE OPENING] the circuit chosen is " << this->circuit_id << "\n";
         _clients[this->circuit_id] = INVALID_SOCKET;
     }
     catch (std::runtime_error e)
