@@ -234,8 +234,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(c
     }
     catch (std::runtime_error& e)
     {
-        std::cerr << "amount to use is grater then the amount of exisiting nodes!!!\n";
-        return std::vector<std::pair<std::string, std::string>>();
+        throw;
     }
 }
 
