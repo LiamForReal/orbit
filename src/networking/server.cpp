@@ -355,7 +355,6 @@ void Server::acceptControlClient()
 		std::cout << "[CONTROL] Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
 		closesocket(nodeSocket);
 	}
-
 }
 
 SOCKET Server::createSocket(const std::string& ip, unsigned int port)

@@ -22,47 +22,36 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     std::vector<std::pair<std::string, std::string>> controlNodesInfo;
     CircuitConfirmationResponse ccr;
     this->rr.buffer.clear();
-    unsigned int status = CIRCUIT_CONFIRMATION_STATUS;
-    unsigned int circuit_id = requestInfo.circuit_id;
-
-    if (_controlList.find(circuit_id) != _controlList.end() && requestInfo.length == 0) //the circuit already exsisting in case of crush 
-    {
-        std::cout << "[NODE OPENING] the circuit already exist\n";
-        ccr.nodesPath = _controlList[circuit_id];
-        std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
-        data = _aes.encrypt(data);
-        rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
-        return rr;
-    }
-
+    unsigned int status = CIRCUIT_CONFIRMATION_STATUS, circuitId = 0;
     try
     {
         requestInfo.buffer = _aes.decrypt(requestInfo.buffer);
         NodeOpenRequest nor = DeserializerRequests::deserializeNodeOpeningRequest(requestInfo);
-        std::cout << "[NODE OPENING] client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
+
+        std::cout << "client sent: " << requestInfo.id << "\nbuffer(open): " << nor.amount_to_open << "\nbuffer(use): " << nor.amount_to_use << std::endl;
         // here open and get ips from docker.
         nodesInfo = dm.openAndGetInfo(nor.amount_to_use, nor.amount_to_open, this->circuit_id);
-        if (nodesInfo.empty())
-            throw std::runtime_error("[NODE OPENING] the failed to take nodes details");
+
         controlNodesInfo = dm.GetControlInfo();
 
+        circuitId = this->circuit_id;
         ccr.nodesPath = nodesInfo;
-        this->_controlList[this->circuit_id] = controlNodesInfo;
+        this->_controlList[circuitId] = controlNodesInfo;
 
-        std::cout << "[NODE OPENING] the circuit chosen is " << this->circuit_id << "\n";
-        _clients[this->circuit_id] = INVALID_SOCKET;
+        std::cout << "\n\nthe circuit chosen is " << circuitId << "\n\n";
+        _clients[circuitId] = INVALID_SOCKET;
+        while (_controlList.find(this->circuit_id) != _controlList.end())
+        {
+            this->circuit_id = (this->circuit_id + 1) % 255;
+        }
     }
     catch (std::runtime_error e)
     {
+        std::cout << e.what() << std::endl;
         status = CIRCUIT_CONFIRMATION_ERROR;
     }
     std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);
     data = _aes.encrypt(data);
-    rr.buffer = Helper::buildRR(data, status, data.size(), this->circuit_id);
-    this->circuit_id = (this->circuit_id + 1) % 255;
-    while (_controlList.find(this->circuit_id) != _controlList.end())
-    {
-        this->circuit_id = (this->circuit_id + 1) % 255;
-    }
+    rr.buffer = Helper::buildRR(data, status, data.size(), circuitId);
     return rr;
 }

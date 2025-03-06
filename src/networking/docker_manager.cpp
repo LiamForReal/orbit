@@ -2,10 +2,10 @@
 
 #include <random>
 
-DockerManager::DockerManager() 
-{ 
+DockerManager::DockerManager()
+{
     _clientsAmount = 0;
-    this->amountCreated = 0; 
+    this->amountCreated = 0;
     runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");
     runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
 }
@@ -14,7 +14,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 {
     int result;
     result = system(command.c_str());
-    if (result == 0) 
+    if (result == 0)
         std::cout << "Command process started successfully." << std::endl;
     else std::cerr << "Failed to start command's process. Error code: " << result << std::endl;
 }
@@ -44,9 +44,9 @@ std::vector<string> DockerManager::SelectPathAndAdjustNetwork(int use, const uns
     {
         if (it != *nodeSelected.begin())
         {
-            pathNodeExisting.emplace_back(it);  
+            pathNodeExisting.emplace_back(it);
         }
-        else guardNodeCircuits[circuitId] = it; 
+        else guardNodeCircuits[circuitId] = it;
     }
     nodeSelected.clear();
     for (int i = 1; i < use; ++i)  //node selected get all the nodes and choose unique paths to every client each
@@ -100,7 +100,7 @@ std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersN
     std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";
     for (auto it : containersNames)
     {
-        
+
         FILE* pipe = _popen(containerIDCommand.c_str(), "r");
         if (!pipe) throw std::runtime_error("Failed to run command");
         while (fgets(buffer, sizeof(buffer), pipe) != NULL)
@@ -118,8 +118,8 @@ std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersN
             containerIP += buffer;
         }
         _pclose(pipe);
-	    containerIP = containerIP.substr(0, containerIP.find("\n"));
-	    nodesIp.push_back(containerIP);
+        containerIP = containerIP.substr(0, containerIP.find("\n"));
+        nodesIp.push_back(containerIP);
     }
     std::cout << "ips founded successfully!\n";
     return nodesIp;
@@ -150,7 +150,7 @@ std::vector<std::string> DockerManager::findControlPorts(std::vector<string>& co
         try
         {
             hostPort = std::to_string(std::stoi(portsStr));
-            std::cout <<  it << ": control port id is "  << hostPort << "\n";
+            std::cout << it << ": control port id is " << hostPort << "\n";
             controlNodesPorts.emplace_back(hostPort);
             portsStr = "";
         }
@@ -190,7 +190,7 @@ std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& cont
         proxyNodesPorts.emplace_back(hostPort);
         for (int i = 1; i < containersNames.size(); i++)
         {
-            std::cout << "container " << std::to_string( i + 1) << " proxy port is 9050\n";
+            std::cout << "container " << std::to_string(i + 1) << " proxy port is 9050\n";
             proxyNodesPorts.emplace_back(INTERNAL_PORT);
         }
     }
@@ -199,14 +199,21 @@ std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& cont
         std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
     }
 
-    
+
     return proxyNodesPorts;
 }
 
 std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create, const unsigned int circuitId)
 {
+    // 1 2 / 0 -> 2 - 1 1 > 0
+    // 1 2 / 1 -> 2 - 1 1 = 1
+    // 1 2 / 30 -> 2 - 1 1 < 30
     try
     {
+        if (create < use && use - create > this->amountCreated)
+        {
+            throw std::runtime_error("user input problem");
+        }
         _clientsAmount++;
         std::vector<std::pair<std::string, std::string>> nodesInfo;
         setNewNodes(create, use);
@@ -227,8 +234,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(c
     }
     catch (std::runtime_error& e)
     {
-        std::cerr << "amount to use is grater then the amount of exisiting nodes!!!\n";
-        return std::vector<std::pair<std::string, std::string>>();
+        throw;
     }
 }
 
@@ -257,7 +263,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::GetControlInfo()
 }
 
 /*
-* 1find the node name -> 2reconfigure its ip by py script -> 
+* 1find the node name -> 2reconfigure its ip by py script ->
 * 3rerun him -> 4add him to the nodes properly path/guard ->
 * use function to find circuit -> get circuit ips and ports -> return
 */
