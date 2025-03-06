@@ -199,13 +199,6 @@ void Server::clientHandler(const SOCKET client_socket)
 		unsigned int circuit_id = 0, status = 0;
 		RequestResult rr = RequestResult();
 
-		char error = 0;
-		socklen_t len = sizeof(error);
-		int retval = getsockopt(client_socket, SOL_SOCKET, SO_ERROR, &error, &len);
-		if (retval != 0 || error != 0) {
-			std::cout << "[CLIENT] Socket is not valid!\n";
-		}
-
 		//PREPER TOR REQUEST HANDLER START
 		mutex.lock();
 		std::cout << "[CIRCUITS] inishialize tor request handler\n";
@@ -353,7 +346,7 @@ void Server::acceptControlClient()
 				}
 			}
 		}
-		std::thread tr(&Server::clientControlHandler, this, nodeSocket, circuits, nodeIPStr);
+		std::thread tr(&Server::clientControlHandler, this, std::ref(nodeSocket), std::ref(circuits), nodeIPStr);
 		tr.detach();
 	}
 	else
