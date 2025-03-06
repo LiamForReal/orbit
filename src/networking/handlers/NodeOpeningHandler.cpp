@@ -43,6 +43,7 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
     }
     catch (std::runtime_error e)
     {
+        std::cout << e.what() << std::endl;
         status = CIRCUIT_CONFIRMATION_ERROR;
     }
     std::vector<unsigned char> data = SerializerResponses::serializeResponse(ccr);

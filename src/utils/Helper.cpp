@@ -17,12 +17,10 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 
 		while (totalBytesSent < dataSize)
 		{
-			std::cout << "1";
 			bytesSent = send(sc,
 				reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
 				dataSize - totalBytesSent,
 				0);
-			std::cout << "2";
 			if (bytesSent == SOCKET_ERROR)
 			{
 				std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
@@ -34,7 +32,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 				throw std::runtime_error("Connection closed by the client");
 			}
 			totalBytesSent += bytesSent;
-			std::cout << "3\n";
 		}
 	}
 	catch (std::runtime_error& e)

@@ -205,8 +205,15 @@ std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& cont
 
 std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(const int& use, const int& create, const unsigned int circuitId)
 {
+    // 1 2 / 0 -> 2 - 1 1 > 0
+    // 1 2 / 1 -> 2 - 1 1 = 1
+    // 1 2 / 30 -> 2 - 1 1 < 30
     try
     {
+        if (create < use && use - create > this->amountCreated)
+        {
+            throw std::runtime_error("user input problem");
+        }
         _clientsAmount++;
         std::vector<std::pair<std::string, std::string>> nodesInfo;
         setNewNodes(create, use);
