@@ -41,10 +41,10 @@ void Client::connectToServer(std::string serverIP, int port)
 		throw std::runtime_error("[DS CONNECTING] Cant connect to server");
 
 	//CREATE SELF RSA PAIR OF KEYS START
-	_rsa.pregenerateKeys(); 
+	_rsa.pregenerateKeys();
 	std::cout << "[DS CONNECTING] Client finished pregenerating RSA keys...\n";
 	//CREATE SELF RSA PAIR OF KEYS END
-	
+
 	//RSA KEY EXCHANGE WITH DS START
 	RsaKeyExchangeRequest rkeRequest;
 	rkeRequest.public_key = _rsa.getPublicKey();
@@ -97,7 +97,7 @@ void Client::connectToServer(std::string serverIP, int port)
 			throw std::runtime_error("[DS CONNECTING] Did not get ECDHE key exchange request!");
 		}
 		std::cout << "[DS CONNECTING] ecdhe msg recved\n";
-		
+
 		ekeResponse = DeserializerResponses::deserializeEcdheKeyExchangeResponse(ri);
 		_ecdhe.setG(ekeResponse.calculationResult);
 		std::cout << "[DS CONNECTING] generate aes key!!!\n";
@@ -112,10 +112,11 @@ void Client::connectToServer(std::string serverIP, int port)
 	//BUILD AES KEY END
 }
 
-void Client::nodeOpening(const bool& regular)
+RequestInfo Client::nodeOpening(const bool& regular)
 {
 	NodeOpenRequest nor;
 	RequestResult rr;
+	RequestInfo ri;
 	std::vector<unsigned char> data;
 
 	std::cout << "[NODE OPENING] node openning begins\n";
@@ -124,7 +125,8 @@ void Client::nodeOpening(const bool& regular)
 		rr.buffer = Helper::buildRR(NODE_OPEN_RC, circuit_id);
 		Helper::sendVector(_clientSocketWithDS, rr.buffer);
 		std::cout << "[NODE OPENING] send open nodes after crush\n";
-		return;
+		ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
+		return ri;
 	}
 
 	do
@@ -139,9 +141,16 @@ void Client::nodeOpening(const bool& regular)
 	rr.buffer = Helper::buildRR(data, NODE_OPEN_RC, data.size());
 	Helper::sendVector(_clientSocketWithDS, rr.buffer);//PROBLEM HERE SOMTIMES!!!
 	std::cout << "[NODE OPENING] Message send to server..." << std::endl;
+	ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
+	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
+	{
+		return ri;
+	}
+	std::cout << "[NODE OPENING] input invalid! try again.\n";
+	nodeOpening(regular);
 }
 
-std::string Client::generateHttpGetRequest(const std::string& domain) 
+std::string Client::generateHttpGetRequest(const std::string& domain)
 {
 	std::ostringstream request;
 	request << domain;
@@ -197,20 +206,20 @@ void Client::HandleTorClient(const bool regular)
 	uint256_t sheredSicret;
 	AES aes_tmp;
 	CircuitConfirmationResponse ccr;
-	
+
 	try
 	{
 		//NODE OPPENING START
-		nodeOpening(regular);
-		ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
+		ri = nodeOpening(regular);
 		circuit_id = ri.circuit_id;
+		
 		ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri);
-		_rsaCircuitData.reserve(ccr.nodesPath.size());
+		if (ccr.nodesPath.empty() || ri.id == unsigned int(CIRCUIT_CONFIRMATION_ERROR))
+			throw std::runtime_error("ciruit must contains at list one node!");
 
+		_rsaCircuitData.reserve(ccr.nodesPath.size());
 		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
-		{
 			std::cout << "[HANDLER] Node: " << it->first << " " << it->second << std::endl;
-		}
 		//NODE OPPENING END
 
 		//CONNECTING TO FIRST NODE START
@@ -307,6 +316,7 @@ void Client::HandleTorClient(const bool regular)
 		catch (...)
 		{
 			std::cout << "[HANDLER] client crush " << std::endl;
+
 		}
 		//SEND ECDHE KEY EXCHANGE TO FIRST NODE END
 
@@ -422,9 +432,11 @@ void Client::HandleTorClient(const bool regular)
 		}
 		//SENDING HTTP GET END
 	}
-	catch(const std::runtime_error& e)
+	catch (const std::runtime_error& e)
 	{
 		std::cout << "[HANDLER] catched problem: " << e.what() << std::endl;
+		circuit_id = 0;
+		HandleTorClient();
 	}
 	catch (...)
 	{
@@ -448,7 +460,7 @@ int main()
 		WSAInitializer wsa = WSAInitializer();
 		Client client = Client();
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
-		
+
 		client.HandleTorClient();
 
 		//thread listen to ds -> this thread start only after startConversation is got the input from ds 

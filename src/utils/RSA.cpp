@@ -228,7 +228,6 @@ cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod)
 void RSA::generateP(std::promise<uint1024_t>&& promiseP)
 {
 	uint1024_t p = this->getRandomPrimeNumber<uint1024_t>();
-	std::cout << "P generated!\n";
 	promiseP.set_value(p);
 	this->_generatedP = true;
 }
@@ -236,7 +235,6 @@ void RSA::generateP(std::promise<uint1024_t>&& promiseP)
 void RSA::generateQ(std::promise<uint1024_t>&& promiseQ)
 {
 	uint1024_t q = this->getRandomPrimeNumber<uint1024_t>();
-	std::cout << "Q generated!\n";
 	promiseQ.set_value(q);
 	this->_generatedQ = true;
 }

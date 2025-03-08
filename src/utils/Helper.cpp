@@ -11,8 +11,12 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 
 	try
 	{
-		if(vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+		{
 			std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
+			std::cout << "only to show somting wrong\n";
+		}
+			
 
 		while (totalBytesSent < dataSize)
 		{

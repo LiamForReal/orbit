@@ -36,7 +36,7 @@ public:
 	~Client();
 	void connectToServer(std::string serverIP, int port);
 	void HandleTorClient(const bool regular = true);
-	void nodeOpening(const bool& regular);
+	RequestInfo nodeOpening(const bool& regular);
 	bool domainValidationCheck(std::string domain);
 
 	void dataLayersEncription(std::vector<unsigned char>& data);

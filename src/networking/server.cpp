@@ -231,7 +231,8 @@ void Server::clientHandler(const SOCKET client_socket)
 		mutex.unlock();
 		if (static_cast<unsigned int>(rr.buffer[1]) == CIRCUIT_CONFIRMATION_ERROR)
 		{
-			throw std::runtime_error("[CIRCUITS] failed to get nodes details");
+			std::cout << "[CIRCUITS] client wrong input\n";
+			clientHandler(client_socket);
 		}
 		//SEND CIRCUIT INFO END
 	}
