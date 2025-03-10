@@ -8,8 +8,6 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
-std::mutex mutex;
-
 Node::Node() 
 {
 	// notice that we step out to the global namespace

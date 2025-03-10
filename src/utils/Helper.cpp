@@ -5,19 +5,17 @@ using std::string;
 
 void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
-	size_t totalBytesSent = 0;
-	size_t dataSize = vec.size();  // Ensure size_t is used
-	int bytesSent;
-
 	try
 	{
-		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+		std::cout << "definishen\n";
+		int dataSize = vec.size(), bytesSent = 0, totalBytesSent = 0;
+		if (true/*vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC)*/)
 		{
-			std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
-			std::cout << "only to show somting wrong\n";
+			std::cout << "sending..." << "\n";
+			//std::cout << "only to show somting wrong\n";
+			//std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
 		}
 			
-
 		while (totalBytesSent < dataSize)
 		{
 			bytesSent = send(sc,
@@ -37,6 +35,8 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 			}
 			totalBytesSent += bytesSent;
 		}
+		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+			std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 	}
 	catch (std::runtime_error& e)
 	{
@@ -46,8 +46,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 	{
 		std::cout << "unecpected error while sending" << std::endl;
 	}
-	if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
-		std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
 }
 
 unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
@@ -271,7 +269,6 @@ RequestInfo Helper::buildRI_AES(const SOCKET& socket, const unsigned int& circui
 		
 		ri.buffer = key.decrypt(ri.buffer);
 	}
-
 	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
 	return ri;
 }

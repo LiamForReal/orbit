@@ -147,7 +147,7 @@ RequestInfo Client::nodeOpening(const bool& regular)
 		return ri;
 	}
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
-	nodeOpening(regular);
+	return nodeOpening(regular);
 }
 
 std::string Client::generateHttpGetRequest(const std::string& domain)
@@ -212,16 +212,15 @@ void Client::HandleTorClient(const bool regular)
 		//NODE OPPENING START
 		ri = nodeOpening(regular);
 		circuit_id = ri.circuit_id;
-		
+
 		ccr = DeserializerResponses::deserializeCircuitConfirmationResponse(ri);
 		if (ccr.nodesPath.empty() || ri.id == unsigned int(CIRCUIT_CONFIRMATION_ERROR))
 			throw std::runtime_error("ciruit must contains at list one node!");
-
 		_rsaCircuitData.reserve(ccr.nodesPath.size());
 		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 			std::cout << "[HANDLER] Node: " << it->first << " " << it->second << std::endl;
 		//NODE OPPENING END
-
+		
 		//CONNECTING TO FIRST NODE START
 		_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -403,32 +402,34 @@ void Client::HandleTorClient(const bool regular)
 
 		//SENDING HTTP GET START
 		HttpGetRequest httpGetRequest;
-		//while(true) add if work
-		std::cout << "Enter domain: ";
-		std::cin >> domain;
-		if (!domainValidationCheck(domain))
-			throw std::runtime_error("[HANDLER] domain is illegal");
-		httpGetRequest.domain = domain;
-
-		data = SerializerRequests::serializeRequest(httpGetRequest);
-		dataLayersEncription(data);
-		rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
-
-		Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
-		std::cout << "[HANDLER] sends httpGet Request:\n";
-		ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-		dataLayersDecription(ri.buffer);
-		HttpGetResponse httpGetResponse;
-		httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
-
-		if (Errors::HTTP_MSG_ERROR == ri.id)
+		while (true)//add if work
 		{
-			std::cerr << "[HANDLER] Could not get HTML of " << domain << std::endl;
-		}
-		else
-		{
-			std::cout << "[HANDLER] HTML of " << domain << ": " << std::endl;
-			std::cout << httpGetResponse.content << std::endl;
+			std::cout << "Enter domain: ";
+			std::cin >> domain;
+			if (!domainValidationCheck(domain))
+				throw std::runtime_error("[HANDLER] domain is illegal");
+			httpGetRequest.domain = domain;
+
+			data = SerializerRequests::serializeRequest(httpGetRequest);
+			dataLayersEncription(data);
+			rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
+
+			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
+			std::cout << "[HANDLER] sends httpGet Request:\n";
+			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+			dataLayersDecription(ri.buffer);
+			HttpGetResponse httpGetResponse;
+			httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
+
+			if (Errors::HTTP_MSG_ERROR == ri.id)
+			{
+				std::cerr << "[HANDLER] Could not get HTML of " << domain << std::endl;
+			}
+			else
+			{
+				std::cout << "[HANDLER] HTML of " << domain << ": " << std::endl;
+				std::cout << httpGetResponse.content << std::endl;
+			}
 		}
 		//SENDING HTTP GET END
 	}

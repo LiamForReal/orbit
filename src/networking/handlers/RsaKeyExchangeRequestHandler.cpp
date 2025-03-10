@@ -54,15 +54,20 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestIn
 				// TODO: HERE CREATE THE RSA OF THE NODE
 				RSA rsa = RSA();
 				rsa.pregenerateKeys();
+				std::cout << "\n\n1";
 				std::cout << "[RSA] created for circuit " << circuit_id << std::endl;
 				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(
 					rsa, std::pair<uint2048_t, uint2048_t>(
 						rkeRequest.public_key, rkeRequest.product
 					));
+				std::cout << "2";
 				rkeResponse.public_key = rsa.getPublicKey();
 				rkeResponse.product = rsa.getProduct();
+				std::cout << "3";
 				std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
+				std::cout << "4";
 				rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
+				std::cout << "5";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}
