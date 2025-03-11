@@ -7,11 +7,11 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
 	try
 	{
-		std::cout << "definishen\n";
 		int dataSize = vec.size(), bytesSent = 0, totalBytesSent = 0;
-		if (true/*vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC)*/)
+		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
 		{
 			std::cout << "sending..." << "\n";
+			std::cout.flush();
 			//std::cout << "only to show somting wrong\n";
 			//std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
 		}
@@ -36,7 +36,11 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 			totalBytesSent += bytesSent;
 		}
 		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+		{
 			std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
+			std::cout.flush();
+		}
+			
 	}
 	catch (std::runtime_error& e)
 	{

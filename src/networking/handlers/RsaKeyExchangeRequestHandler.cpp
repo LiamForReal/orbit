@@ -6,7 +6,7 @@ RsaKeyExchangeRequestHandler::RsaKeyExchangeRequestHandler(std::map<unsigned int
 	this->rr = RequestResult();
 }
 
-bool RsaKeyExchangeRequestHandler::isRequestRelevant(const RequestInfo& requestInfo) 
+bool RsaKeyExchangeRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 {
 	return requestInfo.id == RSA_KEY_EXCHANGE_RC;
 }
@@ -25,7 +25,6 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestIn
 			_circuitData[circuit_id].first = _socket;
 			std::cout << "[RSA] client socket allocated!\n";
 		}
-
 		if (_circuitData[circuit_id].first == _socket)
 		{
 			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
@@ -54,20 +53,17 @@ RequestResult RsaKeyExchangeRequestHandler::handleRequest(RequestInfo& requestIn
 				// TODO: HERE CREATE THE RSA OF THE NODE
 				RSA rsa = RSA();
 				rsa.pregenerateKeys();
-				std::cout << "\n\n1";
+
 				std::cout << "[RSA] created for circuit " << circuit_id << std::endl;
-				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>(
-					rsa, std::pair<uint2048_t, uint2048_t>(
-						rkeRequest.public_key, rkeRequest.product
-					));
-				std::cout << "2";
+				_rsaKeys[circuit_id] = std::pair<RSA, std::pair<uint2048_t, uint2048_t>>();
+				_rsaKeys[circuit_id].first = rsa;
+				_rsaKeys[circuit_id].second.first = rkeRequest.public_key;
+				_rsaKeys[circuit_id].second.second = rkeRequest.product;
+
 				rkeResponse.public_key = rsa.getPublicKey();
 				rkeResponse.product = rsa.getProduct();
-				std::cout << "3";
 				std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
-				std::cout << "4";
 				rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
-				std::cout << "5";
 				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}
