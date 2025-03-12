@@ -11,6 +11,7 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
 		{
 			std::cout << "sending..." << "\n";
+			std::cout << "status: " << unsigned int(vec[1]) << ", circuit id: " << unsigned int(vec[0]) << "\n";
 			std::cout.flush();
 			//std::cout << "only to show somting wrong\n";
 			//std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
@@ -177,7 +178,6 @@ RequestInfo Helper::waitForResponse(const SOCKET& socket)
 		ri.length = 0;
 		return ri;
 	}
-		
 	return Helper::buildRI(socket, ri.circuit_id, ri.id);
 }
 
