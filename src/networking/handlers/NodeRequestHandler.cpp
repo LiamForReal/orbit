@@ -65,6 +65,7 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo)
 		rr = rkerh->handleRequest(requestInfo);
 		if (unsigned int(rr.buffer[STATUS_INDEX]) == RSA_KEY_EXCHANGE_STATUS && _isFirstTime)
 			_isRSA = true;
+		return rr;
 	}
 	else if (ekerh->isRequestRelevant(requestInfo))
 	{
@@ -73,10 +74,10 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo)
 		{
 			_isAES = true;
 		}
+		return rr;
 	}
 	else
 	{
 		throw std::runtime_error("no request much this code Node request Handler");
 	}
-	return RequestResult();
 }

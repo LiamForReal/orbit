@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\networking\docker_manager.h" />
+    <ClInclude Include="..\networking\handlers\CloseConnectionHandler.h" />
     <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\NodeOpeningHandler.h" />
     <ClInclude Include="..\networking\handlers\TorRequestHandler.h" />
@@ -149,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\networking\docker_manager.cpp" />
+    <ClCompile Include="..\networking\handlers\CloseConnectionHandler.cpp" />
     <ClCompile Include="..\networking\handlers\NodeOpeningHandler.cpp" />
     <ClCompile Include="..\networking\handlers\TorRequestHandler.cpp" />
     <ClCompile Include="..\networking\server.cpp" />

@@ -13,8 +13,6 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 			std::cout << "sending..." << "\n";
 			std::cout << "status: " << unsigned int(vec[1]) << ", circuit id: " << unsigned int(vec[0]) << "\n";
 			std::cout.flush();
-			//std::cout << "only to show somting wrong\n";
-			//std::cout << "Socket to send: " << sc << ", data size: " << dataSize << " bytes" << std::endl;
 		}
 			
 		while (totalBytesSent < dataSize)
@@ -39,9 +37,7 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
 		{
 			std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
-			std::cout.flush();
 		}
-			
 	}
 	catch (std::runtime_error& e)
 	{
