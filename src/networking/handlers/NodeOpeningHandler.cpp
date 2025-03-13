@@ -39,7 +39,6 @@ RequestResult NodeOpeningHandler::handleRequest(RequestInfo& requestInfo)
         this->_controlList[circuitId] = controlNodesInfo;
 
         std::cout << "\n\nthe circuit chosen is " << circuitId << "\n\n";
-        _clients[circuitId] = INVALID_SOCKET;
         while (_controlList.find(this->circuit_id) != _controlList.end())
         {
             this->circuit_id = (this->circuit_id + 1) % 255;

@@ -29,14 +29,14 @@ RequestResult DeleteCircuitRequestHandler::handleRequest(RequestInfo& requestInf
 	unsigned int circuit_id = requestInfo.circuit_id,status = DELETE_CIRCUIT_STATUS;
 	try
 	{
-		closeSocket(cd[requestInfo.circuit_id].first);
-		cd[requestInfo.circuit_id].first = INVALID_SOCKET;
-		closeSocket(cd[requestInfo.circuit_id].second);
-		cd[requestInfo.circuit_id].second = INVALID_SOCKET;
+		closeSocket(cd[circuit_id].first);
+		cd[circuit_id].first = INVALID_SOCKET;
+		closeSocket(cd[circuit_id].second);
+		cd[circuit_id].second = INVALID_SOCKET;
 		_socket = INVALID_SOCKET;
-		cd.erase(requestInfo.circuit_id);
-		_rsaKeys.erase(requestInfo.circuit_id);
-		_aesKeys.erase(requestInfo.circuit_id);
+		cd.erase(circuit_id);
+		_rsaKeys.erase(circuit_id);
+		_aesKeys.erase(circuit_id);
 		std::cout << "[DELETE CIRCUIT] circuit was deleted successfully!\n";
 	}
 	catch (std::runtime_error& e)

@@ -2,7 +2,7 @@
 #include "NodeOpeningHandler.h"
 #include "DeleteCircuitRequestHandler.h"
 #include "../../utils/AES.h"
-
+#include "CloseConnectionHandler.h"
 class TorRequestHandler
 {
 	public: 
@@ -12,7 +12,9 @@ class TorRequestHandler
 
 	private:
 		NodeOpeningHandler* noh;//more...
+		CloseConnectionHandler* cch;
 		DockerManager& dm;
+
 
 		AES _aes;
 		std::map<unsigned int, std::vector<std::pair<std::string, std::string>>>& _controlList;

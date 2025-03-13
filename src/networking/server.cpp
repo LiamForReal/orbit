@@ -213,27 +213,28 @@ void Server::clientHandler(const SOCKET client_socket)
 		ri = Helper::waitForResponse(client_socket);
 
 		rr = torRequestHandler.directRequest(ri);
+		circuit_id = unsigned int(rr.buffer[0]);
+		mutex.lock();
+		_clients[circuit_id] = client_socket;
+		std::cout << "[CIRCUITS] new client allocated\n\n";
+		mutex.unlock();
 
-		for (auto it : _clients)
-		{
-			if (it.second == INVALID_SOCKET)
-			{
-				std::lock_guard<std::mutex> lock(mutex);
-				circuit_id = it.first;
-				_clients[circuit_id] = client_socket;
-				std::cout << "[CIRCUITS] new client allocated\n\n";
-				break;
-			}
-		}
 		Helper::sendVector(client_socket, rr.buffer);
 		mutex.lock();
 		std::cout << "[CIRCUITS] sending msg...\n";
 		mutex.unlock();
+
 		if (static_cast<unsigned int>(rr.buffer[1]) == CIRCUIT_CONFIRMATION_ERROR)
 		{
 			std::cout << "[CIRCUITS] client wrong input\n";
 			clientHandler(client_socket);
 		}
+		ri = Helper::waitForResponse(client_socket);
+		rr = torRequestHandler.directRequest(ri);
+		if (rr.buffer[1] == unsigned char(CLOSE_CONNECTION_STATUS))
+			std::cout << "[CIRCUITS] client closed connection successfully!";
+		else std::cout << "[CIRCUITS] problem accured on close connection with client";
+
 		//SEND CIRCUIT INFO END
 	}
 	catch (...)

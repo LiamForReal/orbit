@@ -82,8 +82,8 @@ void Node::controlReceiver(SOCKET& serverSock)
 			//ERROR!!!
 			NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), INVALID_SOCKET, std::ref(_aesKeys)); // dont need sock for delete
 			rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
-
-			if (DELETE_CIRCUIT_STATUS == rr.buffer[STATUS_INDEX])
+			Helper::sendVector(serverSock, rr.buffer);
+			if (unsigned char(DELETE_CIRCUIT_STATUS) == rr.buffer[STATUS_INDEX])
 			{
 				std::cout << "[CONTROL RECVER] Delete successfully done!\n";
 				throw  -1;

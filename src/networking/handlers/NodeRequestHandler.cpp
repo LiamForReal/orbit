@@ -59,12 +59,6 @@ RequestResult NodeRequestHandler::handleMsg(RequestInfo& requestInfo)
 	else if (dcrh->isRequestRelevant(requestInfo))
 	{
 		return dcrh->handleRequest(requestInfo);
-		//if (rr.buffer[STATUS_INDEX] == unsigned int(DELETE_CIRCUIT_STATUS))
-		//{
-		//	_isRSA = false;
-		//	_isAES = false;
-		//	_isFirstTime = true;
-		//}
 	}
 	else if (rkerh->isRequestRelevant(requestInfo))
 	{
