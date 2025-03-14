@@ -11,7 +11,7 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
 		{
 			std::cout << "sending..." << "\n";
-			std::cout << "status: " << unsigned int(vec[1]) << ", circuit id: " << unsigned int(vec[0]) << "\n";
+			//std::cout << "status: " << unsigned int(vec[1]) << ", circuit id: " << unsigned int(vec[0]) << "\n";
 			std::cout.flush();
 		}
 			
@@ -37,6 +37,7 @@ void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
 		{
 			std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
+			std::cout.flush();
 		}
 	}
 	catch (std::runtime_error& e)
@@ -97,34 +98,29 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 
 std::vector<uint8_t> Helper::getDataPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
 {
-	if (bytesNum <= 0)
-	{
-		return {};
-	}
+	if (bytesNum <= 0) return {};
 
 	std::vector<uint8_t> data(bytesNum);
 	int totalReceived = 0;
 
 	while (totalReceived < bytesNum)
 	{
-		int res = recv(sc, reinterpret_cast<char*>(data.data()) + totalReceived,
-			bytesNum - totalReceived, flags);
+		int res = recv(sc, reinterpret_cast<char*>(data.data()) + totalReceived, bytesNum - totalReceived, flags);
 
 		if (res == SOCKET_ERROR)
 		{
 			std::cerr << "Error while receiving from socket: " << sc
 				<< ", Error Code: " << WSAGetLastError() << std::endl;
-			throw - 1;
+			return {};  // Return empty vector instead of throwing
 		}
 		else if (res == 0)
 		{
 			std::cerr << "Connection closed by the peer\n";
-			throw - 1;//std::system_error(EBADF, std::generic_category(), "Connection closed by the peer");
+			return {};  // Connection closed
 		}
 
 		totalReceived += res;
 	}
-
 	return data;
 }
 
@@ -174,6 +170,8 @@ RequestInfo Helper::waitForResponse(const SOCKET& socket)
 		ri.length = 0;
 		return ri;
 	}
+	if (ri.id == 0 && ri.circuit_id == 0)
+		return waitForResponse(socket);
 	return Helper::buildRI(socket, ri.circuit_id, ri.id);
 }
 

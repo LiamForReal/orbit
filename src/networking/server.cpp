@@ -223,6 +223,7 @@ void Server::clientHandler(const SOCKET client_socket)
 		mutex.lock();
 		std::cout << "[CIRCUITS] sending msg...\n";
 		mutex.unlock();
+		//SEND CIRCUIT INFO END
 
 		if (static_cast<unsigned int>(rr.buffer[1]) == CIRCUIT_CONFIRMATION_ERROR)
 		{
@@ -234,8 +235,6 @@ void Server::clientHandler(const SOCKET client_socket)
 		if (rr.buffer[1] == unsigned char(CLOSE_CONNECTION_STATUS))
 			std::cout << "[CIRCUITS] client closed connection successfully!";
 		else std::cout << "[CIRCUITS] problem accured on close connection with client";
-
-		//SEND CIRCUIT INFO END
 	}
 	catch (...)
 	{
@@ -418,6 +417,8 @@ void Server::clientControlHandler(SOCKET& node_sock, const std::vector<unsigned 
 		std::cout << "[CONTROL] Unexpected problem caught!\n";
 	}
 }
+
+
 
 void Server::setupSocketTimeout(SOCKET& node_sock, int seconeds_to_wait)
 {

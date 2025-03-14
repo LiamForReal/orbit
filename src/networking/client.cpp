@@ -220,7 +220,7 @@ void Client::HandleTorClient(const bool regular)
 		for (auto it = ccr.nodesPath.begin(); it != ccr.nodesPath.end(); it++)
 			std::cout << "[HANDLER] Node: " << it->first << " " << it->second << std::endl;
 		//NODE OPPENING END
-		
+
 		//CONNECTING TO FIRST NODE START
 		_clientSocketWithFirstNode = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -402,33 +402,50 @@ void Client::HandleTorClient(const bool regular)
 
 		//SENDING HTTP GET START
 		HttpGetRequest httpGetRequest;
+		int option = 0;
 		while (true)//add if work
 		{
-			std::cout << "Enter domain: ";
-			std::cin >> domain;
-			if (!domainValidationCheck(domain))
-				throw std::runtime_error("[HANDLER] domain is illegal");
-			httpGetRequest.domain = domain;
-
-			data = SerializerRequests::serializeRequest(httpGetRequest);
-			dataLayersEncription(data);
-			rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
-
-			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
-			std::cout << "[HANDLER] sends httpGet Request:\n";
-			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-			dataLayersDecription(ri.buffer);
-			HttpGetResponse httpGetResponse;
-			httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
-
-			if (Errors::HTTP_MSG_ERROR == ri.id)
+			do
 			{
-				std::cerr << "[HANDLER] Could not get HTML of " << domain << std::endl;
+				std::cout << "choose an action: \n1. send http get msg\n2. close connection\n";
+				std::cin >> option;
+			} while (option != 1 && option != 2);
+
+			if (option == 1)
+			{
+				std::cout << "Enter domain: ";
+				std::cin >> domain;
+				if (!domainValidationCheck(domain))
+					throw std::runtime_error("[HANDLER] domain is illegal");
+				httpGetRequest.domain = domain;
+
+				data = SerializerRequests::serializeRequest(httpGetRequest);
+				dataLayersEncription(data);
+				rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
+
+				Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
+				std::cout << "[HANDLER] sends httpGet Request:\n";
+				ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+				dataLayersDecription(ri.buffer);
+				HttpGetResponse httpGetResponse;
+				httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
+
+				if (Errors::HTTP_MSG_ERROR == ri.id)
+				{
+					std::cerr << "[HANDLER] Could not get HTML of " << domain << std::endl;
+				}
+				else
+				{
+					std::cout << "[HANDLER] HTML of " << domain << ": " << std::endl;
+					std::cout << httpGetResponse.content << std::endl;
+				}
 			}
-			else
+			else if (option == 2)
 			{
-				std::cout << "[HANDLER] HTML of " << domain << ": " << std::endl;
-				std::cout << httpGetResponse.content << std::endl;
+				rr.buffer = Helper::buildRR(CLOSE_CONNECTION_RC, circuit_id);
+				Helper::sendVector(_clientSocketWithDS, rr.buffer);
+				std::cout << "[Handler] sends close connection request\n";
+				exit(1);
 			}
 		}
 		//SENDING HTTP GET END

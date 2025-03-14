@@ -272,7 +272,6 @@ uint16_t port = (uint16_t)(std::atoi((Node::getEnvVar((LPCSTR)("NODE_PORT"))).c_
 
 int main()
 {
-	std::cout << "ip is: " << ip << ", port is: " << port << "\n";
 	WSAInitializer wsa = WSAInitializer();
 	Node node = Node();
 	while (true)
