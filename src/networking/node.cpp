@@ -8,6 +8,8 @@ static const unsigned int IFACE = 0;
 using std::string;
 using std::vector;
 
+std::mutex mtx;
+
 Node::Node() 
 {
 	// notice that we step out to the global namespace
@@ -82,7 +84,9 @@ void Node::controlReceiver(SOCKET& serverSock)
 			//ERROR!!!
 			NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), INVALID_SOCKET, std::ref(_aesKeys)); // dont need sock for delete
 			rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
+			mtx.lock();
 			Helper::sendVector(serverSock, rr.buffer);
+			mtx.unlock();
 			if (unsigned char(DELETE_CIRCUIT_STATUS) == rr.buffer[STATUS_INDEX])
 			{
 				std::cout << "[CONTROL RECVER] Delete successfully done!\n";
@@ -114,16 +118,9 @@ void Node::controlSender(SOCKET& serverSock)
 		rr.buffer = Helper::buildRR((unsigned char)(ALIVE_MSG_RC)); //without circuit id - unneccecery
 		while (true)
 		{
-			
-			try
-			{
-				Helper::sendVector(serverSock, rr.buffer);
-			}
-			catch(std::runtime_error e)
-			{
-				std::cout << e.what() << std::endl;
-				break;
-			}
+			mtx.lock();
+			Helper::sendVector(serverSock, rr.buffer);
+			mtx.unlock();
 			//return; node crush
 			// add node crush exe to check
 			std::this_thread::sleep_for(std::chrono::seconds(2));
@@ -145,8 +142,8 @@ void Node::serveControl()
 	try
 	{
 		SOCKET serverSock = createSocketWithServer();
-		unsigned long l;
-		ioctlsocket(serverSock, FIONREAD, &l);
+		//unsigned long l;
+		//ioctlsocket(serverSock, FIONREAD, &l);
 
 		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
 		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
@@ -278,8 +275,8 @@ int main()
 	{
 		try
 		{
-			//std::thread aliveMsg(&Node::serveControl, node);
-			//aliveMsg.detach();
+			std::thread aliveMsg(&Node::serveControl, node);
+			aliveMsg.detach();
 			node.serveProxy(ip, port);
 		}
 		catch (const std::runtime_error& e)

@@ -6,8 +6,20 @@ DockerManager::DockerManager()
 {
     _clientsAmount = 0;
     this->amountCreated = 0;
-    runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");
     runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
+}
+
+DockerManager::~DockerManager()
+{
+    for (auto it : pathNodeExisting)//delete containers
+    {
+        runCmdCommand("docker stop " + it + " docker rm " + it);
+    }
+    for (auto it : guardNodeCircuits)
+    {
+        runCmdCommand("docker stop " + it.second + " docker rm " + it.second);
+    }
+    runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");//delete network
 }
 
 void DockerManager::runCmdCommand(const std::string& command)
@@ -76,7 +88,6 @@ void DockerManager::openDocker(const int& amount)
     {
         buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1);
     }
-
     runCmdCommand(buildCommand);
 }
 

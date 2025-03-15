@@ -42,7 +42,6 @@ RequestResult EcdheKeyExchangeRequestHandler::handleRequest(RequestInfo& request
 			}
 			else
 			{
-				std::cout << "1. " << requestInfo.buffer.size() << "\n";
 				EcdheKeyExchangeRequest ekeRequest = DeserializerRequests::deserializeEcdheKeyExchangeRequest(requestInfo);
 				// ECDHE HANDLING IF GOT MSG FROM PREV AND THERE IS NO NEXT
 				// SAVE ECDHE AND SEND BACKWARDS

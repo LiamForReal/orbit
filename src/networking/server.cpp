@@ -302,6 +302,7 @@ void Server::acceptControlClient()
 	std::vector<unsigned int> circuits;
 	// Accept the client connection
 	SOCKET nodeSocket = accept(this->_controlSocket, (sockaddr*)&nodeAddr, &nodeAddrLen);//wait here
+	std::cout << "node sock after accept " << nodeSocket << "\n";
 	if (nodeSocket == INVALID_SOCKET)
 	{
 		throw std::runtime_error("[CONTROL] Failed to accept client connection.");
@@ -356,37 +357,6 @@ void Server::acceptControlClient()
 		std::cout << "[CONTROL] Node " << nodeIPStr << " is not allowed. Closing connection." << std::endl;
 		closesocket(nodeSocket);
 	}
-}
-
-SOCKET Server::createSocket(const std::string& ip, unsigned int port)
-{
-	SOCKET sock = INVALID_SOCKET;
-
-	// Create the socket
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (sock == INVALID_SOCKET) {
-		std::cerr << "Error creating socket: " << WSAGetLastError() << std::endl;
-		return INVALID_SOCKET;
-	}
-
-	// Set up the sockaddr_in structure
-	sockaddr_in serverAddr;
-	serverAddr.sin_family = AF_INET;
-	serverAddr.sin_port = htons(port); // Convert to network byte order
-	if (inet_pton(AF_INET, ip.c_str(), &serverAddr.sin_addr) <= 0) {
-		std::cerr << "Invalid IP address format" << std::endl;
-		closesocket(sock);
-		return INVALID_SOCKET;
-	}
-
-	// Connect to the server
-	if (::connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
-		std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
-		closesocket(sock);
-		return INVALID_SOCKET;
-	}
-
-	return sock;
 }
 
 void Server::clientControlHandler(SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp)
