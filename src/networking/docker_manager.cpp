@@ -4,22 +4,48 @@
 
 DockerManager::DockerManager()
 {
+    deleteDockerContainers();
     _clientsAmount = 0;
     this->amountCreated = 0;
     runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
 }
 
-DockerManager::~DockerManager()
+
+void DockerManager::deleteDockerContainers()
 {
-    for (auto it : pathNodeExisting)//delete containers
-    {
-        runCmdCommand("docker stop " + it + " docker rm " + it);
+    std::vector<std::string> containers = runCommand("docker ps --format \"{{.Names}}\"");
+
+    if (containers.empty()) {
+        std::cout << "No running containers found." << std::endl;
     }
-    for (auto it : guardNodeCircuits)
-    {
-        runCmdCommand("docker stop " + it.second + " docker rm " + it.second);
+    else {
+        for (const auto& container : containers) {
+            std::cout << "Stopping and removing: " << container << std::endl;
+            runCmdCommand("docker stop " + container);
+            runCmdCommand("docker rm " + container);
+        }
     }
-    runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");//delete network
+
+    // Remove the specified Docker network
+    runCmdCommand("docker network rm dockerfiles_TOR_NETWORK");
+}
+
+std::vector<std::string> DockerManager::runCommand(const std::string& command) 
+{
+    std::vector<std::string> result;
+    char buffer[128];
+    FILE* pipe = _popen(command.c_str(), "r");
+    if (!pipe) {
+        std::cerr << "Failed to run command" << std::endl;
+        return result;
+    }
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        std::string containerName(buffer);
+        containerName.erase(containerName.find_last_not_of(" \n\r") + 1); // Trim whitespace
+        result.push_back(containerName);
+    }
+    _pclose(pipe);
+    return result;
 }
 
 void DockerManager::runCmdCommand(const std::string& command)
@@ -105,112 +131,70 @@ void DockerManager::openDocker(const string& containerName)
 std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersNames)
 {
     std::vector<std::string> nodesIp;
-    char buffer[128];
-    std::string containerID;
-    //int random_number = min + std::rand() % (max - min + 1); TODO: access the nodes for all the clients!!!
     std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";
+
     for (auto it : containersNames)
     {
+        std::vector<std::string> containerIDs = runCommand(containerIDCommand);
+        if (containerIDs.empty()) throw std::runtime_error("Failed to retrieve container ID");
 
-        FILE* pipe = _popen(containerIDCommand.c_str(), "r");
-        if (!pipe) throw std::runtime_error("Failed to run command");
-        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-        {
-            containerID += buffer;
-        }
-        _pclose(pipe);
-        containerID = containerID.substr(0, containerID.find("\n"));  // Clean up newlines
+        std::string containerID = containerIDs.front();
         std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + it;
-        pipe = _popen(inspectCommand.c_str(), "r");
-        if (!pipe) throw std::runtime_error("Failed to run inspect command");
-        std::string containerIP;
-        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-        {
-            containerIP += buffer;
-        }
-        _pclose(pipe);
-        containerIP = containerIP.substr(0, containerIP.find("\n"));
-        nodesIp.push_back(containerIP);
+
+        std::vector<std::string> containerIPs = runCommand(inspectCommand);
+        if (containerIPs.empty()) throw std::runtime_error("Failed to retrieve container IP");
+
+        nodesIp.push_back(containerIPs.front());
     }
-    std::cout << "ips founded successfully!\n";
+    std::cout << "IPs found successfully!\n";
     return nodesIp;
 }
 
 std::vector<std::string> DockerManager::findControlPorts(std::vector<string>& containersNames)
 {
     std::vector<std::string> controlNodesPorts;
-    char buffer[128];
-    std::string portsStr = "", hostPort = "";
     std::string inspectCommand;
 
     for (auto it : containersNames)
     {
-        // Build the docker inspect command with necessary `cd`
         inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9051/tcp\\\") 0).HostPort }}\" " + it;
-
-        // Execute the command
-        FILE* pipe = _popen(inspectCommand.c_str(), "r");
-        if (!pipe)
-            throw std::runtime_error("Failed to run inspect command");
-
-        while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-        {
-            portsStr += buffer; // Collect JSON output
-        }
-        _pclose(pipe);
-        try
-        {
-            hostPort = std::to_string(std::stoi(portsStr));
-            std::cout << it << ": control port id is " << hostPort << "\n";
-            controlNodesPorts.emplace_back(hostPort);
-            portsStr = "";
-        }
-        catch (const std::exception& ex)
-        {
-            std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
+        std::vector<std::string> portsStr = runCommand(inspectCommand);
+        if (!portsStr.empty()) {
+            try {
+                std::string hostPort = std::to_string(std::stoi(portsStr.front()));
+                std::cout << it << ": control port id is " << hostPort << "\n";
+                controlNodesPorts.emplace_back(hostPort);
+            }
+            catch (const std::exception& ex) {
+                std::cerr << "Error parsing port: " << ex.what() << std::endl;
+            }
         }
     }
     return controlNodesPorts;
 }
 
+
 std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& containersNames)
 {
     std::vector<std::string> proxyNodesPorts;
-    char buffer[128];
-    std::string portsStr = "", hostPort = "";
-    // Build the docker inspect command with necessary `cd`
+    if (containersNames.empty()) return proxyNodesPorts;
+
     std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + *containersNames.begin();
-    // Execute the command
-    FILE* pipe = _popen(inspectCommand.c_str(), "r");
-    if (!pipe)
-        throw std::runtime_error("Failed to run inspect command");
-
-    portsStr.clear();
-    while (fgets(buffer, sizeof(buffer), pipe) != NULL)
-    {
-        portsStr += buffer; // Collect JSON output
-    }
-    _pclose(pipe);
-
-    // Parse the JSON to extract the ports
-    try
-    {
-        hostPort = std::to_string(std::stoi(portsStr));
-
-        std::cout << "container 1 (of this function calling) proxy port is " << hostPort << "\n";
-        proxyNodesPorts.emplace_back(hostPort);
-        for (int i = 1; i < containersNames.size(); i++)
-        {
-            std::cout << "container " << std::to_string(i + 1) << " proxy port is 9050\n";
-            proxyNodesPorts.emplace_back(INTERNAL_PORT);
+    std::vector<std::string> portsStr = runCommand(inspectCommand);
+    if (!portsStr.empty()) {
+        try {
+            std::string hostPort = std::to_string(std::stoi(portsStr.front()));
+            std::cout << "container 1 (of this function calling) proxy port is " << hostPort << "\n";
+            proxyNodesPorts.emplace_back(hostPort);
+            for (size_t i = 1; i < containersNames.size(); i++) {
+                std::cout << "container " << std::to_string(i + 1) << " proxy port is 9050\n";
+                proxyNodesPorts.emplace_back(INTERNAL_PORT);
+            }
+        }
+        catch (const std::exception& ex) {
+            std::cerr << "Error parsing port: " << ex.what() << std::endl;
         }
     }
-    catch (const std::exception& ex)
-    {
-        std::cerr << "Error parsing JSON: " << ex.what() << std::endl;
-    }
-
-
     return proxyNodesPorts;
 }
 
@@ -220,7 +204,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::openAndGetInfo(c
     // 1 2 / 1 -> 2 - 1 1 = 1
     // 1 2 / 30 -> 2 - 1 1 < 30
     try
-    {
+    {//3 
         if (create < use && use - create > this->amountCreated)
         {
             throw std::runtime_error("user input problem");

@@ -115,7 +115,7 @@ void Node::controlSender(SOCKET& serverSock)
 	try
 	{
 		RequestResult rr;
-		rr.buffer = Helper::buildRR((unsigned char)(ALIVE_MSG_RC)); //without circuit id - unneccecery
+		rr.buffer = Helper::buildRR(ALIVE_MSG_RC); //without circuit id - unneccecery
 		while (true)
 		{
 			mtx.lock();
@@ -275,8 +275,8 @@ int main()
 	{
 		try
 		{
-			std::thread aliveMsg(&Node::serveControl, node);
-			aliveMsg.detach();
+			//std::thread aliveMsg(&Node::serveControl, node);
+			//aliveMsg.detach();
 			node.serveProxy(ip, port);
 		}
 		catch (const std::runtime_error& e)

@@ -18,13 +18,14 @@ class DockerManager
 {
 public:
     DockerManager();
-    ~DockerManager();
     std::vector<pair<string, string>> openAndGetInfo(const int& use, const int& create, const unsigned int circuitId);
     std::vector<pair<string, string>> GetControlInfo();
     std::vector<std::pair<std::string, std::string>> giveCircuitAfterCrush(string crushedNode, const int use, const unsigned int circuitId);
 
 private:
+    void deleteDockerContainers();
     void runCmdCommand(const string& command);
+    std::vector<std::string> runCommand(const std::string& command);
     void openDocker(const int& amount);
     void openDocker(const string& containerName);
     void setNewNodes(const int& create, const int& use);

@@ -50,10 +50,10 @@ Server::~Server()
 void Server::serve()
 {
 	std::thread serveClientsThread(&Server::serveClients, this);
-	std::thread serveControlThread(&Server::serveControl, this);
+	//std::thread serveControlThread(&Server::serveControl, this);
 
 	serveClientsThread.join();
-	serveControlThread.join();
+	//serveControlThread.join();
 }
 
 void Server::serveClients()
