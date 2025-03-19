@@ -59,7 +59,7 @@ void DockerManager::runCmdCommand(const std::string& command)
 
 void DockerManager::setNewNodes(const int& create, const int& use)
 {
-    if (this->amountCreated + create >= 20)
+    if (this->amountCreated + create > NODE_CAPACITY)
         throw std::runtime_error("to many nodes the server cant allow it!");
 
     for (int i = 0; i < create; i++) //put all the nodes I wanna work with node1 - noden
