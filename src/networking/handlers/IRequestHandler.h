@@ -18,14 +18,13 @@
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
-    unsigned int circuit_id;
     std::vector<unsigned char> buffer;
 } RequestResult;
 
 
 class IRequestHandler
 {
-    public:
-        virtual bool isRequestRelevant(const RequestInfo& requestInfo) = 0;
-        virtual RequestResult handleRequest(const RequestInfo& requestInfo) = 0;
+public:
+    virtual bool isRequestRelevant(const RequestInfo& requestInfo) = 0;
+    virtual RequestResult handleRequest(RequestInfo& requestInfo) = 0;
 };

@@ -21,8 +21,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{ca62a8de-e9b2-4584-aaa4-b8e9243044df}</ProjectGuid>
-    <RootNamespace>Server</RootNamespace>
+    <ProjectGuid>{29fccc9c-6500-4140-9dfe-37e98f9b2704}</ProjectGuid>
+    <RootNamespace>Project2</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -127,49 +127,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\networking\docker_manager.h" />
-    <ClInclude Include="..\networking\handlers\CloseConnectionHandler.h" />
-    <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
-    <ClInclude Include="..\networking\handlers\NodeOpeningHandler.h" />
-    <ClInclude Include="..\networking\handlers\TorRequestHandler.h" />
-    <ClInclude Include="..\networking\server.h" />
-    <ClInclude Include="..\networking\WSAInitializer.h" />
-    <ClInclude Include="..\utils\AES.h" />
-    <ClInclude Include="..\utils\DeserializerRequests.h" />
-    <ClInclude Include="..\utils\ECDHE.h" />
-    <ClInclude Include="..\utils\Helper.h" />
-    <ClInclude Include="..\utils\json.hpp" />
-    <ClInclude Include="..\utils\prime_numbers_manager.h" />
-    <ClInclude Include="..\utils\Requestes.hpp" />
-    <ClInclude Include="..\utils\RequestInfo.hpp" />
-    <ClInclude Include="..\utils\Responses.hpp" />
-    <ClInclude Include="..\utils\RSA.h" />
-    <ClInclude Include="..\utils\SerializerRequests.h" />
-    <ClInclude Include="..\utils\SerializerResponses.h" />
-    <ClInclude Include="..\utils\utils.hpp" />
+    <ClCompile Include="..\..\utils\ECDHE.cpp" />
+    <ClCompile Include="..\..\utils\prime_numbers_manager.cpp" />
+    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\networking\docker_manager.cpp" />
-    <ClCompile Include="..\networking\handlers\CloseConnectionHandler.cpp" />
-    <ClCompile Include="..\networking\handlers\NodeOpeningHandler.cpp" />
-    <ClCompile Include="..\networking\handlers\TorRequestHandler.cpp" />
-    <ClCompile Include="..\networking\server.cpp" />
-    <ClCompile Include="..\networking\WSAInitializer.cpp" />
-    <ClCompile Include="..\utils\AES.cpp" />
-    <ClCompile Include="..\utils\DeserializerRequests.cpp" />
-    <ClCompile Include="..\utils\ECDHE.cpp" />
-    <ClCompile Include="..\utils\Helper.cpp" />
-    <ClCompile Include="..\utils\prime_numbers_manager.cpp" />
-    <ClCompile Include="..\utils\RSA.cpp" />
-    <ClCompile Include="..\utils\SerializerRequests.cpp" />
-    <ClCompile Include="..\utils\SerializerResponses.cpp" />
-    <ClCompile Include="..\utils\utils.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\dockerFiles\Docker-compose.yaml" />
-    <None Include="..\dockerFiles\Dockerfile" />
-    <None Include="..\dockerFiles\docker_build_node.bat" />
-    <None Include="..\dockerFiles\docker_ip_inishializer.py" />
+    <ClInclude Include="..\..\utils\ECDHE.h" />
+    <ClInclude Include="..\..\utils\prime_numbers_manager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

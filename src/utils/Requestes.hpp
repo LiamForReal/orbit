@@ -9,8 +9,8 @@ typedef enum RequestCode
 	RSA_KEY_EXCHANGE_RC = 10,
 	ECDHE_KEY_EXCHANGE_RC = 20,
 	NODE_OPEN_RC = 30,
-	CIRCUIT_CONFIRMATION_RC = 40,     
-	BANDWIDTH_RC = 50,
+	//CIRCUIT_CONFIRMATION_RC = 40,     
+	//BANDWIDTH_RC = 50,
 	LINK_RC = 60,    
 	HTTP_MSG_RC = 70,
 	CLOSE_CONNECTION_RC = 80, 
@@ -22,7 +22,6 @@ typedef struct RsaKeyExchangeRequest
 {
     uint2048_t public_key;
     uint2048_t product;
-    unsigned int circuit_id;
 } RsaKeyExchangeRequest;
 
 typedef struct EcdheKeyExchangeRequest
@@ -41,21 +40,13 @@ typedef struct NodeOpenRequest
 typedef struct LinkRequest
 {
     pair<std::string, unsigned int> nextNode;
-    unsigned int circuit_id; 
 } LinkRequest;
 
 typedef struct HttpGetRequest
 {
     string domain; //maybe in cpp the library have other way to save the content and it will be switched there 
-    unsigned int circuit_id;
 } HttpGetRequest;
 
-typedef struct CloseConnectionRequest
-{ 
-    unsigned int circuit_id; 
-} CloseConnectionRequest;
+//Close connection is only a id
 
-typedef struct DeleteCircuitRequest
-{ 
-    unsigned int circuit_id; 
-} DeleteCircuitRequest;
+//delete circuit is only a id

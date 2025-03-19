@@ -1,68 +1,63 @@
 #include "Helper.h"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <sstream>
-#include <mutex>
+
 
 using std::string;
 
-// recieves the type code of the message from socket (3 bytes)
-// and returns the code. if no message found in the socket returns 0 (which means the client disconnected)
-
-unsigned int Helper::socketHasData(SOCKET socket) 
+void Helper::sendVector(const SOCKET sc, const std::vector<uint8_t>& vec)
 {
-	char buf;
-	unsigned int code = Helper::getStatusCodeFromSocket(socket);
-	return code;
-}
-
-// recieve data from socket according byteSize
-// returns the data as string
-string Helper::getStringPartFromSocket(const SOCKET sc, const int bytesNum)
-{
-	return getPartFromSocket(sc, bytesNum*sizeof(unsigned char), 0);
-}
-
-void Helper::sendVector(const SOCKET sc, const std::vector<unsigned char>& vec)
-{
-	std::cout << "Sending...\n";
-	const char* dataPtr = reinterpret_cast<const char*>(vec.data());
-	std::string str = dataPtr; 
-	int dataSize = static_cast<int>(vec.size());
-	int totalBytesSent = 0;
-	std::cout << "socket to send: " << sc << std::endl;
-	while (totalBytesSent < dataSize)
+	try
 	{
-		int bytesSent = send(sc, dataPtr + totalBytesSent, dataSize - totalBytesSent, 0);
-
-		if (bytesSent == SOCKET_ERROR)
+		int dataSize = vec.size(), bytesSent = 0, totalBytesSent = 0;
+		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
 		{
-			std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
-			throw std::runtime_error("Error while sending message to client");
+			std::cout << "sending..." << "\n";
+			//std::cout << "status: " << unsigned int(vec[1]) << ", circuit id: " << unsigned int(vec[0]) << "\n";
+			std::cout.flush();
 		}
-		else if (bytesSent == 0)
+			
+		while (totalBytesSent < dataSize)
 		{
-			std::cerr << "Connection closed by the client\n";
-			throw std::runtime_error("Connection closed by the client");
-		}
+			bytesSent = send(sc,
+				reinterpret_cast<const char*>(vec.data()) + totalBytesSent, // Fix pointer arithmetic
+				dataSize - totalBytesSent,
+				0);
 
-		totalBytesSent += bytesSent;
+			if (bytesSent == SOCKET_ERROR)
+			{
+				std::cerr << "Send failed with error: " << WSAGetLastError() << std::endl;
+				throw std::runtime_error("Error while sending message to client");
+			}
+			else if (bytesSent == 0)
+			{
+				std::cerr << "Connection closed by the client\n";
+				throw std::runtime_error("Connection closed by the client");
+			}
+			totalBytesSent += bytesSent;
+		}
+		if (vec.size() >= 2 && vec[1] != unsigned char(ALIVE_MSG_RC))
+		{
+			std::cout << "Successfully sent " << totalBytesSent << " bytes\n";
+			std::cout.flush();
+		}
 	}
-
-	if (totalBytesSent != dataSize)
+	catch (std::runtime_error& e)
 	{
-		std::cerr << "Failed to send entire message to client\n";
-		throw std::runtime_error("Failed to send entire message to client");
+		std::cout << "run time error: " << e.what() << std::endl;
+	}
+	catch(...)
+	{
+		std::cout << "unecpected error while sending" << std::endl;
 	}
 }
 
 unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 {
 	unsigned int value = 0;
-	unsigned char* data = getUnsignedCharPartFromSocket(sc, 1, 0);
+	unsigned char* data = NULL;
 
-	value = (value << 8) | static_cast<unsigned char>(data[0]);
+	data = new unsigned char[1];
+	recv(sc, (char*)(data), 1, 0);
+	value = (unsigned int)(*data);
 
 	delete[] data;
 	data = NULL;
@@ -72,10 +67,11 @@ unsigned int Helper::getStatusCodeFromSocket(const SOCKET sc)
 
 unsigned int Helper::getCircuitIdFromSocket(const SOCKET sc)
 {
-    unsigned int value = 0;
-	unsigned char* data = getUnsignedCharPartFromSocket(sc, 1, 0);
-
-	value = (value << 8) | static_cast<unsigned char>(data[0]);
+	unsigned int value = 0;
+	unsigned char* data = NULL;
+	data = new unsigned char[1];
+	recv(sc, (char*)(data), 1, 0);
+	value = (unsigned int)(*data);
 
 	delete[] data;
 	data = NULL;
@@ -87,256 +83,254 @@ unsigned int Helper::getLengthPartFromSocket(const SOCKET sc)
 {
 	int i = 0;
 	unsigned int value = 0;
-	unsigned char* data = Helper::getUnsignedCharPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
-
+	std::vector<unsigned char> data = Helper::getDataPartFromSocket(sc, 4, 0); // Assuming getPartFromSocket returns the byte data as a string
 
 	for (i = 0; i < 4; i++)
 	{
 		value |= (static_cast<unsigned int>(data[i]) << (i * 8));
 	}
 
-	delete[] data;
-	data = NULL;
-
 	return value;
 }
 
 // recieve data from socket according byteSize
 // this is private function
-std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum)
+
+std::vector<uint8_t> Helper::getDataPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
 {
-	return getPartFromSocket(sc, bytesNum, 0);
-}
+	if (bytesNum <= 0) return {};
 
-// send data to socket
-// this is private function
-/*
-    void Helper::sendData(const SOCKET sc, const std::string message)
-{
-	const char* data = message.c_str();
+	std::vector<uint8_t> data(bytesNum);
+	int totalReceived = 0;
 
-	if (send(sc, data, message.size(), 0) == INVALID_SOCKET)
+	while (totalReceived < bytesNum)
 	{
-		throw std::exception("Error while sending message to client");
+		int res = recv(sc, reinterpret_cast<char*>(data.data()) + totalReceived, bytesNum - totalReceived, flags);
+
+		if (res == SOCKET_ERROR)
+		{
+			std::cerr << "Error while receiving from socket: " << sc
+				<< ", Error Code: " << WSAGetLastError() << std::endl;
+			return {};  // Return empty vector instead of throwing
+		}
+		else if (res == 0)
+		{
+			std::cerr << "Connection closed by the peer\n";
+			return {};  // Connection closed
+		}
+
+		totalReceived += res;
 	}
-}
-
-*/
-
-
-std::string Helper::getPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
-{
-	if (bytesNum == 0)
-	{
-		return "";
-	}
-
-	char* data = new char[bytesNum + 1];
-	int res = recv(sc, data, bytesNum, flags);
-	if (res == INVALID_SOCKET)
-	{
-		std::string s = "Error while recieving from socket: ";
-		s += std::to_string(sc);
-		throw std::runtime_error(s.c_str());
-	}
-	data[bytesNum] = 0;
-	std::string received(data);
-	delete[] data;
-	data = NULL;
-
-	return received;
-}
-
-unsigned char* Helper::getUnsignedCharPartFromSocket(const SOCKET sc, const int bytesNum, const int flags)
-{
-	if (bytesNum == 0)
-	{
-		return nullptr;
-	}
-
-	unsigned char* data = new unsigned char[bytesNum];
-	int res = recv(sc, (char*)(data), bytesNum, flags);
-
-	if (res == SOCKET_ERROR)
-	{
-		std::string s = "Error while receiving from socket: ";
-		s += std::to_string(sc);
-		throw std::runtime_error(s);
-	}
-	else if (res != bytesNum)
-	{
-		// Handle incomplete data reception if needed
-	}
-
-	//data[bytesNum] = '\0';
-
 	return data;
 }
 
-RequestInfo Helper::buildRI(SOCKET socket, unsigned int statusCode)
-{
-    RequestInfo ri = RequestInfo();
-    ri.buffer = std::vector<unsigned char>();
-    std::string msg = "";
-    unsigned int msgLength = 0;
-	unsigned int circuitId = 0;
-    size_t i = 0;
-    int j = 0;
 
-    ri.id = statusCode;
-
-    std::cout << "DEBUG: Status code: " << statusCode << std::endl;
-    ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
-
-    if (ri.id == ALIVE_MSG_RC) //request how has no data
-        return ri;
-
-    msgLength = Helper::getLengthPartFromSocket(socket);
-    std::cout << "DEBUG: Length: " << msgLength << std::endl;
-
-    for (j = 0; j < BYTES_TO_COPY; ++j) {
-        ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLength >> (8 * j)) & 0xFF));
-    }
-
-    msg = Helper::getStringPartFromSocket(socket, msgLength);
-    msg[msgLength] = '\0';
-
-    for (i = 0; i < msgLength; i++)
-    {
-        ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
-    }
-
-    std::cout << "DEBUG: The message is: " << msg << std::endl;
-
-    ri.id = statusCode;
-
-    return ri;
-}
-
-
-RequestInfo Helper::waitForResponse(SOCKET socket)
-{
-	unsigned int statusCode;
-
-	while (true)
-	{
-		statusCode = Helper::socketHasData(socket);
-		if (statusCode != 0 && statusCode != -1)
-		{
-			return Helper::buildRI(socket, statusCode);
-		}
-	}
-}
-
-RequestInfo Helper::buildRI_RSA(SOCKET socket, const unsigned int& statusCode, RSA& rsa)
+RequestInfo Helper::buildRI(const SOCKET& socket, const unsigned int& circuit_id, const unsigned int& statusCode)
 {
 	RequestInfo ri = RequestInfo();
 	ri.buffer = std::vector<unsigned char>();
-	std::string msg = "";
+	size_t i = 0;
+	int j = 0;
+
+	ri.circuit_id = circuit_id;
+	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
+
+	ri.id = statusCode;
+	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
+
+	ri.length = Helper::getLengthPartFromSocket(socket);
+
+	std::cout << "DEBUG: Length: " << ri.length << std::endl;
+
+	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
+
+	std::cout << "DEBUG: The message is: ";
+	if (ri.buffer.size() < 2000)
+	{
+		for (auto it : ri.buffer)
+			std::cout << it;
+		std::cout << std::endl;
+	}
+	else std::cout << "the cipher text is roghly a 69000 bytes encripted by rsa2048 that I dont print.\n";
+	return ri;
+}
+
+
+RequestInfo Helper::waitForResponse(const SOCKET& socket)
+{
+	RequestInfo ri;
+	ri.circuit_id = Helper::getCircuitIdFromSocket(socket);
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		return ri;
+	else if (ri.circuit_id != 0 && ri.id == NODE_OPEN_RC)
+	{
+		ri.length = 0;
+		return ri;
+	}
+	if (ri.id == 0 && ri.circuit_id == 0)
+		return waitForResponse(socket);
+	return Helper::buildRI(socket, ri.circuit_id, ri.id);
+}
+
+RequestInfo Helper::buildRI_RSA(const SOCKET& socket, const unsigned int& circuit_id, const unsigned int& statusCode, RSA& rsa)
+{
+	RequestInfo ri = RequestInfo();
+	ri.buffer = std::vector<unsigned char>();
 	unsigned int circuitId = 0;
 	size_t i = 0;
 	int j = 0;
 
-	std::vector<uint8_t> encryptedLengthVec;
-	// 4 * 256 bytes because our RSA is 2048 bits and length is 4
-	encryptedLengthVec.reserve(4 * 256);
-	unsigned int msgLengthValue = 0;
-
-	unsigned char* encryptedLength = getUnsignedCharPartFromSocket(socket, 4 * 256, 0);
-	for (short i = 0; i < 4 * 256; i++)
-	{
-		encryptedLengthVec.emplace_back(encryptedLength[i]);
-	}
-
-	free(encryptedLength);
-	encryptedLength = NULL;
-
-	std::vector<uint8_t> decryptedLengthVec = rsa.Decrypt(std::ref(encryptedLengthVec));
-
-	for (i = 0; i < 4; i++)
-	{
-		msgLengthValue |= (static_cast<unsigned int>(decryptedLengthVec[i]) << (i * 8));
-	}
-
-	encryptedLengthVec.clear();
-	decryptedLengthVec.clear();
+	ri.circuit_id = circuit_id;
+	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
 
 	ri.id = statusCode;
+	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
 
-	std::cout << "DEBUG: Status code: " << statusCode << std::endl;
-	ri.buffer.insert(ri.buffer.begin(), 1, static_cast<unsigned char>(statusCode));
-
-	if (ri.id == ALIVE_MSG_RC) //request how has no data
-		return ri;
-
-	std::cout << "DEBUG: Length: " << msgLengthValue << std::endl;
-
-	for (j = 0; j < BYTES_TO_COPY; ++j) 
-	{
-		ri.buffer.insert(ri.buffer.begin() + INC + j, static_cast<unsigned char>((msgLengthValue >> (8 * j)) & 0xFF));
-	}
-
+	ri.length = Helper::getLengthPartFromSocket(socket);
+	std::cout << "DEBUG: Length: " << ri.length << std::endl;
 	// msgLengthValue * 256 bytes because our RSA is 2048 bits and data's length is msgLengthValue
-	std::vector<uint8_t> encryptedMessageVec;
-	encryptedMessageVec.reserve(msgLengthValue * 256);
+	std::vector<uint8_t> encryptedMessage;
+	encryptedMessage.reserve(ri.length);
+	encryptedMessage = getDataPartFromSocket(socket, ri.length, 0);
 
-	unsigned char* encryptedMessage = getUnsignedCharPartFromSocket(socket, msgLengthValue * 256, 0);
-	for (unsigned int i = 0; i < msgLengthValue * 256; i++)
+	//std::cout << "<===== FULL ENCRIPTED MSG START =====>\n";
+	//for (auto it : encryptedMessageVec)
+	//{
+	//	std::cout << it;
+	//}
+	//std::cout << "\n<===== FULL ENCRIPTED MSG END =====>";
+	std::cout << "DEBUG: The message is: ";
+	try
 	{
-		encryptedMessageVec.emplace_back(encryptedMessage[i]);
+		std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(encryptedMessage);
+		for (auto it : decryptedMessageVec)
+		{
+			ri.buffer.emplace_back(it);
+		}
 	}
-
-	free(encryptedMessage);
-	encryptedMessage = NULL;
-
-	std::vector<uint8_t> decryptedMessageVec = rsa.Decrypt(std::ref(encryptedMessageVec));
-
-	for (uint8_t byte : decryptedMessageVec)
+	catch (std::exception e)
 	{
-		std::cout << static_cast<int>(byte) << " ";
-		msg += byte;
+		std::cout << e.what() << std::endl;
 	}
-
-	encryptedMessageVec.clear();
-	decryptedMessageVec.clear();
-
-	msg[msgLengthValue] = '\0';
-
-	for (i = 0; i < msgLengthValue; i++)
-	{
-		ri.buffer.push_back(static_cast<unsigned char>(msg[i]));
-	}
-
-	std::cout << "DEBUG: The message is: " << msg << std::endl;
-
-	ri.id = statusCode;
-
 	return ri;
 }
 
-RequestInfo Helper::waitForResponse_RSA(SOCKET socket, RSA& rsa)
+RequestInfo Helper::waitForResponse_RSA(const SOCKET& socket, RSA& rsa)
 {
-	std::vector<uint8_t> encryptedStatusCodeVec;
-	// 256 bytes because our RSA is 2048 bits
-	encryptedStatusCodeVec.reserve(256);
-	unsigned int statusCode;
+	RequestInfo ri;
+	ri.circuit_id = Helper::getCircuitIdFromSocket(socket);
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS)//in case of regenerate circuit //request how has no data
+		return ri;
+	return Helper::buildRI_RSA(socket, ri.circuit_id, ri.id, std::ref(rsa));
+}
 
-	unsigned char* encryptedStatusCode = getUnsignedCharPartFromSocket(socket, 256, 0);
-	for (short i = 0; i < 256; i++)
+RequestInfo Helper::buildRI_AES(const SOCKET& socket, const unsigned int& circuit_id, const unsigned int& statusCode, bool gotFromNext, AES& key)
+{
+	RequestInfo ri = RequestInfo();
+	ri.buffer = std::vector<unsigned char>();
+	size_t i = 0;
+	int j = 0;
+
+	ri.circuit_id = circuit_id;
+	std::cout << "DEBUG: circuit id: " << ri.circuit_id << "\n";
+
+	ri.id = statusCode;
+	std::cout << "DEBUG: Status code: " << ri.id << std::endl;
+
+	ri.length = Helper::getLengthPartFromSocket(socket);
+	std::cout << "DEBUG: Length: " << ri.length << std::endl;
+
+	ri.buffer = getDataPartFromSocket(socket, ri.length, 0);
+
+	if (gotFromNext)
 	{
-		encryptedStatusCodeVec.emplace_back(encryptedStatusCode[i]);
+		std::cout << "encripting...\n";
+		ri.buffer = key.encrypt(ri.buffer);
 	}
+	else
+	{
+		std::cout << "decripting...\n";
+		if (ri.buffer.size() < 2000)
+		{
+			std::cout << "cipher text: ";
+			for (auto it : ri.buffer)
+				std::cout << it;
+			std::cout << "\n";
+		}
+		else std::cout << "the cipher text is roghly a 69000 bytes encripted by rsa2048 that I dont print.\n";
+		
+		ri.buffer = key.decrypt(ri.buffer);
+	}
+	std::cout << "DEBUG: The message is: " << ri.buffer.data() << std::endl;
+	return ri;
+}
 
-	free(encryptedStatusCode);
-	encryptedStatusCode = NULL;
+RequestInfo Helper::waitForResponse_AES(const SOCKET& socket, AES& key, bool isEncription)
+{
+	RequestInfo ri;
+	ri.circuit_id = Helper::getCircuitIdFromSocket(socket);
+	ri.id = Helper::getStatusCodeFromSocket(socket);
+	if (ri.id == ALIVE_MSG_RC || ri.id == CLOSE_CONNECTION_RC || ri.id == DELETE_CIRCUIT_RC
+		|| ri.id == NODE_OPEN_STATUS || ri.id == LINK_STATUS || ri.id == CLOSE_CONNECTION_STATUS ||
+		ri.id == ALIVE_MSG_STATUS || ri.id == DELETE_CIRCUIT_STATUS) //request how has no data
+		return ri;
+	return Helper::buildRI_AES(socket, ri.circuit_id, ri.id, isEncription, key);
+}
 
-	std::vector<uint8_t> decryptedStatusCodeVec = rsa.Decrypt(std::ref(encryptedStatusCodeVec));
-	std::cout << "Dec status code vec size: " << decryptedStatusCodeVec.size() << std::endl;
+vector<unsigned char> Helper::buildRR(RequestInfo& ri)
+{
+	vector<unsigned char> tmp;
+	unsigned int len;
 
-	statusCode = decryptedStatusCodeVec[0];
+	len = ri.buffer.size();
+	//std::cout << "msg len: " << len << ", ri.length: " << ri.length << "\n";
+	ri.length = len; //when encripting sometimes rsa and esa add nulls padding
 
-	encryptedStatusCodeVec.clear();
-	decryptedStatusCodeVec.clear();
+	//Insert Circuit id
+	tmp.emplace_back(unsigned char(ri.circuit_id));
 
-	return Helper::buildRI_RSA(socket, statusCode, std::ref(rsa));
+	//Insert Id
+	tmp.emplace_back(unsigned char(ri.id));
+
+	//Insert Length
+	unsigned char* lengthBytes = reinterpret_cast<unsigned char*>(&len);
+	tmp.insert(tmp.end(), lengthBytes, lengthBytes + 4);
+
+	//Insert data
+	if (!ri.buffer.empty())
+		tmp.insert(tmp.end(), ri.buffer.begin(), ri.buffer.end());
+	return tmp;
+}
+
+vector<unsigned char> Helper::buildRR(const vector<unsigned char> buffer, unsigned int status, unsigned int length, unsigned int circuit_id)
+{
+	vector<unsigned char> tmp;
+
+	//Insert Circuit id
+	tmp.emplace_back(unsigned char(circuit_id));
+
+	//Insert ID
+	tmp.emplace_back(unsigned char(status));
+
+	//Insert length
+	unsigned char* lengthBytes = reinterpret_cast<unsigned char*>(&length);
+	tmp.insert(tmp.end(), lengthBytes, lengthBytes + 4);
+
+	//Insert data
+	tmp.insert(tmp.end(), buffer.begin(), buffer.end());
+	return tmp;
+}
+
+vector<unsigned char> Helper::buildRR(unsigned int status, unsigned int circuit_id)
+{
+	vector<unsigned char> tmp;
+	tmp.emplace_back(unsigned char(circuit_id));
+	tmp.emplace_back(unsigned char(status));
+	return tmp;
 }

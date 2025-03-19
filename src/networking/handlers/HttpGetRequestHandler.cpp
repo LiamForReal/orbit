@@ -3,14 +3,15 @@
 #include <curl/curl.h>
 #include <string>
 
-HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock) : _circuitsData(circuitsData), _socket(clientSock)
+HttpGetRequestHandler::HttpGetRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, std::map<unsigned int, AES>& aesKeys)
+    : _circuitsData(circuitsData), _aesKeys(aesKeys)
 {
-	this->rr = RequestResult();
+    this->rr = RequestResult();
 }
 
 bool HttpGetRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 {
-	return requestInfo.id == HTTP_MSG_RC;
+    return requestInfo.id == HTTP_MSG_RC;
 }
 
 size_t HttpGetRequestHandler::writeChunk(void* data, size_t size, size_t nmemb, void* userData)
@@ -88,50 +89,53 @@ std::string HttpGetRequestHandler::sendHttpRequest(const std::string& httpReques
     return htmlCode;
 }
 
-RequestResult HttpGetRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult HttpGetRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
-	this->rr.buffer.clear();
-
-	HttpGetRequest hgRequest;
-	HttpGetResponse hgResponse;
+    this->rr.buffer.clear();
+    HttpGetResponse hgResponse;
     RequestInfo ri;
-
-	try
-	{
-		hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo.buffer);
-		
-        rr.circuit_id = hgRequest.circuit_id;
-		// check if there is next
-		if (_circuitsData[hgRequest.circuit_id].second != INVALID_SOCKET && _circuitsData[hgRequest.circuit_id].second != NULL)
-		{
-			hgResponse.status = HTTP_MSG_STATUS_FOWARD;
-			std::vector<unsigned char> buffer = SerializerRequests::serializeRequest(hgRequest);
-			Helper::sendVector(_circuitsData[hgRequest.circuit_id].second, buffer);
+    unsigned int status = HTTP_MSG_STATUS;
+    try
+    {
+        
+        unsigned int circuit_id = requestInfo.circuit_id;
+        // check if there is next
+        if (_circuitsData[circuit_id].second != INVALID_SOCKET && _circuitsData[circuit_id].second != NULL)
+        {
+            rr.buffer = Helper::buildRR(requestInfo);
+            Helper::sendVector(_circuitsData[circuit_id].second, rr.buffer);
             std::cout << "[HTTP GET] listening forward\n";
-            ri = Helper::waitForResponse(_circuitsData[rr.circuit_id].second);
+            ri = Helper::waitForResponse(_circuitsData[circuit_id].second);
+            std::cout << "[HTTP GET] msg encript by this aes layer\n";
+            ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer);
             std::cout << "[HTTP GET] sending backwards!\n";
-            Helper::sendVector(_circuitsData[rr.circuit_id].first, ri.buffer);
-		}
-		else
-		{
-            //if (this->cd.find(hgRequest.circuit_id) == cd.end())
-            //{
-                //std::cout << "4";
-            _circuitsData[hgRequest.circuit_id].first = _socket;
-            //}
-            //else throw std::runtime_error("this circuit first already taken");
-			// send HTTP GET (hgRequest.msg) to Web Server
-			hgResponse.status = HTTP_MSG_STATUS_BACKWARD;
-			hgResponse.content = this->sendHttpRequest(hgRequest.domain);
+            rr.buffer = Helper::buildRR(ri);
+            Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
+        }
+        else
+        {
+            HttpGetRequest hgRequest = DeserializerRequests::deserializeHttpGetRequest(requestInfo);
+            //_circuitsData[requestInfo.circuit_id].first = _socket;
+            // send HTTP GET (hgRequest.msg) to Web Server
+            hgResponse.content = this->sendHttpRequest(hgRequest.domain);
             std::cout << "[HTTP GET] sending backwards!\n";
-            this->rr.buffer = SerializerResponses::serializeResponse(hgResponse);
-            Helper::sendVector(_circuitsData[rr.circuit_id].first, rr.buffer);
-		}
-	}
-	catch (std::runtime_error e)
-	{
-		hgResponse.status = Errors::HTTP_MSG_ERROR;
-		hgResponse.content = "";
-	}
-	return this->rr;
+
+            std::vector<unsigned char> data = SerializerResponses::serializeResponse(hgResponse);
+            std::cout << "[HTTP GET] msg encript by this aes layer\n";
+            data = _aesKeys[circuit_id].encrypt(data);
+            rr.buffer = Helper::buildRR(data, status, data.size(), circuit_id);
+            Helper::sendVector(_circuitsData[circuit_id].first, rr.buffer);
+        }
+    }
+    catch (std::runtime_error e)
+    {
+        status = Errors::HTTP_MSG_ERROR;
+        hgResponse.content = "";
+    }
+    catch (...)
+    {
+        std::cout << "[HTTP GET] unecpected error!!!\n";
+        throw;
+    }
+    return this->rr;
 }

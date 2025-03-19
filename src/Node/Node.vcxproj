@@ -128,6 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\networking\handlers\DeleteCircuitRequestHandler.h" />
+    <ClInclude Include="..\networking\handlers\EcdheKeyExchangeRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\HttpGetRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\IRequestHandler.h" />
     <ClInclude Include="..\networking\handlers\LinkRequestHandler.h" />
@@ -135,10 +136,13 @@
     <ClInclude Include="..\networking\handlers\RsaKeyExchangeRequestHandler.h" />
     <ClInclude Include="..\networking\node.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
+    <ClInclude Include="..\utils\AES.h" />
     <ClInclude Include="..\utils\DeserializerRequests.h" />
     <ClInclude Include="..\utils\DeserializerResponses.h" />
+    <ClInclude Include="..\utils\ECDHE.h" />
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
+    <ClInclude Include="..\utils\prime_numbers_manager.h" />
     <ClInclude Include="..\utils\Requestes.hpp" />
     <ClInclude Include="..\utils\RequestInfo.hpp" />
     <ClInclude Include="..\utils\Responses.hpp" />
@@ -149,15 +153,19 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\networking\handlers\DeleteCircuitRequestHandler.cpp" />
+    <ClCompile Include="..\networking\handlers\EcdheKeyExchangeRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\HttpGetRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\LinkRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\NodeRequestHandler.cpp" />
     <ClCompile Include="..\networking\handlers\RsaKeyExchangeRequestHandler.cpp" />
     <ClCompile Include="..\networking\node.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
+    <ClCompile Include="..\utils\AES.cpp" />
     <ClCompile Include="..\utils\DeserializerRequests.cpp" />
     <ClCompile Include="..\utils\DeserializerResponses.cpp" />
+    <ClCompile Include="..\utils\ECDHE.cpp" />
     <ClCompile Include="..\utils\Helper.cpp" />
+    <ClCompile Include="..\utils\prime_numbers_manager.cpp" />
     <ClCompile Include="..\utils\RSA.cpp" />
     <ClCompile Include="..\utils\SerializerRequests.cpp" />
     <ClCompile Include="..\utils\SerializerResponses.cpp" />

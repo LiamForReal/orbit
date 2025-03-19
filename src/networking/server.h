@@ -20,11 +20,12 @@
 #include "../utils/Helper.h"
 #include "handlers/TorRequestHandler.h"
 #include "../utils/RSA.h"
+#include "../utils/ECDHE.h"
+
 
 #define MAX_INT_OF_BYTE 256
 #define DEC 1
 #define SECONDS_TO_WAIT 10 //the maximum time we wait for node alives
-#define AMOUNT_OF_BYTES 1250
 
 class Server
 {
@@ -42,13 +43,28 @@ class Server
         void acceptClient(); 
         void acceptControlClient();
         void clientHandler(const SOCKET client_socket);
-        void clientControlHandler(const SOCKET node_sock, const std::vector<unsigned int>& circuits, string nodeIp);
-        
+
+        void clientControlHandler(SOCKET& node_sock, const std::vector<unsigned int>& circuits, std::string nodeIp);
+        void setupSocketTimeout(SOCKET& node_sock, int seconeds_to_wait = SECONDS_TO_WAIT);
+        bool handleCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock);
+        bool checkNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp);
+        bool processCircuitNotifications(const std::vector<unsigned int>& circuits, const std::string& nodeIp,SOCKET& node_sock);
+        void notifyNodeDeletion(SOCKET& node_sock, unsigned int circuitId);
+        //void notifyClientDeletion(unsigned int circuitId);
+        void regenerateCircuit(unsigned int circuitId, const std::string& nodeIp);
+        bool receiveAliveMessage(SOCKET& node_sock, const std::string& nodeIp);
+        void handleNodeTimeout(const std::vector<unsigned int>& circuits, const std::string& nodeIp, SOCKET& node_sock);
+
+
         std::map<unsigned int, std::vector<std::pair<std::string, std::string>>> _controlList; // nodes data
         std::map<unsigned int, SOCKET> _clients;
         std::map<unsigned int, std::set<std::string>> _circuitsToNotify;
         SOCKET _socket;
         SOCKET _controlSocket;
 
-        RSA rsa;
+        ECDHE ecdhe;
+                //self, client's
+        std::map<SOCKET, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>> _rsaInfo;
+        std::map<SOCKET, ECDHE> _ecdheInfo;
+        AES _aes;
 };

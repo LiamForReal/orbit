@@ -16,6 +16,13 @@
 #include "../utils/SerializerRequests.h"
 #include "../utils/Helper.h"
 #include "../utils/RSA.h"
+#include "../utils/ECDHE.h"
+#include "../utils/AES.h"
+
+typedef struct RequestResult // Changed from typedef to struct definition
+{
+	std::vector<unsigned char> buffer;
+} RequestResult;
 
 #define COMMUNICATE_NODE_PORT 9050
 #define COMMUNICATE_SERVER_PORT 9787
@@ -28,33 +35,28 @@ public:
 	Client();
 	~Client();
 	void connectToServer(std::string serverIP, int port);
-	void startConversation(const bool& openNodes = true);
-	void nodeOpening();
+	void HandleTorClient(const bool regular = true);
+	RequestInfo nodeOpening(const bool& regular);
 	bool domainValidationCheck(std::string domain);
-	void listenToServerInfo();
 
-	bool getPassedListenWait() const;
-	bool getPassedPathGetWait() const;
-	bool getRestartConversation() const;
-
-	void setPassedPathGetWait(const bool& passedPathGetWait);
-	void setRestartConversation(const bool& restartConversation);
-
+	void dataLayersEncription(std::vector<unsigned char>& data);
+	void dataLayersDecription(std::vector<unsigned char>& data);
 	void closeSocketWithFirstNode();
 	
 private:
 	
 	std::string generateHttpGetRequest(const std::string& domain);
 
-	bool _passedListenWait;
-	bool _passedPathGetWait;
-	bool _restartConversation;
-
-	SOCKET _clientSocketWithFirstNode;
+	unsigned int circuit_id;
 	SOCKET _clientSocketWithDS;
+	SOCKET _clientSocketWithFirstNode;
 
-	RSA rsa;
-	uint2048_t rsaServerPubkey;
-	uint2048_t rsaServerProduct;
-	std::vector<std::pair<uint2048_t, uint2048_t>> rsaCircuitData;
+	RSA _rsa; //self
+	std::pair<uint2048_t, uint2048_t> _serverRSA; //server's
+	std::vector<std::pair<uint2048_t, uint2048_t>> _rsaCircuitData; //circuit's
+
+	ECDHE _ecdhe; //self 
+
+	AES _aes;
+	std::vector<AES> _aesCircuitData;
 };

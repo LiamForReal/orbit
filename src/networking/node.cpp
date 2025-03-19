@@ -1,17 +1,16 @@
 #include "node.h"
 // add request handler that muches 
-
 #define ENVE_MAX_LIMIT  32,766
-#define AMOUNT_OF_BYTES 1250
+bool isFirstCall = true;
 // using static const instead of macros 
 static const unsigned int IFACE = 0;
 
 using std::string;
 using std::vector;
 
-std::mutex mutex;
+std::mutex mtx;
 
-Node::Node()
+Node::Node() 
 {
 	// notice that we step out to the global namespace
 	// for the resolution of the function socket
@@ -77,65 +76,54 @@ void Node::controlReceiver(SOCKET& serverSock)
 	{
 		RequestInfo ri;
 		RequestResult rr;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), serverSock);
-
 		while (true)
 		{
 			ri = Helper::waitForResponse(serverSock);
 
-			mutex.lock();
-			std::cout << "delete sended!\n\n";
-			rr = nodeRequestHandler.handleMsg(ri);
-
-			if (DELETE_CIRCUIT_STATUS == rr.buffer[0])
+			std::cout << "[CONTROL RECVER] delete recved!\n\n";
+			//ERROR!!!
+			NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), INVALID_SOCKET, std::ref(_aesKeys)); // dont need sock for delete
+			rr = nodeRequestHandler.handleMsg(ri); //put out the delete from nodeRequestHndler
+			mtx.lock();
+			Helper::sendVector(serverSock, rr.buffer);
+			mtx.unlock();
+			if (unsigned char(DELETE_CIRCUIT_STATUS) == rr.buffer[STATUS_INDEX])
 			{
-				std::cout << "Delete successfully done!\n";
+				std::cout << "[CONTROL RECVER] Delete successfully done!\n";
+				throw  -1;
 			}
 			else
 			{
-				std::cerr << "Failed to delete circuit!\n";
+				std::cerr << "[CONTROL RECVER] Failed to delete circuit!\n";
 			}
-			mutex.unlock();
-
 		}
 	}
 	catch (std::runtime_error& e)
 	{
-		std::cout << "[RECEIVER] Control manganon problem!\n";
+		std::cout << "[CONTROL RECVER] Control manganon problem!\n";
 		std::cout << e.what() << std::endl;
 	}
 	catch (...)
 	{
-		std::cout << "[RECEIVER] An unexpected error occurred!\n";
+		std::cout << "[CONTROL RECVER] An unexpected error occurred!\n[CONTROL RECVER] restarting node\n";
+		throw;
 	}
 }
 
 void Node::controlSender(SOCKET& serverSock)
 {
-	char* data = NULL;
-
 	try
 	{
-		data = new char[1];
-		data[0] = (char)(ALIVE_MSG_RC);
-
-		int bytesSent = 0;
-
+		RequestResult rr;
+		rr.buffer = Helper::buildRR(ALIVE_MSG_RC); //without circuit id - unneccecery
 		while (true)
 		{
-			mutex.lock();
-			bytesSent = send(serverSock, data, sizeof(data), 0);
-			mutex.unlock();
-			if (bytesSent <= 0)
-			{
-				std::cout << "\n\n\n alive msg wasn't send \n\n\n";
-				std::cout << "send: data: " << data << " , size of data: " << sizeof(data) << "\n";
-				break;
-			}
-			//else std::cout << "\nalive msg was sended!\n";
+			mtx.lock();
+			Helper::sendVector(serverSock, rr.buffer);
+			mtx.unlock();
 			//return; node crush
 			// add node crush exe to check
-			std::this_thread::sleep_for(std::chrono::seconds(1));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 		}
 	}
 	catch (std::runtime_error& e)
@@ -154,14 +142,14 @@ void Node::serveControl()
 	try
 	{
 		SOCKET serverSock = createSocketWithServer();
-		unsigned long l;
-		ioctlsocket(serverSock, FIONREAD, &l);
+		//unsigned long l;
+		//ioctlsocket(serverSock, FIONREAD, &l);
 
 		std::thread controlSenderThread(&Node::controlSender, this, std::ref(serverSock));
-		//std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
+		std::thread controlReceiverThread(&Node::controlReceiver, this, std::ref(serverSock));
 
 		controlSenderThread.join();
-		//controlReceiverThread.join();
+		controlReceiverThread.join();
 	}
 	catch (std::runtime_error& e)
 	{
@@ -220,11 +208,14 @@ void Node::acceptClient()
 	if (client_socket == INVALID_SOCKET)
 		throw std::runtime_error("invalid socket accepted");
 
-	std::cout << "Client accepted !\n";
-	// create new thread for client	and detach from it
+	std::cout << "Client accepted!\n";
+
+	int flag = 1;
+	setsockopt(client_socket, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+
+	// Create new thread for client and detach from it
 	std::thread tr(&Node::clientHandler, this, client_socket);
 	tr.detach();
-
 }
 
 std::string Node::getEnvVar(const LPCSTR& key)
@@ -254,13 +245,11 @@ void Node::clientHandler(const SOCKET client_socket)
 	{
 		RequestInfo ri;
 		LinkRequest lr;
-		RequestResult rr;
-		rr.circuit_id = 0;
-		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(rsaCircuits), client_socket);
+		RequestResult rr;	
+		NodeRequestHandler nodeRequestHandler = NodeRequestHandler(std::ref(circuits), std::ref(_rsaKeys), client_socket, std::ref(_aesKeys));
 		while (true)
 		{
-			//wait for msg from main
-			ri = Helper::waitForResponse(client_socket);
+			ri = nodeRequestHandler.getMsg();
 			rr = nodeRequestHandler.handleMsg(ri);
 		}
 	}
@@ -268,35 +257,39 @@ void Node::clientHandler(const SOCKET client_socket)
 	{
 		std::cerr << e.what() << '\n';
 	}
+	catch (...)
+	{
+		std::cout << "[CLIENT HANDLER] unexpected error accured\n";
+	}
 }
 
 
+string ip = Node::getEnvVar((LPCSTR)("NODE_IP")); // Get the IP from the environment variable
+uint16_t port = (uint16_t)(std::atoi((Node::getEnvVar((LPCSTR)("NODE_PORT"))).c_str())); // Get the port from the environment variable
+
 int main()
 {
-	try
+	WSAInitializer wsa = WSAInitializer();
+	Node node = Node();
+	while (true)
 	{
-		//change you have ct version go get it
-		WSAInitializer wsa = WSAInitializer();
-		Node node = Node();
-		string ip_env = node.getEnvVar((LPCSTR)("NODE_IP")); // Get the IP from the environment variable
-		string port_env = node.getEnvVar((LPCSTR)("NODE_PORT")); // Get the port from the environment variable
-		std::cout << "ip is: " << ip_env << ", port is: " << port_env << "\n";
-		uint16_t port = (uint16_t)(std::atoi(port_env.c_str())); // Default to 9050 if not set
-
-		std::thread aliveMsg(&Node::serveControl, node);
-		aliveMsg.detach();
-		node.serveProxy(ip_env, port);
+		try
+		{
+			//std::thread aliveMsg(&Node::serveControl, node);
+			//aliveMsg.detach();
+			node.serveProxy(ip, port);
+		}
+		catch (const std::runtime_error& e)
+		{
+			std::cerr << e.what() << '\n';
+		}
+		catch (...)
+		{
+			std::cout << "[MAIN] restarting node threads\n";
+			continue;
+		}
 	}
-	catch (const std::runtime_error& e)
-	{
-		std::cerr << e.what() << '\n';
-	}
-	catch (...)
-	{
-		std::cout << "an unaccespted error\n";
-	}
-
+	
 	system("pause");
-
 	return 0;
 }

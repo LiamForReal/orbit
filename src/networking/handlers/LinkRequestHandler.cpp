@@ -1,6 +1,7 @@
 #include "LinkRequestHandler.h"
 
-LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s) : _circuitData(circuitData), _socket(s)
+LinkRequestHandler::LinkRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitData, SOCKET& s, std::map<unsigned int, AES>& aesKeys) 
+	: _circuitData(circuitData), _socket(s), _aesKeys(aesKeys)
 {
 	this->rr = RequestResult();
 }
@@ -26,6 +27,9 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 		return INVALID_SOCKET;
 	}
 
+	int flag = 1;
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&flag, sizeof(flag));
+
 	// Connect to the server
 	if (connect(sock, reinterpret_cast<sockaddr*>(&serverAddr), sizeof(serverAddr)) == SOCKET_ERROR) {
 		std::cerr << "Connection failed: " << WSAGetLastError() << std::endl;
@@ -36,50 +40,49 @@ SOCKET LinkRequestHandler::createSocket(const std::string& ip, unsigned int port
 	return sock;
 }
 
+
 bool LinkRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 {
 	return requestInfo.id == LINK_RC;
 }
 
-RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult LinkRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
-	rr.buffer.clear();
-	LinkRequest lr;
-	LinkResponse lre;
 	RequestInfo ri;
+	unsigned int status = LINK_STATUS;
+	rr.buffer.clear();
 	try
 	{
-		lr = DeserializerRequests::deserializeLinkRequest(requestInfo.buffer);
+		unsigned int circuit_id = requestInfo.circuit_id;
 
-		rr.circuit_id = lr.circuit_id;
-
-		lre.status = LINK_STATUS;
-
-		if (_circuitData[lr.circuit_id].first == _socket)
+		if (_circuitData[circuit_id].first == _socket)
 		{
-			if (_circuitData[lr.circuit_id].second != INVALID_SOCKET && _circuitData[lr.circuit_id].second != NULL)
+			if (_circuitData[circuit_id].second != INVALID_SOCKET && _circuitData[circuit_id].second != NULL)
 			{
 				std::cout << "[LINK] seconed is exisist and trying to connenct" << std::endl;
-				Helper::sendVector(_circuitData[lr.circuit_id].second, requestInfo.buffer);
-				ri = Helper::waitForResponse(_circuitData[lr.circuit_id].second);//sends rr but I put that on ri
-				if (ri.id == LINK_STATUS)
-					lre.status = LINK_STATUS;
-				else throw std::runtime_error("[LINK] problem occurred while linking the next node");
-				std::cout << "[LINK] sends to the next node!\n";
-				rr.buffer = SerializerResponses::serializeResponse(lre);
+				rr.buffer = Helper::buildRR(requestInfo);
+				Helper::sendVector(_circuitData[circuit_id].second, rr.buffer);
+				ri = Helper::waitForResponse(_circuitData[circuit_id].second);//sends rr but I put that on ri
+				//becouse ri contains only status and circuit id there is no need for encription
+				ri.buffer = _aesKeys[circuit_id].encrypt(ri.buffer); //change
+				std::cout << "[LINK] msg encript by this aes layer\n";
+				rr.buffer = Helper::buildRR(ri);
 				std::cout << "[LINK] sending backwards!\n";
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 			else
 			{
+				LinkRequest lr = DeserializerRequests::deserializeLinkRequest(requestInfo);
 				std::cout << "[LINK] seconed is new and now generating\n";
-				_circuitData[lr.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
-				if (_circuitData[lr.circuit_id].second == INVALID_SOCKET)
+				_circuitData[requestInfo.circuit_id].second = this->createSocket(lr.nextNode.first, lr.nextNode.second);
+				if (_circuitData[requestInfo.circuit_id].second == INVALID_SOCKET)
 					throw std::runtime_error("[LINK] socket creation failed");
-				std::cout << "[LINK] next created";
-				rr.buffer = SerializerResponses::serializeResponse(lre);
+				std::cout << "[LINK] next created\n";
+				rr.buffer.clear();
+				//becouse ri contains only status and circuit id there is no need for encription
+				rr.buffer = Helper::buildRR(status ,circuit_id);
 				std::cout << "[LINK] sending backwards!\n";
-				Helper::sendVector(_circuitData[rr.circuit_id].first, rr.buffer);
+				Helper::sendVector(_circuitData[circuit_id].first, rr.buffer);
 			}
 		}
 		else throw std::runtime_error("the socket given is corrupted");
@@ -87,7 +90,12 @@ RequestResult LinkRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	}
 	catch (std::runtime_error& e)
 	{
-		lre.status = LINK_ERROR;
+		status = LINK_ERROR;
+	}
+	catch (...)
+	{
+		std::cout << "[LINK] unecpected error!!!\n";
+		throw;
 	}
 	return rr;
 }

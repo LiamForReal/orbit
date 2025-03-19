@@ -4,6 +4,8 @@
 typedef struct RequestInfo
 {
     unsigned int id;
+    unsigned int circuit_id;
+    unsigned int length;
     std::vector<unsigned char> buffer;
     RequestInfo()
     {

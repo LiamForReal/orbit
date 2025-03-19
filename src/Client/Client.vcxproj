@@ -21,7 +21,9 @@
   <ItemGroup>
     <ClInclude Include="..\networking\client.h" />
     <ClInclude Include="..\networking\WSAInitializer.h" />
+    <ClInclude Include="..\utils\AES.h" />
     <ClInclude Include="..\utils\DeserializerResponses.h" />
+    <ClInclude Include="..\utils\ECDHE.h" />
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
     <ClInclude Include="..\utils\prime_numbers_manager.h" />
@@ -35,7 +37,9 @@
   <ItemGroup>
     <ClCompile Include="..\networking\client.cpp" />
     <ClCompile Include="..\networking\WSAInitializer.cpp" />
+    <ClCompile Include="..\utils\AES.cpp" />
     <ClCompile Include="..\utils\DeserializerResponses.cpp" />
+    <ClCompile Include="..\utils\ECDHE.cpp" />
     <ClCompile Include="..\utils\Helper.cpp" />
     <ClCompile Include="..\utils\prime_numbers_manager.cpp" />
     <ClCompile Include="..\utils\RSA.cpp" />

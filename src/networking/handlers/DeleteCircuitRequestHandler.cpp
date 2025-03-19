@@ -1,7 +1,7 @@
 #include "DeleteCircuitRequestHandler.h"
 
-DeleteCircuitRequestHandler::DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, SOCKET& clientSock)
-	: cd(circuitsData), _socket(clientSock)
+DeleteCircuitRequestHandler::DeleteCircuitRequestHandler(std::map<unsigned int, std::pair<SOCKET, SOCKET>>& circuitsData, std::map<unsigned int, std::pair<RSA, std::pair<uint2048_t, uint2048_t>>>& rsaKeys, std::map<unsigned int, AES>& aesKeys, SOCKET& socket)
+	: cd(circuitsData), _rsaKeys(rsaKeys), _aesKeys(aesKeys), _socket(socket)
 {
 	this->rr = RequestResult();
 }
@@ -23,25 +23,32 @@ bool DeleteCircuitRequestHandler::isRequestRelevant(const RequestInfo& requestIn
 	return requestInfo.id == DELETE_CIRCUIT_RC;
 }
 
-RequestResult DeleteCircuitRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult DeleteCircuitRequestHandler::handleRequest(RequestInfo& requestInfo)
 {
-	this->rr.buffer.clear();
-	DeleteCircuitRequest dcr = DeserializerRequests::deserializeDeleteCircuitRequest(requestInfo.buffer);
-	DeleteCircuitResponse dcre;
+	rr.buffer.clear();
+	unsigned int circuit_id = requestInfo.circuit_id,status = DELETE_CIRCUIT_STATUS;
 	try
 	{
-		this->rr.circuit_id = dcr.circuit_id;
-		
-		closeSocket(this->cd[dcr.circuit_id].first);
-		closeSocket(this->cd[dcr.circuit_id].second);
-		this->cd.erase(dcr.circuit_id);
-		dcre.status = DELETE_CIRCUIT_STATUS;
+		closeSocket(cd[circuit_id].first);
+		cd[circuit_id].first = INVALID_SOCKET;
+		closeSocket(cd[circuit_id].second);
+		cd[circuit_id].second = INVALID_SOCKET;
+		_socket = INVALID_SOCKET;
+		cd.erase(circuit_id);
+		_rsaKeys.erase(circuit_id);
+		_aesKeys.erase(circuit_id);
+		std::cout << "[DELETE CIRCUIT] circuit was deleted successfully!\n";
 	}
 	catch (std::runtime_error& e)
 	{
-		dcre.status = DELETE_CIRCUIT_ERROR;
+		status = DELETE_CIRCUIT_ERROR;
 		std::cout << e.what() << std::endl;
 	}
-	rr.buffer = SerializerResponses::serializeResponse(dcre);
+	catch (...)
+	{
+		status = DELETE_CIRCUIT_ERROR;
+		std::cout << "[DELETE CIRCUIT] an anexpecte error accured while deleting";
+	}
+	rr.buffer = Helper::buildRR(status, circuit_id);
 	return rr;
 }
