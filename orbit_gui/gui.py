@@ -37,7 +37,7 @@ class BrowserWindow(OrbitMainWindow):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
 
-        label = QLabel(self, text="ORBit Browser Search Bar")
+        label = QLabel(self, text="ORBIT Browser Search Bar")
         label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         label.setStyleSheet("font-size: 30px")
 
@@ -53,7 +53,7 @@ class BrowserWindow(OrbitMainWindow):
         self.error_label.setStyleSheet("color: red; font-size: 16px; font-weight: bold;")
         self.error_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
-        search_button = QPushButton("I> Search", self)
+        search_button = QPushButton("🔎 Search", self)
         search_button.setMinimumSize(QSize(140, 60))
         search_button.setMaximumSize(QSize(180, 60))
         search_button.clicked.connect(self.on_search_button_clicked)
