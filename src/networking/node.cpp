@@ -275,8 +275,8 @@ int main()
 	{
 		try
 		{
-			//std::thread aliveMsg(&Node::serveControl, node);
-			//aliveMsg.detach();
+			std::thread aliveMsg(&Node::serveControl, node);
+			aliveMsg.detach();
 			node.serveProxy(ip, port);
 		}
 		catch (const std::runtime_error& e)
