@@ -42,7 +42,7 @@
 
 #pragma endregion
 
-#define BUFFER_SIZE		1024 // 1K need to change
+#define BUFFER_SIZE		10240 // 10K 
 
 class Pipe
 {
