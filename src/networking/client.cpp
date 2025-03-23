@@ -3,12 +3,13 @@ using std::vector;
 
 std::mutex mtx;
 
-Client::Client()
+Client::Client(Pipe p)
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	_clientSocketWithFirstNode = INVALID_SOCKET;
 	circuit_id = 0;
+	_pipe = p;
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 }
@@ -22,6 +23,7 @@ Client::~Client()
 		_rsaCircuitData.clear();
 		closesocket(_clientSocketWithFirstNode);
 		closesocket(_clientSocketWithDS);
+		_pipe.close();
 	}
 	catch (...) {}
 }
@@ -136,6 +138,8 @@ RequestInfo Client::nodeOpening(const bool& regular)
 		std::cout << "enter amount of nodes to use: ";
 		std::cin >> nor.amount_to_use;
 	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
+
+	char buffer[10240];
 	data = SerializerRequests::serializeRequest(nor);
 	data = _aes.encrypt(data);
 	rr.buffer = Helper::buildRR(data, NODE_OPEN_RC, data.size());
@@ -144,9 +148,13 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
 	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
 	{
+		buffer[0] = (char)(1);
+		_pipe.sendMessageToGraphics(buffer);
 		return ri;
 	}
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
+	buffer[0] = (char)(0);
+	_pipe.sendMessageToGraphics(buffer);
 	return nodeOpening(regular);
 }
 
@@ -475,8 +483,35 @@ int main()
 {
 	try
 	{
+		Pipe pip;
+		srand(time_t(NULL));
+
+		Pipe p;
+		bool isConnect = p.connect(); 
+
+		string ans;
+		while (!isConnect) //reconnect manganon optional
+		{
+			std::cout << "cant connect to orbit graphics" << std::endl;
+			std::cout << "Do you try to connect again or exit? (0-try again, 1-exit)" << std::endl;
+			std::cin >> ans;
+
+			if (ans == "0")
+			{
+				std::cout << "trying connect again.." << std::endl;
+				Sleep(3000);
+				isConnect = p.connect();
+			}
+			else
+			{
+				p.close();
+				return 1;
+			}
+		}
+		std::cout << "succesfully connected to gui pipe!\n";
 		WSAInitializer wsa = WSAInitializer();
-		Client client = Client();
+		Client client = Client(p);
+		
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
 
 		client.HandleTorClient();

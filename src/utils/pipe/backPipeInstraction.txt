@@ -35,7 +35,6 @@ function //inside function
 		}
 	}
 
-
 	char msgToGraphics[10240]; //4. should be the length of the buffer size 10kb
 
 	p.sendMessageToGraphics(msgToGraphics);//5. send just sends the char buffer

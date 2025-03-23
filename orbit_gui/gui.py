@@ -1,12 +1,20 @@
+import win32file
+import win32pipe
 import sys
 import os
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QSpinBox, QLineEdit, QTextBrowser
 from PyQt6.QtGui import QPixmap, QPalette, QColor
 
+
+PIPE_NAME: str = r"\\.\pipe\orbitPipe"
+
+
 class OrbitMainWindow(QMainWindow):
-    def __init__(self) -> None:
+    def __init__(self, pipe) -> None:
         super().__init__()
+
+        self.pipe = pipe
 
         # Load the QSS stylesheet
         self.__qss_theme = self.resource_path(os.path.join('qss', 'themes', 'theme.qss'))
@@ -30,9 +38,28 @@ class OrbitMainWindow(QMainWindow):
         return os.path.join(base_path, relative_path)
 
 
+    def pipe_read(self, bytes_amount: int) -> str:
+        while True:
+            try:
+                result, data = win32file.ReadFile(self.pipe, bytes_amount)
+                if 0 == result: # Success
+                    return data.decode()
+            except BaseException as e:
+                print(f"Read error: {e}")
+                sys.exit(1)
+
+
+    def pipe_write(self, data) -> None:
+        try:
+            win32file.WriteFile(self.pipe, data.encode())
+        except BaseException as e:
+            print(f"Write error: {e}")
+            sys.exit(1)
+
+
 class BrowserWindow(OrbitMainWindow):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, pipe) -> None:
+        super().__init__(pipe)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -53,7 +80,7 @@ class BrowserWindow(OrbitMainWindow):
         self.error_label.setStyleSheet("color: red; font-size: 16px; font-weight: bold;")
         self.error_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
-        search_button = QPushButton("🔎 Search", self)
+        search_button = QPushButton("🔍 Search", self)
         search_button.setMinimumSize(QSize(140, 60))
         search_button.setMaximumSize(QSize(180, 60))
         search_button.clicked.connect(self.on_search_button_clicked)
@@ -96,13 +123,17 @@ class BrowserWindow(OrbitMainWindow):
         if query.startswith('https://www.') or query.startswith('http://www.'):
             print("Good")
             self.error_label.setText("")
+
+            self.pipe_write(query)
+            html = self.pipe_read(1024)
+            self.html_renderer.setHtml(html)
         else:
             self.error_label.setText("Invalid URL query!")
 
 
 class IntialSettingsWindow(OrbitMainWindow):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, pipe) -> None:
+        super().__init__(pipe)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -114,18 +145,18 @@ class IntialSettingsWindow(OrbitMainWindow):
         amount_of_nodes_to_open_label = QLabel(text="Amount Of Nodes To Open")
         amount_of_nodes_to_open_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
-        nodes_to_open_spinbox = QSpinBox(self)
-        nodes_to_open_spinbox.setMinimum(1)
-        nodes_to_open_spinbox.setMaximum(10)
-        nodes_to_open_spinbox.setValue(3)
+        self.nodes_to_open_spinbox = QSpinBox(self)
+        self.nodes_to_open_spinbox.setMinimum(1)
+        self.nodes_to_open_spinbox.setMaximum(10)
+        self.nodes_to_open_spinbox.setValue(3)
 
         path_length_label = QLabel(self, text="Path Length")
         path_length_label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
 
-        path_length_spinbox = QSpinBox(self)
-        path_length_spinbox.setMinimum(1)
-        path_length_spinbox.setMaximum(10)
-        path_length_spinbox.setValue(3)
+        self.path_length_spinbox = QSpinBox(self)
+        self.path_length_spinbox.setMinimum(1)
+        self.path_length_spinbox.setMaximum(10)
+        self.path_length_spinbox.setValue(3)
         
         self.error_label = QLabel(self, text="")
         self.error_label.setStyleSheet("color: red; font-weight: bold;")
@@ -140,11 +171,11 @@ class IntialSettingsWindow(OrbitMainWindow):
         layout.addSpacing(30)
         layout.addWidget(amount_of_nodes_to_open_label, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(10)
-        layout.addWidget(nodes_to_open_spinbox, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.nodes_to_open_spinbox, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(20)
         layout.addWidget(path_length_label, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(10)
-        layout.addWidget(path_length_spinbox, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.path_length_spinbox, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignCenter)
         layout.addSpacing(80)
         layout.addWidget(connect_button, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -159,21 +190,23 @@ class IntialSettingsWindow(OrbitMainWindow):
     def next_window(self, checked) -> None:
         # Firstly, send the input to the server for validation,
         # and for circuit opening and connection.
-        #TODO: implement logic here
-        error = False
+        #TODO: check logic here
 
-        if error:
+        self.pipe_write(str(self.nodes_to_open_spinbox.value()))
+        self.pipe_write(str(self.path_length_spinbox.value()))
+        result = self.pipe_read(1024)
+        
+        if result == "ERROR":
             self.error_label.setText("Error: ...TBD...")
-
-
-        self.browserWindow = BrowserWindow()
-        self.browserWindow.show()
-        self.hide()
+        else:
+            self.browserWindow = BrowserWindow(self.pipe)
+            self.browserWindow.show()
+            self.hide()
 
 
 class MainWindow(OrbitMainWindow):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, pipe) -> None:
+        super().__init__(pipe)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -182,12 +215,12 @@ class MainWindow(OrbitMainWindow):
         pixmap = QPixmap('orbit_white.png').scaled(400, 400, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         image_label.setPixmap(pixmap)
 
-        start_button = QPushButton("Start Browsing!")
-        start_button.setMinimumSize(QSize(180, 80))
-        start_button.clicked.connect(self.next_window)
+        self.start_button = QPushButton("Start Browsing!")
+        self.start_button.setMinimumSize(QSize(180, 80))
+        self.start_button.clicked.connect(self.next_window)
 
         layout.addWidget(image_label, alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(start_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.start_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
         main_widget = QWidget()
         main_widget.setLayout(layout)
@@ -196,13 +229,42 @@ class MainWindow(OrbitMainWindow):
 
     
     def next_window(self, checked) -> None:
-        self.intialSettingsWindow = IntialSettingsWindow()
-        self.intialSettingsWindow.show()
-        self.hide()
+        self.start_button.setEnabled(False)
+
+        self.pipe_write("CONNECT")
+        result = self.pipe_read(1024)
+
+        if result == "TRUE":
+            self.intialSettingsWindow = IntialSettingsWindow(self.pipe)
+            self.intialSettingsWindow.show()
+            self.hide()
+        else:
+            self.start_button.setEnabled(True)
+            print("Failed to connect to ORBIT network!")
 
 
 if __name__ == "__main__":
+    #TODO: run here backend
+    pipe = win32pipe.CreateNamedPipe(
+        PIPE_NAME,
+        win32pipe.PIPE_ACCESS_DUPLEX,  # Read & write access
+        win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
+        1,  # Max instances
+        256,  # Output buffer size
+        10240,  # Input buffer size
+        0,  # Timeout (0 = default)
+        None  # Default security
+    )
+    
+    print("[+] Waiting for a C++ client to connect...")
+
+    win32pipe.ConnectNamedPipe(pipe, None)
+    
+    print("[+] C++ Client Connected!")
+    
     app = QApplication(sys.argv)
-    window = MainWindow()
+    window = MainWindow(pipe)
     window.show()
     sys.exit(app.exec())
+
+    win32file.CloseHandle(pipe)

@@ -42,7 +42,7 @@
 
 #pragma endregion
 
-#define BUFFER_SIZE		10240 // 10K 
+#define BUFFER_SIZE	10240 // 10K 
 
 class Pipe
 {
@@ -55,40 +55,53 @@ public:
 	Pipe()
 	{
 		// Prepare the pipe name
-		strPipeName = (LPTSTR)TEXT("\\\\.\\pipe\\chessPipe"); // need to change
-
+		strPipeName = (LPTSTR)TEXT("\\\\.\\pipe\\orbitPipe"); // need to change
 	}
 
 	bool connect()
 	{
+		DWORD dwMode = PIPE_READMODE_MESSAGE; // Set pipe to message mode
+
 		hPipe = CreateFile(
-			strPipeName,			// Pipe name 
-			GENERIC_READ |			// Read and write access 
+			strPipeName,            // Pipe name 
+			GENERIC_READ |          // Read and write access 
 			GENERIC_WRITE,
-			0,						// No sharing 
-			NULL,					// Default security attributes
-			OPEN_EXISTING,			// Opens existing pipe 
-			0,						// Default attributes 
-			NULL);					// No template file 
+			0,                      // No sharing 
+			NULL,                   // Default security attributes
+			OPEN_EXISTING,          // Opens existing pipe 
+			0,                      // Default attributes 
+			NULL);                  // No template file 
 
-		// Break if the pipe handle is valid. 
-		if (hPipe != INVALID_HANDLE_VALUE)
-			return true;
-
-		if (// Exit if an error other than ERROR_PIPE_BUSY occurs
-			GetLastError() != ERROR_PIPE_BUSY
-			||
-			// All pipe instances are busy, so wait for 5 seconds
-			!WaitNamedPipe(strPipeName, 5000))
+		// Break if the pipe handle is valid.
+		if (hPipe == INVALID_HANDLE_VALUE)
 		{
-			_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"),
-				strPipeName, GetLastError());
+			if (GetLastError() == ERROR_PIPE_BUSY)
+			{
+				// All pipe instances are busy, so wait for 5 seconds
+				if (!WaitNamedPipe(strPipeName, 5000))
+				{
+					_tprintf(_T("WaitNamedPipe failed w/err 0x%08lx\n"), GetLastError());
+					return false;
+				}
+			}
+			else
+			{
+				_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"),
+					strPipeName, GetLastError());
+				return false;
+			}
+		}
+
+		// Set the pipe to message mode
+		if (!SetNamedPipeHandleState(hPipe, &dwMode, NULL, NULL))
+		{
+			_tprintf(_T("SetNamedPipeHandleState failed w/err 0x%08lx\n"), GetLastError());
+			CloseHandle(hPipe);
 			return false;
 		}
 
-		_tprintf(_T("The named pipe, %s, is connected.\n"), strPipeName);
+		_tprintf(_T("The named pipe, %s, is connected in message mode.\n"), strPipeName);
 		return true;
-
 	}
 
 	bool sendMessageToGraphics(char* msg)
@@ -98,7 +111,8 @@ public:
 		DWORD cbBytesWritten, cbRequestBytes;
 
 		// Send one message to the pipe.
-		cbRequestBytes = sizeof(TCHAR) * (lstrlen((chRequest)) + 1);
+		
+		cbRequestBytes = sizeof(TCHAR) * (lstrlen(LPCWSTR(chRequest)) + 1);
 
 		BOOL bResult = WriteFile(			// Write to the pipe.
 			hPipe,						// Handle of the pipe
@@ -134,7 +148,7 @@ public:
 			&cbBytesRead,			// Number of bytes read 
 			NULL);					// Not overlapped 
 
-			if (!bResult && GetLastError() != ERROR_MORE_DATA)
+		if (!bResult && GetLastError() != ERROR_MORE_DATA)
 		{
 			_tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
 			return "";
@@ -142,7 +156,8 @@ public:
 
 		_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"),
 			cbBytesRead, chReply);
-		std::string s = chReply;
+		const char* buffer = (char*)chReply;
+		std::string s = buffer;
 		return s;
 
 	}
