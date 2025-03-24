@@ -120,11 +120,11 @@ class BrowserWindow(OrbitMainWindow):
 
     def on_search_button_clicked(self, checked) -> None:
         query = self.search_bar.text()
-        if query.startswith('https://www.') or query.startswith('http://www.'):
+        if (query.startswith('https://www.') or query.startswith('http://www.')) and (query.count(".") > 1):
             print("Good")
             self.error_label.setText("")
 
-            self.pipe_write(query)
+            self.pipe_write(str(len(query)) + "," + query)
             html = self.pipe_read(1024)
             self.html_renderer.setHtml(html)
         else:
@@ -192,11 +192,10 @@ class IntialSettingsWindow(OrbitMainWindow):
         # and for circuit opening and connection.
         #TODO: check logic here
 
-        self.pipe_write(str(self.nodes_to_open_spinbox.value()))
-        self.pipe_write(str(self.path_length_spinbox.value()))
-        result = self.pipe_read(1024)
+        self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
+        result = self.pipe_read(1)
         
-        if result == "ERROR":
+        if str(result[0]) == "0":
             self.error_label.setText("Error: ...TBD...")
         else:
             self.browserWindow = BrowserWindow(self.pipe)
@@ -229,18 +228,10 @@ class MainWindow(OrbitMainWindow):
 
     
     def next_window(self, checked) -> None:
-        self.start_button.setEnabled(False)
+        self.intialSettingsWindow = IntialSettingsWindow(self.pipe)
+        self.intialSettingsWindow.show()
+        self.hide()
 
-        self.pipe_write("CONNECT")
-        result = self.pipe_read(1024)
-
-        if result == "TRUE":
-            self.intialSettingsWindow = IntialSettingsWindow(self.pipe)
-            self.intialSettingsWindow.show()
-            self.hide()
-        else:
-            self.start_button.setEnabled(True)
-            print("Failed to connect to ORBIT network!")
 
 
 if __name__ == "__main__":
