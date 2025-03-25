@@ -125,8 +125,11 @@ class BrowserWindow(OrbitMainWindow):
             self.error_label.setText("")
 
             self.pipe_write(str(len(query)) + "," + query)
-            html = self.pipe_read(1024)
-            self.html_renderer.setHtml(html)
+            html = self.pipe_read(5120)
+            length = int(html.split(',')[0])
+            print(length)
+            data = html.split(',')[1][:length] 
+            self.html_renderer.setHtml(data)
         else:
             self.error_label.setText("Invalid URL query!")
 
@@ -193,10 +196,11 @@ class IntialSettingsWindow(OrbitMainWindow):
         #TODO: check logic here
 
         self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
-        result = self.pipe_read(1)
-        
+        result = self.pipe_read(10)
+        print("the result is: " + result)
         if str(result[0]) == "0":
             self.error_label.setText("Error: ...TBD...")
+            next_window(checked)
         else:
             self.browserWindow = BrowserWindow(self.pipe)
             self.browserWindow.show()

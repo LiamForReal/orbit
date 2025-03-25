@@ -104,34 +104,50 @@ public:
 		return true;
 	}
 
-	bool sendMessageToGraphics(char* msg)
+	std::string toUTF8(const std::wstring& wstr)
 	{
-		//char ea[] = "SSS";
-		char* chRequest = msg;	// Client -> Server
-		DWORD cbBytesWritten, cbRequestBytes;
+		int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
+		std::string str(size_needed, 0);
+		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, NULL, NULL);
+		return str;
+	}
 
-		// Send one message to the pipe.
+	bool sendMessageToGraphics(const char* msg)
+	{
+		// Convert the char* (ASCII/UTF-8) to a wide string (std::wstring)
+		int len = MultiByteToWideChar(CP_UTF8, 0, msg, -1, NULL, 0);
+		if (len == 0)
+		{
+			_tprintf(_T("Failed to convert char* to wstring. Error code: %lu\n"), GetLastError());
+			return false;
+		}
+
+		std::wstring wide_msg(len, L'\0');
+		MultiByteToWideChar(CP_UTF8, 0, msg, -1, &wide_msg[0], len);
+
+		// Convert the wstring to a char* (for writing to the pipe)
+		const wchar_t* wide_char_msg = wide_msg.c_str();
 		
-		cbRequestBytes = sizeof(TCHAR) * (lstrlen(LPCWSTR(chRequest)) + 1);
+		// Calculate the bytes to write (including null-terminator)
+		DWORD cbBytesWritten;
+		DWORD cbRequestBytes = (wide_msg.size() + 1) * sizeof(wchar_t); // Size in bytes
 
-		BOOL bResult = WriteFile(			// Write to the pipe.
-			hPipe,						// Handle of the pipe
-			chRequest,					// Message to be written
-			cbRequestBytes,				// Number of bytes to write
-			&cbBytesWritten,			// Number of bytes written
-			NULL);						// Not overlapped 
+		// Write the message to the pipe
+		BOOL bResult = WriteFile(
+			hPipe,                      // Handle of the pipe
+			wide_char_msg,               // Message to be written (wide-char version)
+			cbRequestBytes,              // Number of bytes to write
+			&cbBytesWritten,             // Number of bytes written
+			NULL);                       // Not overlapped
 
-		if (!bResult/*Failed*/ || cbRequestBytes != cbBytesWritten/*Failed*/)
+		if (!bResult || cbRequestBytes != cbBytesWritten)
 		{
 			_tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
 			return false;
 		}
 
-		_tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"),
-			cbBytesWritten, chRequest);
-
+		_tprintf(_T("Sent %ld bytes: %s\n"), cbBytesWritten, msg);
 		return true;
-
 	}
 
 	std::string getMessageFromGraphics()
@@ -154,7 +170,7 @@ public:
 			return "";
 		}
 
-		_tprintf(_T("Receives %ld bytes; Message: \"%s\"\n"),
+		_tprintf(_T("Receives %ld bytes\n"),
 			cbBytesRead, chReply);
 		const char* buffer = (char*)chReply;
 		std::string s = buffer;

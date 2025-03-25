@@ -131,7 +131,7 @@ RequestInfo Client::nodeOpening(const bool& regular)
 		return ri;
 	}
 
-	char buffer[1];
+	char buffer[5];
 	string msg = _pipe.getMessageFromGraphics();
 	nor.amount_to_open = std::stoi(msg.substr(0, msg.find(',')));
 	nor.amount_to_use = std::stoi(msg.substr(msg.find(',') + 1));
@@ -144,12 +144,16 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
 	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
 	{
-		buffer[0] = (char)(1);
+		buffer[0] = '1';
+		buffer[1] = '1';
+		buffer[2] = '1';
+		buffer[3] = '1';
+		buffer[4] = '1';
 		_pipe.sendMessageToGraphics(buffer);
 		return ri;
 	}
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
-	buffer[0] = (char)(0);
+	buffer[0] = '0';
 	_pipe.sendMessageToGraphics(buffer);
 	return nodeOpening(regular);
 }
@@ -432,12 +436,20 @@ void Client::HandleTorClient(const bool regular)
 			}
 			else
 			{
+				int i = 0;
 				std::cout << "[HANDLER] HTML of " << httpGetRequest.domain << ": " << std::endl;
-				for (int i = 0; i < httpGetResponse.content.size(); i++)
+				string length = std::to_string(httpGetResponse.content.size());
+				for(i = 0; i < length.size(); i++)
+				{
+					buffer[i] = length[i];
+				}
+				buffer[length.size()] = ',';
+				for (i = length.size() + 1; i < httpGetResponse.content.size(); i++)
 				{
 					buffer[i] = httpGetResponse.content[i];
 				}
 				_pipe.sendMessageToGraphics(buffer);
+				std::this_thread::sleep_for(std::chrono::milliseconds(500));
 			}
 		}
 		//SENDING HTTP GET END
