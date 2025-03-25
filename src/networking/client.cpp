@@ -435,7 +435,7 @@ void Client::HandleTorClient(const bool regular)
 				int i = 0;
 				std::cout << "[HANDLER] HTML of " << httpGetRequest.domain << ": " << std::endl;
 				string length = std::to_string(httpGetResponse.content.size());
-				char buffer[5120]; //switch to exact len with char* if needed 
+				char* buffer = new char[length.size() + 1 + httpGetResponse.content.size()]; //switch to exact len with char* if needed 
 				for(i = 0; i < length.size(); i++)
 				{
 					buffer[i] = length[i];
@@ -446,6 +446,7 @@ void Client::HandleTorClient(const bool regular)
 					buffer[i] = httpGetResponse.content[i];
 				}
 				_pipe.sendMessageToGraphics(buffer);
+				delete[] buffer;
 				std::this_thread::sleep_for(std::chrono::milliseconds(5000)); //just for chack 
 			}
 		}

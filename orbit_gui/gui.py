@@ -47,7 +47,8 @@ class OrbitMainWindow(QMainWindow):
                     return data.decode()
             except BaseException as e:
                 print(f"Read error: {e}")
-                sys.exit(1)
+                exit(1)
+                #return self.pipe_read(bytes_amount)
 
 
     def pipe_write(self, data) -> None:

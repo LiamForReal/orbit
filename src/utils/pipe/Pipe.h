@@ -123,10 +123,10 @@ public:
 		// Write to the pipe
 		BOOL bResult = WriteFile(
 			hPipe,                  // Handle of the pipe
-			chRequest,              // Message to be written
+			LPCVOID(chRequest),              // Message to be written
 			cbRequestBytes,         // Number of bytes to write
 			&cbBytesWritten,        // Number of bytes written
-			NULL                    // Not overlapped
+			NULL //FILE_FLAG_OVERLAPPED                   // Not overlapped
 		);
 
 		if (!bResult || cbRequestBytes != cbBytesWritten)
