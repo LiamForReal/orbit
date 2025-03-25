@@ -112,33 +112,22 @@ public:
 		return str;
 	}
 
-	bool sendMessageToGraphics(const char* msg)
+	bool sendMessageToGraphics(char* msg)
 	{
-		// Convert the char* (ASCII/UTF-8) to a wide string (std::wstring)
-		int len = MultiByteToWideChar(CP_UTF8, 0, msg, -1, NULL, 0);
-		if (len == 0)
-		{
-			_tprintf(_T("Failed to convert char* to wstring. Error code: %lu\n"), GetLastError());
-			return false;
-		}
+		char* chRequest = msg;  // Client -> Server
+		DWORD cbBytesWritten, cbRequestBytes;
 
-		std::wstring wide_msg(len, L'\0');
-		MultiByteToWideChar(CP_UTF8, 0, msg, -1, &wide_msg[0], len);
+		// Calculate the number of bytes in the char* string (including the null terminator)
+		cbRequestBytes = strlen(chRequest) + 1;  // Add 1 for the null terminator
 
-		// Convert the wstring to a char* (for writing to the pipe)
-		const wchar_t* wide_char_msg = wide_msg.c_str();
-		
-		// Calculate the bytes to write (including null-terminator)
-		DWORD cbBytesWritten;
-		DWORD cbRequestBytes = (wide_msg.size() + 1) * sizeof(wchar_t); // Size in bytes
-
-		// Write the message to the pipe
+		// Write to the pipe
 		BOOL bResult = WriteFile(
-			hPipe,                      // Handle of the pipe
-			wide_char_msg,               // Message to be written (wide-char version)
-			cbRequestBytes,              // Number of bytes to write
-			&cbBytesWritten,             // Number of bytes written
-			NULL);                       // Not overlapped
+			hPipe,                  // Handle of the pipe
+			chRequest,              // Message to be written
+			cbRequestBytes,         // Number of bytes to write
+			&cbBytesWritten,        // Number of bytes written
+			NULL                    // Not overlapped
+		);
 
 		if (!bResult || cbRequestBytes != cbBytesWritten)
 		{
@@ -146,9 +135,11 @@ public:
 			return false;
 		}
 
-		_tprintf(_T("Sent %ld bytes: %s\n"), cbBytesWritten, msg);
+		_tprintf(_T("Sends %ld bytes\n"), cbBytesWritten);
+
 		return true;
 	}
+
 
 	std::string getMessageFromGraphics()
 	{
@@ -171,12 +162,14 @@ public:
 		}
 
 		_tprintf(_T("Receives %ld bytes\n"),
-			cbBytesRead, chReply);
+			cbBytesRead);
 		const char* buffer = (char*)chReply;
 		std::string s = buffer;
 		return s;
 
 	}
+
+
 
 	void close()
 	{

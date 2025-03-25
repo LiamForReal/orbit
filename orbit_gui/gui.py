@@ -42,7 +42,8 @@ class OrbitMainWindow(QMainWindow):
         while True:
             try:
                 result, data = win32file.ReadFile(self.pipe, bytes_amount)
-                if 0 == result: # Success
+                print("result:" + str(result) + "\n")
+                if result == 234: # Success
                     return data.decode()
             except BaseException as e:
                 print(f"Read error: {e}")
@@ -125,11 +126,21 @@ class BrowserWindow(OrbitMainWindow):
             self.error_label.setText("")
 
             self.pipe_write(str(len(query)) + "," + query)
-            html = self.pipe_read(5120)
-            length = int(html.split(',')[0])
+            
+            char = ''
+            length = ""
+            while char != ',':
+                char = self.pipe_read(1)
+                if char != ',':
+                    length += char
+            
             print(length)
-            data = html.split(',')[1][:length] 
-            self.html_renderer.setHtml(data)
+            length = int(length)
+            if length != 0:
+                html = self.pipe_read(length)
+                self.html_renderer.setHtml(data)
+            else:
+                self.html_renderer.setHtml("")
         else:
             self.error_label.setText("Invalid URL query!")
 
@@ -196,7 +207,7 @@ class IntialSettingsWindow(OrbitMainWindow):
         #TODO: check logic here
 
         self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
-        result = self.pipe_read(10)
+        result = self.pipe_read(1)
         print("the result is: " + result)
         if str(result[0]) == "0":
             self.error_label.setText("Error: ...TBD...")

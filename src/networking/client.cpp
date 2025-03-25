@@ -131,7 +131,7 @@ RequestInfo Client::nodeOpening(const bool& regular)
 		return ri;
 	}
 
-	char buffer[5];
+	char buffer[1];
 	string msg = _pipe.getMessageFromGraphics();
 	nor.amount_to_open = std::stoi(msg.substr(0, msg.find(',')));
 	nor.amount_to_use = std::stoi(msg.substr(msg.find(',') + 1));
@@ -145,10 +145,6 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
 	{
 		buffer[0] = '1';
-		buffer[1] = '1';
-		buffer[2] = '1';
-		buffer[3] = '1';
-		buffer[4] = '1';
 		_pipe.sendMessageToGraphics(buffer);
 		return ri;
 	}
@@ -409,9 +405,9 @@ void Client::HandleTorClient(const bool regular)
 
 		//SENDING HTTP GET START
 		HttpGetRequest httpGetRequest;
-		char buffer[5120];
 		while (true)//add if work
 		{
+			std::cout << "getting msg from graphics\n";
 			string msg = _pipe.getMessageFromGraphics();
 			int length = std::stoi(msg.substr(0, msg.find(',')));
 			httpGetRequest.domain = msg.substr(msg.find(',') + 1, length);
@@ -431,7 +427,7 @@ void Client::HandleTorClient(const bool regular)
 			if (Errors::HTTP_MSG_ERROR == ri.id)
 			{
 				std::cerr << "[HANDLER] Could not get HTML of " << httpGetRequest.domain << std::endl;
-				buffer[0] = (char)(0);
+				char buffer[1] = { '0' };
 				_pipe.sendMessageToGraphics(buffer);
 			}
 			else
@@ -439,6 +435,7 @@ void Client::HandleTorClient(const bool regular)
 				int i = 0;
 				std::cout << "[HANDLER] HTML of " << httpGetRequest.domain << ": " << std::endl;
 				string length = std::to_string(httpGetResponse.content.size());
+				char buffer[5120]; //switch to exact len with char* if needed 
 				for(i = 0; i < length.size(); i++)
 				{
 					buffer[i] = length[i];
@@ -449,7 +446,7 @@ void Client::HandleTorClient(const bool regular)
 					buffer[i] = httpGetResponse.content[i];
 				}
 				_pipe.sendMessageToGraphics(buffer);
-				std::this_thread::sleep_for(std::chrono::milliseconds(500));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5000)); //just for chack 
 			}
 		}
 		//SENDING HTTP GET END
