@@ -500,7 +500,7 @@ int main()
 
 		// Set PYTHONHOME environment variable
 		_putenv_s("PYTHONHOME", python_home);  // For MSVC
-		_putenv_s("PYTHONPATH", python_home);
+		//_putenv_s("PYTHONPATH", python_home);
 
 		Py_Initialize();
 

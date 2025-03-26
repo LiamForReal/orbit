@@ -1,5 +1,5 @@
 import win32file
-import win32pipe
+import win32pipe 
 import sys
 import os
 from PyQt6.QtCore import QSize, Qt
