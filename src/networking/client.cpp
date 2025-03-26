@@ -1,4 +1,5 @@
 #include "client.h"
+
 using std::vector;
 
 std::mutex mtx;
@@ -493,6 +494,32 @@ int main()
 {
 	try
 	{
+		std::cout << "Starting orbit gui...\n";
+		const char* script_path = "C:\\Users\\Magshimim\\orbit\\orbit_gui\\gui.py";
+		const char* python_home = "C:\\Program Files\\Python38";  // Update to the correct path where Python is installed
+
+		// Set PYTHONHOME environment variable
+		_putenv_s("PYTHONHOME", python_home);  // For MSVC
+		_putenv_s("PYTHONPATH", python_home);
+
+		Py_Initialize();
+
+		// Run the Python GUI script
+		
+		FILE* fp = nullptr;
+		if (fopen_s(&fp, script_path, "r") == 0 && fp) {  // Safer fopen
+			PyRun_SimpleFile(fp, script_path);
+			fclose(fp);
+			std::cout << "Success: orbit gui run successfully!\n";
+		}
+		else {
+			std::cerr << "Error: Could not open gui.py at " << script_path << "\n";
+		}
+
+		// Finalize Python
+		Py_Finalize();
+
+		std::cout << "inishialize back Pipe\n";
 		Pipe pip;
 		srand(time_t(NULL));
 

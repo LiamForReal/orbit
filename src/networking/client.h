@@ -19,6 +19,7 @@
 #include "../utils/ECDHE.h"
 #include "../utils/AES.h"
 #include "../utils/pipe/Pipe.h"
+#include <python3.11/Python.h>
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
