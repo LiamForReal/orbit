@@ -131,7 +131,7 @@ RequestInfo Client::nodeOpening(const bool& regular)
 		return ri;
 	}
 
-	char buffer[1];
+	char* buffer = new char[1];
 	string msg = _pipe.getMessageFromGraphics();
 	nor.amount_to_open = std::stoi(msg.substr(0, msg.find(',')));
 	nor.amount_to_use = std::stoi(msg.substr(msg.find(',') + 1));
@@ -151,6 +151,7 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
 	buffer[0] = '0';
 	_pipe.sendMessageToGraphics(buffer);
+	delete[] buffer;
 	return nodeOpening(regular);
 }
 
@@ -409,6 +410,13 @@ void Client::HandleTorClient(const bool regular)
 		{
 			std::cout << "getting msg from graphics\n";
 			string msg = _pipe.getMessageFromGraphics();
+
+			if (msg.empty()) {
+				std::cout << "No message available from graphics, retrying...\n";
+				std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Short delay before retry
+				break;  // Skip this iteration if there's no message
+			}
+
 			int length = std::stoi(msg.substr(0, msg.find(',')));
 			httpGetRequest.domain = msg.substr(msg.find(',') + 1, length);
 			std::cout << "domain is: " << httpGetRequest.domain << std::endl;
@@ -428,7 +436,10 @@ void Client::HandleTorClient(const bool regular)
 			{
 				std::cerr << "[HANDLER] Could not get HTML of " << httpGetRequest.domain << std::endl;
 				char buffer[1] = { '0' };
-				_pipe.sendMessageToGraphics(buffer);
+				if (!_pipe.sendMessageToGraphics(buffer)) 
+				{
+					std::cerr << "Failed to send error response back to graphics.\n";
+				}
 			}
 			else
 			{
@@ -445,9 +456,14 @@ void Client::HandleTorClient(const bool regular)
 				{
 					buffer[i] = httpGetResponse.content[i];
 				}
-				_pipe.sendMessageToGraphics(buffer);
+				
+				if (!_pipe.sendMessageToGraphics(buffer))
+				{
+					std::cerr << "Failed to send data back to graphics.\n";
+				}
+
 				delete[] buffer;
-				std::this_thread::sleep_for(std::chrono::milliseconds(5000)); //just for chack 
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
 		//SENDING HTTP GET END

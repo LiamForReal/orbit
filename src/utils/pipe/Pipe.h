@@ -47,134 +47,166 @@
 class Pipe
 {
 private:
-	HANDLE hPipe;
-	LPTSTR  strPipeName;
+    HANDLE hPipe;
+    LPTSTR  strPipeName;
 
 public:
+    Pipe()
+    {
+        strPipeName = (LPTSTR)TEXT("\\\\.\\pipe\\orbitPipe");
+    }
 
-	Pipe()
-	{
-		// Prepare the pipe name
-		strPipeName = (LPTSTR)TEXT("\\\\.\\pipe\\orbitPipe"); // need to change
-	}
+    bool connect()
+    {
+        DWORD dwMode = PIPE_READMODE_MESSAGE;  // Set pipe to message mode
 
-	bool connect()
-	{
-		DWORD dwMode = PIPE_READMODE_MESSAGE; // Set pipe to message mode
+        hPipe = CreateFile(
+            strPipeName,            // Pipe name
+            GENERIC_READ |          // Read and write access
+            GENERIC_WRITE,
+            0,                      // No sharing
+            NULL,                   // Default security attributes
+            OPEN_EXISTING,          // Opens existing pipe
+            0,                      // Default attributes
+            NULL);                  // No template file
 
-		hPipe = CreateFile(
-			strPipeName,            // Pipe name 
-			GENERIC_READ |          // Read and write access 
-			GENERIC_WRITE,
-			0,                      // No sharing 
-			NULL,                   // Default security attributes
-			OPEN_EXISTING,          // Opens existing pipe 
-			0,                      // Default attributes 
-			NULL);                  // No template file 
+        if (hPipe == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_PIPE_BUSY)
+            {
+                if (!WaitNamedPipe(strPipeName, 5000))
+                {
+                    _tprintf(_T("WaitNamedPipe failed w/err 0x%08lx\n"), GetLastError());
+                    return false;
+                }
+            }
+            else
+            {
+                _tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"),
+                    strPipeName, GetLastError());
+                return false;
+            }
+        }
 
-		// Break if the pipe handle is valid.
-		if (hPipe == INVALID_HANDLE_VALUE)
-		{
-			if (GetLastError() == ERROR_PIPE_BUSY)
-			{
-				// All pipe instances are busy, so wait for 5 seconds
-				if (!WaitNamedPipe(strPipeName, 5000))
-				{
-					_tprintf(_T("WaitNamedPipe failed w/err 0x%08lx\n"), GetLastError());
-					return false;
-				}
-			}
-			else
-			{
-				_tprintf(_T("Unable to open named pipe %s w/err 0x%08lx\n"),
-					strPipeName, GetLastError());
-				return false;
-			}
-		}
+        if (!SetNamedPipeHandleState(hPipe, &dwMode, NULL, NULL))
+        {
+            _tprintf(_T("SetNamedPipeHandleState failed w/err 0x%08lx\n"), GetLastError());
+            CloseHandle(hPipe);
+            return false;
+        }
 
-		// Set the pipe to message mode
-		if (!SetNamedPipeHandleState(hPipe, &dwMode, NULL, NULL))
-		{
-			_tprintf(_T("SetNamedPipeHandleState failed w/err 0x%08lx\n"), GetLastError());
-			CloseHandle(hPipe);
-			return false;
-		}
+        _tprintf(_T("The named pipe, %s, is connected in message mode.\n"), strPipeName);
+        return true;
+    }
 
-		_tprintf(_T("The named pipe, %s, is connected in message mode.\n"), strPipeName);
-		return true;
-	}
+    bool sendMessageToGraphics(char* msg)
+    {
+        char* chRequest = msg;  // Client -> Server
+        DWORD cbBytesWritten, cbRequestBytes;
+        DWORD dwError;
+        BOOL bResult;
 
-	std::string toUTF8(const std::wstring& wstr)
-	{
-		int size_needed = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), NULL, 0, NULL, NULL);
-		std::string str(size_needed, 0);
-		WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), (int)wstr.size(), &str[0], size_needed, NULL, NULL);
-		return str;
-	}
+        cbRequestBytes = strlen(chRequest) + 1;  // Include null terminator
 
-	bool sendMessageToGraphics(char* msg)
-	{
-		char* chRequest = msg;  // Client -> Server
-		DWORD cbBytesWritten, cbRequestBytes;
+        // Check pipe status before attempting to write
+        DWORD dwBytesAvail = 0, dwBytesLeft = 0;
+        bResult = PeekNamedPipe(hPipe, NULL, 0, NULL, &dwBytesAvail, &dwBytesLeft);
+        std::cout << "Pipe status - Bytes Available: " << dwBytesAvail
+            << ", Bytes Left: " << dwBytesLeft << std::endl;
 
-		// Calculate the number of bytes in the char* string (including the null terminator)
-		cbRequestBytes = strlen(chRequest) + 1;  // Add 1 for the null terminator
+        if (dwBytesLeft > 0)
+        {
+            std::cout << "Pipe is busy, waiting before writing..." << std::endl;
+            // Wait if there's still data to be read or the pipe is full
+            Sleep(500);
+        }
 
-		// Write to the pipe
-		BOOL bResult = WriteFile(
-			hPipe,                  // Handle of the pipe
-			LPCVOID(chRequest),              // Message to be written
-			cbRequestBytes,         // Number of bytes to write
-			&cbBytesWritten,        // Number of bytes written
-			NULL //FILE_FLAG_OVERLAPPED                   // Not overlapped
-		);
+        // Attempt to write to the pipe
+        bResult = WriteFile(
+            hPipe,                  // Pipe handle
+            LPCVOID(chRequest),     // Message to be written
+            cbRequestBytes,         // Number of bytes to write
+            &cbBytesWritten,        // Number of bytes written
+            NULL                    // Not overlapped (blocking)
+        );
 
-		if (!bResult || cbRequestBytes != cbBytesWritten)
-		{
-			_tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
-			return false;
-		}
+        std::cout << "First WriteFile result: " << bResult << "\n";
+        if (!bResult)
+        {
+            dwError = GetLastError();
+            std::cout << "Error writing to pipe, error: 0x" << std::hex << dwError << std::dec << "\n";
 
-		_tprintf(_T("Sends %ld bytes\n"), cbBytesWritten);
+            // Handle ERROR_PIPE_BUSY and ERROR_SEM_TIMEOUT - retry up to 5 times
+            if (dwError == ERROR_PIPE_BUSY || dwError == ERROR_SEM_TIMEOUT)
+            {
+                std::cout << "Pipe is busy or timed out, retrying...\n";
+                for (int i = 0; i < 5; ++i)
+                {
+                    Sleep(500);  // Wait for 500 ms before retrying
+                    bResult = WriteFile(
+                        hPipe,              // Pipe handle
+                        LPCVOID(chRequest), // Message to be written
+                        cbRequestBytes,     // Number of bytes to write
+                        &cbBytesWritten,    // Number of bytes written
+                        NULL                // Not overlapped (blocking)
+                    );
 
-		return true;
-	}
+                    if (bResult)
+                    {
+                        std::cout << "WriteFile succeeded after retry " << i + 1 << "\n";
+                        _tprintf(_T("Sends %ld bytes\n"), cbBytesWritten);
+                        return true;
+                    }
+                    else
+                    {
+                        dwError = GetLastError();
+                        if (dwError != ERROR_PIPE_BUSY && dwError != ERROR_SEM_TIMEOUT)
+                        {
+                            break;  // Exit if the error is not "pipe busy" or "sem timeout"
+                        }
+                    }
+                }
+            }
 
+            _tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
+            return false;  // Return false if all retries fail
+        }
 
-	std::string getMessageFromGraphics()
-	{
-		DWORD cbBytesRead;
-		DWORD cbReplyBytes;
-		TCHAR chReply[BUFFER_SIZE];		// Server -> Client
+        _tprintf(_T("Sends %ld bytes\n"), cbBytesWritten);
 
-		cbReplyBytes = sizeof(TCHAR) * BUFFER_SIZE;
-		BOOL bResult = ReadFile(			// Read from the pipe.
-			hPipe,					// Handle of the pipe
-			chReply,				// Buffer to receive the reply
-			cbReplyBytes,			// Size of buffer 
-			&cbBytesRead,			// Number of bytes read 
-			NULL);					// Not overlapped 
+        return true;
+    }
 
-		if (!bResult && GetLastError() != ERROR_MORE_DATA)
-		{
-			_tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
-			return "";
-		}
+    std::string getMessageFromGraphics()
+    {
+        DWORD cbBytesRead;
+        DWORD cbReplyBytes;
+        TCHAR chReply[BUFFER_SIZE];		// Server -> Client
 
-		_tprintf(_T("Receives %ld bytes\n"),
-			cbBytesRead);
-		const char* buffer = (char*)chReply;
-		std::string s = buffer;
-		return s;
+        cbReplyBytes = sizeof(TCHAR) * BUFFER_SIZE;
+        BOOL bResult = ReadFile(			// Read from the pipe.
+            hPipe,					// Pipe handle
+            chReply,				// Buffer to receive the reply
+            cbReplyBytes,			// Size of buffer
+            &cbBytesRead,			// Number of bytes read
+            NULL);					// Not overlapped
 
-	}
+        if (!bResult && GetLastError() != ERROR_MORE_DATA)
+        {
+            _tprintf(_T("ReadFile failed w/err 0x%08lx\n"), GetLastError());
+            return "";
+        }
 
+        _tprintf(_T("Receives %ld bytes\n"),
+            cbBytesRead);
+        const char* buffer = (char*)chReply;
+        std::string s = buffer;
+        return s;
+    }
 
-
-	void close()
-	{
-		CloseHandle(hPipe);
-	}
-
-
+    void close()
+    {
+        CloseHandle(hPipe);
+    }
 };
+
