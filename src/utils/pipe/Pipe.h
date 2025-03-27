@@ -51,9 +51,12 @@ private:
     LPTSTR  strPipeName;
 
 public:
-    Pipe()
+    Pipe(string nameEnding)
     {
-        strPipeName = (LPTSTR)TEXT("\\\\.\\pipe\\orbitPipe");
+        string pipeName = "\\\\.\\pipe\\orbitPipe_" + nameEnding;
+        std::cout << "pipe name is: " << pipeName << "\n";
+        std::wstring widePipeName(pipeName.begin(), pipeName.end());
+        strPipeName = (LPTSTR)widePipeName.c_str();
     }
 
     bool connect()

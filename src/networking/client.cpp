@@ -4,13 +4,12 @@ using std::vector;
 
 std::mutex mtx;
 
-Client::Client(Pipe p)
+Client::Client(Pipe p) : _pipe(p)
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	_clientSocketWithFirstNode = INVALID_SOCKET;
 	circuit_id = 0;
-	_pipe = p;
 	if (_clientSocketWithDS == INVALID_SOCKET)
 		throw std::runtime_error("server run error socket");
 }
@@ -437,7 +436,7 @@ void Client::HandleTorClient(const bool regular)
 			{
 				std::cerr << "[HANDLER] Could not get HTML of " << httpGetRequest.domain << std::endl;
 				char buffer[1] = { '0' };
-				if (!_pipe.sendMessageToGraphics(buffer)) 
+				if (!_pipe.sendMessageToGraphics(buffer))
 				{
 					std::cerr << "Failed to send error response back to graphics.\n";
 				}
@@ -448,7 +447,7 @@ void Client::HandleTorClient(const bool regular)
 				std::cout << "[HANDLER] HTML of " << httpGetRequest.domain << ": " << std::endl;
 				string length = std::to_string(httpGetResponse.content.size());
 				char* buffer = new char[length.size() + 1 + httpGetResponse.content.size()]; //switch to exact len with char* if needed 
-				for(i = 0; i < length.size(); i++)
+				for (i = 0; i < length.size(); i++)
 				{
 					buffer[i] = length[i];
 				}
@@ -457,7 +456,7 @@ void Client::HandleTorClient(const bool regular)
 				{
 					buffer[i] = httpGetResponse.content[i];
 				}
-				
+
 				if (!_pipe.sendMessageToGraphics(buffer))
 				{
 					std::cerr << "Failed to send data back to graphics.\n";
@@ -490,41 +489,18 @@ void Client::HandleTorClient(const bool regular)
 	}
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	try
 	{
-		std::cout << "Starting orbit gui...\n";
-		const char* script_path = "C:\\Users\\Magshimim\\orbit\\orbit_gui\\gui.py";
-		const char* python_home = "C:\\Program Files\\Python38";  // Update to the correct path where Python is installed
-
-		// Set PYTHONHOME environment variable
-		_putenv_s("PYTHONHOME", python_home);  // For MSVC
-		//_putenv_s("PYTHONPATH", python_home);
-
-		Py_Initialize();
-
-		// Run the Python GUI script
-		
-		FILE* fp = nullptr;
-		if (fopen_s(&fp, script_path, "r") == 0 && fp) {  // Safer fopen
-			PyRun_SimpleFile(fp, script_path);
-			fclose(fp);
-			std::cout << "Success: orbit gui run successfully!\n";
-		}
-		else {
-			std::cerr << "Error: Could not open gui.py at " << script_path << "\n";
-		}
-
-		// Finalize Python
-		Py_Finalize();
-
+		if (argc != 2)
+			std::cout << "client gets " << argc << "instade of 2 \n";
+		//DONE INISHIALIZE PYTHON GUI
 		std::cout << "inishialize back Pipe\n";
-		Pipe pip;
+		Pipe pipe = Pipe(argv[1]);
 		srand(time_t(NULL));
 
-		Pipe p;
-		bool isConnect = p.connect(); 
+		bool isConnect = pipe.connect();
 
 		string ans;
 		while (!isConnect) //reconnect manganon optional
@@ -537,18 +513,18 @@ int main()
 			{
 				std::cout << "trying connect again.." << std::endl;
 				Sleep(3000);
-				isConnect = p.connect();
+				isConnect = pipe.connect();
 			}
 			else
 			{
-				p.close();
+				pipe.close();
 				return 1;
 			}
 		}
 		std::cout << "succesfully connected to gui pipe!\n";
 		WSAInitializer wsa = WSAInitializer();
-		Client client = Client(p);
-		
+		Client client = Client(pipe);
+
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
 
 		client.HandleTorClient();

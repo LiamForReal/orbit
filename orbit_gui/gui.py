@@ -2,13 +2,10 @@ import win32file
 import win32pipe 
 import sys
 import os
+import time
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QSpinBox, QLineEdit, QTextBrowser
 from PyQt6.QtGui import QPixmap, QPalette, QColor
-
-
-PIPE_NAME: str = r"\\.\pipe\orbitPipe"
-
 
 class OrbitMainWindow(QMainWindow):
     def __init__(self, pipe) -> None:
@@ -139,7 +136,7 @@ class BrowserWindow(OrbitMainWindow):
             length = int(length)
             if length != 0:
                 html = self.pipe_read(length)
-                self.html_renderer.setHtml(data)
+                self.html_renderer.setHtml(html)
             else:
                 self.html_renderer.setHtml("")
         else:
@@ -212,7 +209,7 @@ class IntialSettingsWindow(OrbitMainWindow):
         print("the result is: " + result)
         if str(result[0]) == "0":
             self.error_label.setText("Error: ...TBD...")
-            next_window(checked)
+            self.next_window(checked)
         else:
             self.browserWindow = BrowserWindow(self.pipe)
             self.browserWindow.show()
@@ -248,12 +245,16 @@ class MainWindow(OrbitMainWindow):
         self.intialSettingsWindow.show()
         self.hide()
 
+def main():
+    if len(sys.argv) < 2:
+        print("Error: Missing required argument (random number).")
+        sys.exit(1)
 
-
-if __name__ == "__main__":
-    #TODO: run here backend
+    # Append the argument to the pipe name
+    pipe_name = fr"\\.\pipe\orbitPipe_{sys.argv[1]}"
+    
     pipe = win32pipe.CreateNamedPipe(
-        PIPE_NAME,
+        pipe_name,
         win32pipe.PIPE_ACCESS_DUPLEX,  # Read & write access
         win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
         1,  # Max instances
@@ -263,8 +264,8 @@ if __name__ == "__main__":
         None  # Default security
     )
     
-    print("[+] Waiting for a C++ client to connect...")
-
+    print("[+] Waiting for a C++ client to connect on pipe" + pipe_name + "...")
+    
     win32pipe.ConnectNamedPipe(pipe, None)
     
     print("[+] C++ Client Connected!")
@@ -275,3 +276,8 @@ if __name__ == "__main__":
     sys.exit(app.exec())
 
     win32file.CloseHandle(pipe)
+
+    #[Errno 2] No such file or directory: 'C:\\Users\\Magshimim\\orbit\\qss\\themes\\theme.qss'
+if __name__ == "__main__":
+    #TODO: run here backend
+    main()
