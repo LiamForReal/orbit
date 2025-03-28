@@ -144,12 +144,12 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
 	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
 	{
-		buffer[0] = '1';
+		buffer[0] = char('1');
 		_pipe.sendMessageToGraphics(buffer);
 		return ri;
 	}
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
-	buffer[0] = '0';
+	buffer[0] = char('0');
 	_pipe.sendMessageToGraphics(buffer);
 	delete[] buffer;
 	return nodeOpening(regular);
@@ -484,8 +484,10 @@ void Client::HandleTorClient(const bool regular)
 		_aes = AES();
 		_ecdhe = ECDHE();
 		std::cout << "[HANDLER] closed socket with first node\n";
-		std::cout << "[HANDLER] restarting convertation\n";
-		HandleTorClient(false);
+		std::cout << "[HANDLER] close connection\n";
+		system("pause");
+		//std::cout << "[HANDLER] restarting convertation\n";
+		//HandleTorClient(false);
 	}
 }
 

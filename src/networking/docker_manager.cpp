@@ -7,7 +7,7 @@ DockerManager::DockerManager()
     deleteDockerContainers();
     _clientsAmount = 0;
     this->amountCreated = 0;
-    runCmdCommand("python ../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
+    runCmdCommand("python ../../../dockerFiles/docker_node_info_init.py"); //pip install pyyaml - to run it
 }
 
 
@@ -93,7 +93,7 @@ std::vector<string> DockerManager::SelectPathAndAdjustNetwork(int use, const uns
     }
     nodeSelected.emplace_back(guardNodeCircuits[circuitId]);
     nodeSelected.insert(nodeSelected.end(), tmp.begin(), tmp.end());
-    string portsCommand = "python ../dockerFiles/adjust_ports_to_talk_in_subnet.py";
+    string portsCommand = "python ../../../dockerFiles/adjust_ports_to_talk_in_subnet.py";
     std::cout << "CLIENT" << _clientsAmount << " PATH:\n [ " << *nodeSelected.begin() << ", ";
     for (auto it = nodeSelected.begin() + 1; it != nodeSelected.end(); it++)
     {
@@ -109,7 +109,7 @@ void DockerManager::openDocker(const int& amount)
 {
     string firstNodeName = "";
     std::vector<string> nodesNames;
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
+    std::string buildCommand = "cd ../../../dockerFiles/ && docker-compose -f Docker-compose.yaml up --build -d";
     for (int i = 0; i < amount; i++)
     {
         buildCommand += " " + std::string(CONTAINER_NAME) + std::to_string(this->amountCreated + i + 1);
@@ -124,14 +124,14 @@ void DockerManager::openDocker(const string& containerName)
         std::cout << "Empty container name\n";
         return;
     }
-    std::string buildCommand = "cd ../dockerFiles/ && docker-compose -f Docker-compose.yaml up -d " + containerName; //only restarts
+    std::string buildCommand = "cd ../../../dockerFiles/ && docker-compose -f Docker-compose.yaml up -d " + containerName; //only restarts
     runCmdCommand(buildCommand);
 }
 
 std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersNames)
 {
     std::vector<std::string> nodesIp;
-    std::string containerIDCommand = "cd ../dockerFiles/ && docker-compose ps -q";
+    std::string containerIDCommand = "cd ../../../dockerFiles/ && docker-compose ps -q";
 
     for (auto it : containersNames)
     {
@@ -139,7 +139,7 @@ std::vector<std::string> DockerManager::findIPs(std::vector<string>& containersN
         if (containerIDs.empty()) throw std::runtime_error("Failed to retrieve container ID");
 
         std::string containerID = containerIDs.front();
-        std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + it;
+        std::string inspectCommand = "cd ../../../dockerFiles/ && docker inspect -f \"{{.NetworkSettings.Networks.dockerfiles_TOR_NETWORK.IPAMConfig.IPv4Address }}\" " + it;
 
         std::vector<std::string> containerIPs = runCommand(inspectCommand);
         if (containerIPs.empty()) throw std::runtime_error("Failed to retrieve container IP");
@@ -157,7 +157,7 @@ std::vector<std::string> DockerManager::findControlPorts(std::vector<string>& co
 
     for (auto it : containersNames)
     {
-        inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9051/tcp\\\") 0).HostPort }}\" " + it;
+        inspectCommand = "cd ../../../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9051/tcp\\\") 0).HostPort }}\" " + it;
         std::vector<std::string> portsStr = runCommand(inspectCommand);
         if (!portsStr.empty()) {
             try {
@@ -179,7 +179,7 @@ std::vector<std::string> DockerManager::findProxyPorts(std::vector<string>& cont
     std::vector<std::string> proxyNodesPorts;
     if (containersNames.empty()) return proxyNodesPorts;
 
-    std::string inspectCommand = "cd ../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + *containersNames.begin();
+    std::string inspectCommand = "cd ../../../dockerFiles/ && docker inspect -f \"{{ (index (index .HostConfig.PortBindings \\\"9050/tcp\\\") 0).HostPort }}\" " + *containersNames.begin();
     std::vector<std::string> portsStr = runCommand(inspectCommand);
     if (!portsStr.empty()) {
         try {
@@ -284,7 +284,7 @@ std::vector<std::pair<std::string, std::string>> DockerManager::giveCircuitAfter
             }
             NodeNumber++;
         }
-        std::string regenerateIpsCommend = "python ../dockerFiles/docker_node_ip_changer.py " + nodeName;
+        std::string regenerateIpsCommend = "python ../../../dockerFiles/docker_node_ip_changer.py " + nodeName;
         runCmdCommand(regenerateIpsCommend);
         std::vector<string> nodeSelected = SelectPathAndAdjustNetwork(use, circuitId);
         std::vector<std::string> ports = findProxyPorts(nodeSelected);

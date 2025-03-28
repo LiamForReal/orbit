@@ -104,80 +104,31 @@ public:
 
     bool sendMessageToGraphics(char* msg)
     {
-        char* chRequest = msg;  // Client -> Server
+        //char ea[] = "SSS";
+        char* chRequest = msg;	// Client -> Server
         DWORD cbBytesWritten, cbRequestBytes;
-        DWORD dwError;
-        BOOL bResult;
 
-        cbRequestBytes = strlen(chRequest) + 1;  // Include null terminator
+        // Send one message to the pipe.
+        cbRequestBytes = sizeof(TCHAR) * (strlen((chRequest)) + 1);
 
-        // Check pipe status before attempting to write
-        DWORD dwBytesAvail = 0, dwBytesLeft = 0;
-        bResult = PeekNamedPipe(hPipe, NULL, 0, NULL, &dwBytesAvail, &dwBytesLeft);
-        std::cout << "Pipe status - Bytes Available: " << dwBytesAvail
-            << ", Bytes Left: " << dwBytesLeft << std::endl;
+        BOOL bResult = WriteFile(			// Write to the pipe.
+            hPipe,						// Handle of the pipe
+            chRequest,					// Message to be written
+            cbRequestBytes,				// Number of bytes to write
+            &cbBytesWritten,			// Number of bytes written
+            NULL);						// Not overlapped 
 
-        if (dwBytesLeft > 0)
+        if (!bResult/*Failed*/ || cbRequestBytes != cbBytesWritten/*Failed*/)
         {
-            std::cout << "Pipe is busy, waiting before writing..." << std::endl;
-            // Wait if there's still data to be read or the pipe is full
-            Sleep(500);
-        }
-
-        // Attempt to write to the pipe
-        bResult = WriteFile(
-            hPipe,                  // Pipe handle
-            LPCVOID(chRequest),     // Message to be written
-            cbRequestBytes,         // Number of bytes to write
-            &cbBytesWritten,        // Number of bytes written
-            NULL                    // Not overlapped (blocking)
-        );
-
-        std::cout << "First WriteFile result: " << bResult << "\n";
-        if (!bResult)
-        {
-            dwError = GetLastError();
-            std::cout << "Error writing to pipe, error: 0x" << std::hex << dwError << std::dec << "\n";
-
-            // Handle ERROR_PIPE_BUSY and ERROR_SEM_TIMEOUT - retry up to 5 times
-            if (dwError == ERROR_PIPE_BUSY || dwError == ERROR_SEM_TIMEOUT)
-            {
-                std::cout << "Pipe is busy or timed out, retrying...\n";
-                for (int i = 0; i < 5; ++i)
-                {
-                    Sleep(500);  // Wait for 500 ms before retrying
-                    bResult = WriteFile(
-                        hPipe,              // Pipe handle
-                        LPCVOID(chRequest), // Message to be written
-                        cbRequestBytes,     // Number of bytes to write
-                        &cbBytesWritten,    // Number of bytes written
-                        NULL                // Not overlapped (blocking)
-                    );
-
-                    if (bResult)
-                    {
-                        std::cout << "WriteFile succeeded after retry " << i + 1 << "\n";
-                        _tprintf(_T("Sends %ld bytes\n"), cbBytesWritten);
-                        return true;
-                    }
-                    else
-                    {
-                        dwError = GetLastError();
-                        if (dwError != ERROR_PIPE_BUSY && dwError != ERROR_SEM_TIMEOUT)
-                        {
-                            break;  // Exit if the error is not "pipe busy" or "sem timeout"
-                        }
-                    }
-                }
-            }
-
             _tprintf(_T("WriteFile failed w/err 0x%08lx\n"), GetLastError());
-            return false;  // Return false if all retries fail
+            return false;
         }
 
-        _tprintf(_T("Sends %ld bytes\n"), cbBytesWritten);
+        _tprintf(_T("Sends %ld bytes; Message: \"%s\"\n"),
+            cbBytesWritten, chRequest);
 
         return true;
+
     }
 
     std::string getMessageFromGraphics()

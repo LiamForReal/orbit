@@ -40,7 +40,7 @@ class OrbitMainWindow(QMainWindow):
             try:
                 result, data = win32file.ReadFile(self.pipe, bytes_amount)
                 print("result:" + str(result) + "\n")
-                if result == 234: # Success
+                if result == 234 or result == 0: # Success
                     return data.decode()
             except BaseException as e:
                 print(f"Read error: {e}")
@@ -206,11 +206,11 @@ class IntialSettingsWindow(OrbitMainWindow):
 
         self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
         result = self.pipe_read(1)
-        print("the result is: " + result)
-        if str(result[0]) == "0":
+        print("the result is: " + result[0])
+        if str(result) == "0":
             self.error_label.setText("Error: ...TBD...")
             self.next_window(checked)
-        else:
+        elif str(result) == "1":
             self.browserWindow = BrowserWindow(self.pipe)
             self.browserWindow.show()
             self.hide()
@@ -258,8 +258,8 @@ def main():
         win32pipe.PIPE_ACCESS_DUPLEX,  # Read & write access
         win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
         1,  # Max instances
-        256,  # Output buffer size
-        10240,  # Input buffer size
+        5120,  # Output buffer size
+        5120,  # Input buffer size
         0,  # Timeout (0 = default)
         None  # Default security
     )
