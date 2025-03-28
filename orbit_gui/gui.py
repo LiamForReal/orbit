@@ -207,9 +207,9 @@ class IntialSettingsWindow(OrbitMainWindow):
         self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
         result = self.pipe_read(1)
         print("the result is: " + result[0])
-        if str(result) == "0":
+        if str(result[0]) == "0":
             self.error_label.setText("Error: ...TBD...")
-            self.next_window(checked)
+            self.__init__(pipe)
         elif str(result) == "1":
             self.browserWindow = BrowserWindow(self.pipe)
             self.browserWindow.show()

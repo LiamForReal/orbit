@@ -102,14 +102,14 @@ public:
         return true;
     }
 
-    bool sendMessageToGraphics(char* msg)
+    bool sendMessageToGraphics(char* msg, int bytesLength)
     {
         //char ea[] = "SSS";
         char* chRequest = msg;	// Client -> Server
         DWORD cbBytesWritten, cbRequestBytes;
 
         // Send one message to the pipe.
-        cbRequestBytes = sizeof(TCHAR) * (strlen((chRequest)) + 1);
+        cbRequestBytes = bytesLength;
 
         BOOL bResult = WriteFile(			// Write to the pipe.
             hPipe,						// Handle of the pipe

@@ -145,12 +145,12 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
 	{
 		buffer[0] = char('1');
-		_pipe.sendMessageToGraphics(buffer);
+		_pipe.sendMessageToGraphics(buffer, 1);
 		return ri;
 	}
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
 	buffer[0] = char('0');
-	_pipe.sendMessageToGraphics(buffer);
+	_pipe.sendMessageToGraphics(buffer, 1);
 	delete[] buffer;
 	return nodeOpening(regular);
 }
@@ -436,7 +436,7 @@ void Client::HandleTorClient(const bool regular)
 			{
 				std::cerr << "[HANDLER] Could not get HTML of " << httpGetRequest.domain << std::endl;
 				char buffer[1] = { '0' };
-				if (!_pipe.sendMessageToGraphics(buffer))
+				if (!_pipe.sendMessageToGraphics(buffer,1))
 				{
 					std::cerr << "Failed to send error response back to graphics.\n";
 				}
@@ -457,7 +457,7 @@ void Client::HandleTorClient(const bool regular)
 					buffer[i] = httpGetResponse.content[i];
 				}
 
-				if (!_pipe.sendMessageToGraphics(buffer))
+				if (!_pipe.sendMessageToGraphics(buffer, length.size() + 1 + httpGetResponse.content.size()))
 				{
 					std::cerr << "Failed to send data back to graphics.\n";
 				}
@@ -496,7 +496,7 @@ int main(int argc, char* argv[])
 	try
 	{
 		if (argc != 2)
-			std::cout << "client gets " << argc << "instade of 2 \n";
+			std::cout << "client gets " << argc << " instade of 2 \n";
 		//DONE INISHIALIZE PYTHON GUI
 		std::cout << "inishialize back Pipe\n";
 		Pipe pipe = Pipe(argv[1]);
