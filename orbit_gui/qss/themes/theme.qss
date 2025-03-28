@@ -1,0 +1,154 @@
+QMainWindow {
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(40, 0, 90), 
+                                stop:0.5 rgb(80, 0, 140), 
+                                stop:1 rgb(120, 0, 180));
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+QPushButton {
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(120, 20, 200), 
+                                stop:0.4 rgb(100, 20, 180), 
+                                stop:0.5 rgb(80, 10, 150), 
+                                stop:1 rgb(60, 10, 120));
+    border: 2px solid rgb(190, 120, 255);
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+}
+
+QPushButton:hover {
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(140, 40, 220), 
+                                stop:0.4 rgb(120, 30, 200), 
+                                stop:0.5 rgb(100, 20, 170), 
+                                stop:1 rgb(80, 10, 140));
+    border: 2px solid rgb(210, 150, 255);
+}
+
+QPushButton:pressed {
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(80, 10, 140), 
+                                stop:0.5 rgb(60, 5, 100), 
+                                stop:1 rgb(40, 5, 80));
+    border: 2px solid rgb(170, 80, 220);
+}
+
+QLabel {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+QSpinBox {
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(120, 20, 200), 
+                                stop:0.4 rgb(100, 20, 180), 
+                                stop:0.5 rgb(80, 10, 150), 
+                                stop:1 rgb(60, 10, 120));
+    border: 2px solid rgb(190, 120, 255);
+    border-radius: 8px;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    width: 40px;
+    height: 20px;
+}
+
+QSpinBox:hover {
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(140, 40, 220), 
+                                stop:0.4 rgb(120, 30, 200), 
+                                stop:0.5 rgb(100, 20, 170), 
+                                stop:1 rgb(80, 10, 140));
+    border: 2px solid rgb(210, 150, 255);
+}
+
+QSpinBox:focus {
+    border: 2px solid rgb(220, 160, 255);
+    background: qlineargradient(spread:pad, x1:0, y1:0, x2:0, y2:1,
+                                stop:0 rgb(150, 50, 230), 
+                                stop:0.5 rgb(130, 40, 210), 
+                                stop:1 rgb(110, 30, 190));
+}
+
+/* Up and Down buttons */
+QSpinBox::up-button, QSpinBox::down-button {
+    width: 18px;
+    border: none;
+    background: transparent;
+}
+
+/* Hover Effect */
+QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+}
+
+/* Pressed Effect */
+QSpinBox::up-button:pressed, QSpinBox::down-button:pressed {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+/* Up Button */
+QSpinBox::up-button {
+    subcontrol-origin: border;
+    subcontrol-position: top right;
+    width: 18px;
+    height: 16px;
+    border-image: url(qss/themes/images/up-arrow.png);
+    border-radius: 4px;
+}
+
+/* Down Button */
+QSpinBox::down-button {
+    subcontrol-origin: border;
+    subcontrol-position: bottom right;
+    width: 18px;
+    height: 16px;
+    border-image: url(qss/themes/images/down-arrow.png);
+    border-radius: 4px;
+}
+
+/* Hover version for images */
+QSpinBox::up-button:hover {
+    border-image: url(qss/themes/images/up-arrow-hover.png);
+}
+
+QSpinBox::down-button:hover {
+    border-image: url(qss/themes/images/down-arrow-hover.png);
+}
+
+/* Pressed version for images */
+QSpinBox::up-button:pressed {
+    border-image: url(qss/themes/images/up-arrow-pressed.png);
+}
+
+QSpinBox::down-button:pressed {
+    border-image: url(qss/themes/images/down-arrow-pressed.png);
+}
+
+QLineEdit {
+    font-size: 20px;
+    padding: 8px;
+    color: white;
+    background: rgb(40, 20, 60);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+}
+
+QTextBrowser {
+    font-size: 16px;
+    padding: 10px;
+    background: rgb(30, 10, 50);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+}

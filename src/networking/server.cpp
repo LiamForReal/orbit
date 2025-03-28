@@ -50,8 +50,8 @@ Server::~Server()
 void Server::serve()
 {
 	std::thread serveClientsThread(&Server::serveClients, this);
-	//std::thread serveControlThread(&Server::serveControl, this);
-
+	//std::thread serveControlThread(&Server::serveControl, this);sdada
+	
 	serveClientsThread.join();
 	//serveControlThread.join();
 }
@@ -127,14 +127,18 @@ void Server::acceptClient()
 			rkeResponse.product = this->_rsaInfo[client_socket].first.getProduct();
 			status = RSA_KEY_EXCHANGE_STATUS;
 		}
+		catch (std::runtime_error& e)
+		{
+			std::cout << e.what() << std::endl;
+			std::cout << "[CONNECT CIRCUITS] client handler crushes!!!\n";
+			break;
+		}
 		catch (...)
 		{
 			status = RSA_KEY_EXCHANGE_ERROR;
 		}
 		//GET REQUEST AND BUILD RSA RESPOSE END
-		std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
-		rr.buffer = Helper::buildRR(data, status, data.size());
-		Helper::sendVector(client_socket, rr.buffer);
+		
 
 
 		//GET REQUEST AND BUILD  ECDHE INFO START
@@ -143,6 +147,10 @@ void Server::acceptClient()
 		uint256_t tmpKey;
 		try
 		{
+			std::vector<unsigned char> data = SerializerResponses::serializeResponse(rkeResponse);
+			rr.buffer = Helper::buildRR(data, status, data.size());
+			Helper::sendVector(client_socket, rr.buffer);
+
 			status = ECDHE_KEY_EXCHANGE_STATUS;
 			ri = Helper::waitForResponse_RSA(client_socket, _rsaInfo[client_socket].first);
 
@@ -157,14 +165,22 @@ void Server::acceptClient()
 			_ecdheInfo[client_socket].createTmpKey();
 			ekeResponse.calculationResult = _ecdheInfo[client_socket].createDefiKey();
 		}
+		catch (std::runtime_error& e)
+		{
+			std::cout << e.what() << std::endl;
+			std::cout << "[CONNECT CIRCUITS] client handler crushes!!!\n";
+			break;
+		}
 		catch (...)
 		{
 			status = ECDHE_KEY_EXCHANGE_ERROR;
 			break;
 		}
+
+
 		try
 		{
-			data = _rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second);
+			std::vector<unsigned char> data = _rsaInfo[client_socket].first.Encrypt(SerializerResponses::serializeResponse(ekeResponse), _rsaInfo[client_socket].second.first, _rsaInfo[client_socket].second.second);
 			rr.buffer = Helper::buildRR(data, status, data.size());
 
 			std::cout << "[CIRCUITS] ecdhe msg sended\n";
@@ -177,6 +193,12 @@ void Server::acceptClient()
 			uint256_t sheredSicret = _ecdheInfo[client_socket].createDefiKey();
 			_aes.generateRoundKeys(sheredSicret);
 			std::cout << "[CIRCUITS] shered sicret is: " << sheredSicret << "\n";
+		}
+		catch (std::runtime_error& e)
+		{
+			std::cout << e.what() << std::endl;
+			std::cout << "[CONNECT CIRCUITS] client handler crushes!!!\n";
+			break;
 		}
 		catch (...)
 		{
@@ -235,6 +257,11 @@ void Server::clientHandler(const SOCKET client_socket)
 		if (rr.buffer[1] == unsigned char(CLOSE_CONNECTION_STATUS))
 			std::cout << "[CIRCUITS] client closed connection successfully!";
 		else std::cout << "[CIRCUITS] problem accured on close connection with client";
+	}
+	catch (std::runtime_error& e)
+	{
+		std::cout << e.what() << std::endl;
+		std::cout << "[CIRCUITS] client handler crushes!!!";
 	}
 	catch (...)
 	{

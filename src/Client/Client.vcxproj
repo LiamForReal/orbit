@@ -26,6 +26,9 @@
     <ClInclude Include="..\utils\ECDHE.h" />
     <ClInclude Include="..\utils\Helper.h" />
     <ClInclude Include="..\utils\json.hpp" />
+    <ClInclude Include="..\utils\pipe\Pipe.h" />
+    <ClInclude Include="..\utils\pipe\stdafx.h" />
+    <ClInclude Include="..\utils\pipe\targetver.h" />
     <ClInclude Include="..\utils\prime_numbers_manager.h" />
     <ClInclude Include="..\utils\Requestes.hpp" />
     <ClInclude Include="..\utils\RequestInfo.hpp" />
@@ -41,6 +44,7 @@
     <ClCompile Include="..\utils\DeserializerResponses.cpp" />
     <ClCompile Include="..\utils\ECDHE.cpp" />
     <ClCompile Include="..\utils\Helper.cpp" />
+    <ClCompile Include="..\utils\pipe\stdafx.cpp" />
     <ClCompile Include="..\utils\prime_numbers_manager.cpp" />
     <ClCompile Include="..\utils\RSA.cpp" />
     <ClCompile Include="..\utils\SerializerRequests.cpp" />

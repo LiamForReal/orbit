@@ -203,16 +203,22 @@ uint2048_t RSA::getProduct() const
 	return this->N;
 }
 
+
 uint2048_t RSA::CRTDecrypt(uint2048_t& encryptedBlock)
 {
-	uint2048_t m1 = mod_exp<uint2048_t>(encryptedBlock, this->DP, this->P);
-	uint2048_t m2 = mod_exp<uint2048_t>(encryptedBlock, this->DQ, this->Q);
+	std::future<uint2048_t> futureM1 = std::async(std::launch::async, [&] {
+		return powm(encryptedBlock, this->DP, this->P);
+		});
 
-	// Ensure (m1 - m2) is always positive by adding P before taking modulo P
+	std::future<uint2048_t> futureM2 = std::async(std::launch::async, [&] {
+		return powm(encryptedBlock, this->DQ, this->Q);
+		});
+
+	uint2048_t m1 = futureM1.get();
+	uint2048_t m2 = futureM2.get();
+
 	uint2048_t h = (this->QINV * ((m1 + P - m2) % P)) % P;
-	uint2048_t decryptedBlock = m2 + h * this->Q;
-
-	return decryptedBlock;
+	return m2 + h * this->Q;
 }
 
 cpp_int RSA::euclideanMod(const cpp_int& num, const cpp_int& mod)

@@ -18,6 +18,8 @@
 #include "../utils/RSA.h"
 #include "../utils/ECDHE.h"
 #include "../utils/AES.h"
+#include "../utils/pipe/Pipe.h"
+#include <python3.11/Python.h>
 
 typedef struct RequestResult // Changed from typedef to struct definition
 {
@@ -32,7 +34,7 @@ typedef struct RequestResult // Changed from typedef to struct definition
 class Client
 {
 public:
-	Client();
+	Client(Pipe p);
 	~Client();
 	void connectToServer(std::string serverIP, int port);
 	void HandleTorClient(const bool regular = true);
@@ -58,5 +60,6 @@ private:
 	ECDHE _ecdhe; //self 
 
 	AES _aes;
+	Pipe _pipe;
 	std::vector<AES> _aesCircuitData;
 };

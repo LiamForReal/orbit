@@ -172,6 +172,8 @@ RequestInfo Helper::waitForResponse(const SOCKET& socket)
 	}
 	if (ri.id == 0 && ri.circuit_id == 0)
 		return waitForResponse(socket);
+	if (ri.id == 205 && ri.circuit_id == 205)
+		throw std::runtime_error("[CONNECTING HANDLER] client disconnected");
 	return Helper::buildRI(socket, ri.circuit_id, ri.id);
 }
 

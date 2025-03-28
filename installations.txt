@@ -1,0 +1,14 @@
+
+python installations
+yaml
+
+docker installations
+docker desktop -> open docker account -> change C:\Users\Magshimim\orbit\src\dockerFiles\dockerFile according to the account
+docker basic image: mcr.microsoft.com/windows/nanoserver:ltsc2019 -> C:\Users\Magshimim\orbit\src\Node\build_node_image.bat
+
+vcpkg installations
+... 
+
+gui installations
+pyQt6
+

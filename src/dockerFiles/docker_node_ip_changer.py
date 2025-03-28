@@ -26,7 +26,7 @@ def main():
 
     services_to_update = sys.argv[1:]
 
-    with open("../dockerFiles/Docker-compose.yaml", "r") as file:
+    with open("C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml", "r") as file:
         compose_data = yaml.safe_load(file)
 
     # Filter services present in the Docker Compose file
@@ -42,7 +42,7 @@ def main():
         compose_data["services"][service]["networks"]["TOR_NETWORK"]["ipv4_address"] = ip
         compose_data["services"][service]["environment"]["NODE_IP"] = ip
 
-    with open("../dockerFiles/Docker-compose.yaml", "w") as file:
+    with open("C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)
 
     print("Assigned random IPs:", random_ips)

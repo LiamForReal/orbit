@@ -3,7 +3,7 @@ import yaml
 
 def update_docker_compose(services, base_port=9050):
     # Load Docker Compose file
-    compose_file = "../dockerFiles/Docker-compose.yaml"
+    compose_file = "C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml"
     
     # Read the YAML file
     with open(compose_file, "r") as file:

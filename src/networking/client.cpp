@@ -1,9 +1,10 @@
 #include "client.h"
+
 using std::vector;
 
 std::mutex mtx;
 
-Client::Client()
+Client::Client(Pipe p) : _pipe(p)
 {
 	// we connect to server that uses TCP. thats why SOCK_STREAM & IPPROTO_TCP
 	_clientSocketWithDS = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -22,6 +23,7 @@ Client::~Client()
 		_rsaCircuitData.clear();
 		closesocket(_clientSocketWithFirstNode);
 		closesocket(_clientSocketWithDS);
+		_pipe.close();
 	}
 	catch (...) {}
 }
@@ -129,13 +131,11 @@ RequestInfo Client::nodeOpening(const bool& regular)
 		return ri;
 	}
 
-	do
-	{
-		std::cout << "enter amount of nodes to open (between " + std::to_string(MIN_NODES_TO_OPEN) + " - " + std::to_string(MAX_NODES_TO_OPEN) + "): ";
-		std::cin >> nor.amount_to_open;
-		std::cout << "enter amount of nodes to use: ";
-		std::cin >> nor.amount_to_use;
-	} while (nor.amount_to_open > MAX_NODES_TO_OPEN || nor.amount_to_open < MIN_NODES_TO_OPEN || nor.amount_to_use < MIN_NODES_TO_OPEN);
+	char* buffer = new char[1];
+	string msg = _pipe.getMessageFromGraphics();
+	nor.amount_to_open = std::stoi(msg.substr(0, msg.find(',')));
+	nor.amount_to_use = std::stoi(msg.substr(msg.find(',') + 1));
+	std::cout << "nor.amount_to_open: " << nor.amount_to_open << ", " << "nor.amount_to_use: " << nor.amount_to_use << std::endl;
 	data = SerializerRequests::serializeRequest(nor);
 	data = _aes.encrypt(data);
 	rr.buffer = Helper::buildRR(data, NODE_OPEN_RC, data.size());
@@ -144,9 +144,14 @@ RequestInfo Client::nodeOpening(const bool& regular)
 	ri = Helper::waitForResponse_AES(_clientSocketWithDS, _aes, false); //decription
 	if (ri.id == unsigned int(CIRCUIT_CONFIRMATION_STATUS))
 	{
+		buffer[0] = char('1');
+		_pipe.sendMessageToGraphics(buffer, 1);
 		return ri;
 	}
 	std::cout << "[NODE OPENING] input invalid! try again.\n";
+	buffer[0] = char('0');
+	_pipe.sendMessageToGraphics(buffer, 1);
+	delete[] buffer;
 	return nodeOpening(regular);
 }
 
@@ -199,7 +204,6 @@ void Client::dataLayersDecription(std::vector<unsigned char>& data)
 
 void Client::HandleTorClient(const bool regular)
 {
-	std::string domain;
 	RequestInfo ri;
 	RequestResult rr;
 	std::vector<unsigned char> data;
@@ -402,50 +406,64 @@ void Client::HandleTorClient(const bool regular)
 
 		//SENDING HTTP GET START
 		HttpGetRequest httpGetRequest;
-		int option = 0;
 		while (true)//add if work
 		{
-			do
+			std::cout << "getting msg from graphics\n";
+			string msg = _pipe.getMessageFromGraphics();
+
+			if (msg.empty()) {
+				std::cout << "No message available from graphics, retrying...\n";
+				std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Short delay before retry
+				break;  // Skip this iteration if there's no message
+			}
+
+			int length = std::stoi(msg.substr(0, msg.find(',')));
+			httpGetRequest.domain = msg.substr(msg.find(',') + 1, length);
+			std::cout << "domain is: " << httpGetRequest.domain << std::endl;
+
+			data = SerializerRequests::serializeRequest(httpGetRequest);
+			dataLayersEncription(data);
+			rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
+
+			Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
+			std::cout << "[HANDLER] sends httpGet Request:\n";
+			ri = Helper::waitForResponse(_clientSocketWithFirstNode);
+			dataLayersDecription(ri.buffer);
+			HttpGetResponse httpGetResponse;
+			httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
+
+			if (Errors::HTTP_MSG_ERROR == ri.id)
 			{
-				std::cout << "choose an action: \n1. send http get msg\n2. close connection\n";
-				std::cin >> option;
-			} while (option != 1 && option != 2);
-
-			if (option == 1)
-			{
-				std::cout << "Enter domain: ";
-				std::cin >> domain;
-				if (!domainValidationCheck(domain))
-					throw std::runtime_error("[HANDLER] domain is illegal");
-				httpGetRequest.domain = domain;
-
-				data = SerializerRequests::serializeRequest(httpGetRequest);
-				dataLayersEncription(data);
-				rr.buffer = Helper::buildRR(data, HTTP_MSG_RC, data.size(), circuit_id);
-
-				Helper::sendVector(_clientSocketWithFirstNode, rr.buffer);
-				std::cout << "[HANDLER] sends httpGet Request:\n";
-				ri = Helper::waitForResponse(_clientSocketWithFirstNode);
-				dataLayersDecription(ri.buffer);
-				HttpGetResponse httpGetResponse;
-				httpGetResponse = DeserializerResponses::deserializeHttpGetResponse(ri);
-
-				if (Errors::HTTP_MSG_ERROR == ri.id)
+				std::cerr << "[HANDLER] Could not get HTML of " << httpGetRequest.domain << std::endl;
+				char buffer[1] = { '0' };
+				if (!_pipe.sendMessageToGraphics(buffer,1))
 				{
-					std::cerr << "[HANDLER] Could not get HTML of " << domain << std::endl;
-				}
-				else
-				{
-					std::cout << "[HANDLER] HTML of " << domain << ": " << std::endl;
-					std::cout << httpGetResponse.content << std::endl;
+					std::cerr << "Failed to send error response back to graphics.\n";
 				}
 			}
-			else if (option == 2)
+			else
 			{
-				rr.buffer = Helper::buildRR(CLOSE_CONNECTION_RC, circuit_id);
-				Helper::sendVector(_clientSocketWithDS, rr.buffer);
-				std::cout << "[Handler] sends close connection request\n";
-				exit(1);
+				int i = 0;
+				std::cout << "[HANDLER] HTML of " << httpGetRequest.domain << ": " << std::endl;
+				string length = std::to_string(httpGetResponse.content.size());
+				char* buffer = new char[length.size() + 1 + httpGetResponse.content.size()]; //switch to exact len with char* if needed 
+				for (i = 0; i < length.size(); i++)
+				{
+					buffer[i] = length[i];
+				}
+				buffer[length.size()] = ',';
+				for (i = length.size() + 1; i < httpGetResponse.content.size(); i++)
+				{
+					buffer[i] = httpGetResponse.content[i];
+				}
+
+				if (!_pipe.sendMessageToGraphics(buffer, length.size() + 1 + httpGetResponse.content.size()))
+				{
+					std::cerr << "Failed to send data back to graphics.\n";
+				}
+
+				delete[] buffer;
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
 		//SENDING HTTP GET END
@@ -466,17 +484,49 @@ void Client::HandleTorClient(const bool regular)
 		_aes = AES();
 		_ecdhe = ECDHE();
 		std::cout << "[HANDLER] closed socket with first node\n";
-		std::cout << "[HANDLER] restarting convertation\n";
-		HandleTorClient(false);
+		std::cout << "[HANDLER] close connection\n";
+		system("pause");
+		//std::cout << "[HANDLER] restarting convertation\n";
+		//HandleTorClient(false);
 	}
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	try
 	{
+		if (argc != 2)
+			std::cout << "client gets " << argc << " instade of 2 \n";
+		//DONE INISHIALIZE PYTHON GUI
+		std::cout << "inishialize back Pipe\n";
+		Pipe pipe = Pipe(argv[1]);
+		srand(time_t(NULL));
+
+		bool isConnect = pipe.connect();
+
+		string ans;
+		while (!isConnect) //reconnect manganon optional
+		{
+			std::cout << "cant connect to orbit graphics" << std::endl;
+			std::cout << "Do you try to connect again or exit? (0-try again, 1-exit)" << std::endl;
+			std::cin >> ans;
+
+			if (ans == "0")
+			{
+				std::cout << "trying connect again.." << std::endl;
+				Sleep(3000);
+				isConnect = pipe.connect();
+			}
+			else
+			{
+				pipe.close();
+				return 1;
+			}
+		}
+		std::cout << "succesfully connected to gui pipe!\n";
 		WSAInitializer wsa = WSAInitializer();
-		Client client = Client();
+		Client client = Client(pipe);
+
 		client.connectToServer("127.0.0.1", COMMUNICATE_SERVER_PORT);
 
 		client.HandleTorClient();
