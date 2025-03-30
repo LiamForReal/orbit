@@ -103,7 +103,8 @@ class BrowserWindow(OrbitMainWindow):
             </ul>
         """)
         
-        self.html_renderer.setFixedSize(QSize(700,350))
+        self.html_renderer.setFixedSize(QSize(730,350))
+        self.html_renderer.setStyleSheet("margin-left: 20px;")
         layout.addWidget(label)
 
         search_layout = QHBoxLayout()
@@ -146,7 +147,91 @@ class BrowserWindow(OrbitMainWindow):
         length = int(length)
         if length != 0:
             html = self.pipe_read(length)
-            self.html_renderer.setHtml(html)
+            html = html.strip("\x00\r\n")
+            if "<title>301 Moved Permanently</title>" not in html or "<TITLE>301 Moved</TITLE>" not in html:
+                try:
+                    html = html.encode("utf-8", "ignore").decode("utf-8")
+                except UnicodeDecodeError:
+                    print("Error: HTML encoding issue detected.")
+                    html = "<p style='color:red;'>No content received.</p>"  # Reset to avoid crashes
+                self.html_renderer.setHtml(html)
+            else: 
+                link = ""
+                title = "<title>301 Moved Permanently</title>"
+                
+                # Check if "301 Moved" is present in the HTML
+                if "<TITLE>301 Moved</TITLE>" in html:
+                    title = "<TITLE>301 Moved</TITLE>"
+                    
+                    # Try to extract the link from the <A> tag
+                    start = html.find("<A")
+                    end = html.find("</A>") + 4  # Include the </A> tag
+                    if start != -1 and end != -1:
+                        link = html[start:end]
+                        print("Link is: " + link)
+                    else:
+                        link = "<p style='color:red;'>No redirection link found.</p>"
+                
+                # Generate the HTML content with title and link
+                self.html_renderer.setHtml("""
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>""" + title + """</title>
+                    <style>
+                        body {
+                            font-family: Arial, sans-serif;
+                            background-color: #f7f7f7;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            height: 100vh;
+                            margin: 0;
+                        }
+                        .container {
+                            background-color: white;
+                            padding: 40px;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                            text-align: center;
+                        }
+                        h1 {
+                            color: #d9534f;
+                            font-size: 36px;
+                            margin-bottom: 20px;
+                        }
+                        p {
+                            font-size: 18px;
+                            color: #333;
+                        }
+                        .link-button {
+                            display: inline-block;
+                            margin-top: 20px;
+                            padding: 10px 20px;
+                            background-color: #007bff;
+                            color: white;
+                            text-decoration: none;
+                            font-weight: bold;
+                            border-radius: 5px;
+                            transition: background-color 0.3s;
+                        }
+                        .link-button:hover {
+                            background-color: #0056b3;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1>""" + title +  """</h1>
+                        <p>The page you requested has been moved to a new location.</p>
+                        <p>""" + link + """</p>
+                    </div>
+                </body>
+                </html>
+                """)
+
         else:
             self.html_renderer.setHtml("<p style='color:red;'>No content received.</p>")
 
@@ -215,13 +300,12 @@ class IntialSettingsWindow(OrbitMainWindow):
         # Firstly, send the input to the server for validation,
         # and for circuit opening and connection.
         #TODO: check logic here
-
+        self.error_label.setText("")
         self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
         result = self.pipe_read(1)
         print("the result is: " + result)
         if str(result) == "0":
             self.error_label.setText("Error: ...TBD...")
-            self.__init__(pipe)
         elif str(result) == "1":
             self.browserWindow = BrowserWindow(self.pipe)
             self.browserWindow.show()
@@ -236,7 +320,7 @@ class MainWindow(OrbitMainWindow):
         layout.setContentsMargins(10, 10, 10, 10)
 
         image_label = QLabel(self)
-        pixmap = QPixmap('orbit_white.png').scaled(400, 400, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
+        pixmap = QPixmap('images/orbit_white.png').scaled(400, 400, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
         image_label.setPixmap(pixmap)
 
         self.start_button = QPushButton("Start Browsing!")

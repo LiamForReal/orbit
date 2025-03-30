@@ -446,12 +446,13 @@ void Client::HandleTorClient(const bool regular)
 				int i = 0;
 				std::cout << "[HANDLER] HTML of " << httpGetRequest.domain << ": " << std::endl;
 				string length = std::to_string(httpGetResponse.content.size());
+
 				char* buffer = new char[length.size() + 1 + httpGetResponse.content.size()]; //switch to exact len with char* if needed 
 				for (i = 0; i < length.size(); i++)
 				{
-					buffer[i] = length[i];
+					buffer[i] = length[i];//8 0 
 				}
-				buffer[length.size()] = ',';
+				buffer[length.size()] = ',';// , 
 				for (i = length.size() + 1; i < httpGetResponse.content.size(); i++)
 				{
 					buffer[i] = httpGetResponse.content[i];
