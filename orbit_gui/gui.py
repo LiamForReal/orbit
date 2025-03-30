@@ -4,8 +4,13 @@ import sys
 import os
 import time
 from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtCore import QUrl
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QLabel, QSpinBox, QLineEdit, QTextBrowser
 from PyQt6.QtGui import QPixmap, QPalette, QColor
+
+BYTES_TO_GET = 10240
+BYTES_TO_SEND = 10240
 
 class OrbitMainWindow(QMainWindow):
     def __init__(self, pipe) -> None:
@@ -85,6 +90,8 @@ class BrowserWindow(OrbitMainWindow):
         search_button.clicked.connect(self.on_search_button_clicked)
 
         self.html_renderer = QTextBrowser()
+        self.html_renderer.setOpenExternalLinks(False)  # Prevents links from opening externally
+        self.html_renderer.anchorClicked.connect(self.on_link_clicked)  # Handle link clicks
 
         self.html_renderer.setHtml("""
             <h2 style="color:rgb(190,120,255);">Welcome to ORBit's HTML Renderer</h2>
@@ -95,19 +102,19 @@ class BrowserWindow(OrbitMainWindow):
                 <li>Images and <a href="https://www.google.com" style="color:lightblue;">links</a></li>
             </ul>
         """)
-
+        
+        self.html_renderer.setFixedSize(QSize(700,350))
         layout.addWidget(label)
 
         search_layout = QHBoxLayout()
         search_layout.addSpacing(20)
         search_layout.addWidget(self.search_bar, alignment=Qt.AlignmentFlag.AlignCenter)
         search_layout.addWidget(search_button, alignment=Qt.AlignmentFlag.AlignCenter)
-        
+
         layout.addSpacing(30)
         layout.addLayout(search_layout)
 
         layout.addWidget(self.error_label, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
-
         layout.addWidget(self.html_renderer)
         layout.addStretch()
 
@@ -116,31 +123,36 @@ class BrowserWindow(OrbitMainWindow):
 
         self.setCentralWidget(main_widget)
 
-
     def on_search_button_clicked(self, checked) -> None:
         query = self.search_bar.text()
-        if (query.startswith('https://www.') or query.startswith('http://www.')) and (query.count(".") > 1):
-            print("Good")
-            self.error_label.setText("")
+        if not (query.startswith('https://www.') or query.startswith('http://www.')):
+            query = "https://www." + query
+            if query.count('.') <= 1:
+                query = query + ".com"
+            self.search_bar.setText(query)
 
-            self.pipe_write(str(len(query)) + "," + query)
-            
-            char = ''
-            length = ""
-            while char != ',':
-                char = self.pipe_read(1)
-                if char != ',':
-                    length += char
-            
-            print(length)
-            length = int(length)
-            if length != 0:
-                html = self.pipe_read(length)
-                self.html_renderer.setHtml(html)
-            else:
-                self.html_renderer.setHtml("")
+        self.error_label.setText("")
+
+        self.pipe_write(str(len(query)) + "," + query)
+        
+        char = ''
+        length = ""
+        while char != ',':
+            char = self.pipe_read(1)
+            if char != ',':
+                length += char
+        
+        print(length)
+        length = int(length)
+        if length != 0:
+            html = self.pipe_read(length)
+            self.html_renderer.setHtml(html)
         else:
-            self.error_label.setText("Invalid URL query!")
+            self.html_renderer.setHtml("<p style='color:red;'>No content received.</p>")
+
+    def on_link_clicked(self, url: QUrl) -> None:
+        """When a user clicks a link in QTextBrowser, update the search bar."""
+        self.search_bar.setText(url.toString())
 
 
 class IntialSettingsWindow(OrbitMainWindow):
@@ -206,8 +218,8 @@ class IntialSettingsWindow(OrbitMainWindow):
 
         self.pipe_write(str(self.nodes_to_open_spinbox.value()) + "," + str(self.path_length_spinbox.value()))
         result = self.pipe_read(1)
-        print("the result is: " + result[0])
-        if str(result[0]) == "0":
+        print("the result is: " + result)
+        if str(result) == "0":
             self.error_label.setText("Error: ...TBD...")
             self.__init__(pipe)
         elif str(result) == "1":
@@ -252,14 +264,15 @@ def main():
 
     # Append the argument to the pipe name
     pipe_name = fr"\\.\pipe\orbitPipe_{sys.argv[1]}"
-    
+   
+
     pipe = win32pipe.CreateNamedPipe(
         pipe_name,
         win32pipe.PIPE_ACCESS_DUPLEX,  # Read & write access
         win32pipe.PIPE_TYPE_MESSAGE | win32pipe.PIPE_READMODE_MESSAGE | win32pipe.PIPE_WAIT,
         1,  # Max instances
-        5120,  # Output buffer size
-        5120,  # Input buffer size
+        BYTES_TO_SEND,  # Output buffer size
+        BYTES_TO_GET,  # Input buffer size
         0,  # Timeout (0 = default)
         None  # Default security
     )
