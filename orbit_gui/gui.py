@@ -68,7 +68,7 @@ class BrowserWindow(OrbitMainWindow):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(10, 10, 10, 10)
 
-        label = QLabel(self, text="ORBIT Browser Search Bar")
+        label = QLabel(self, text="ORBIT Sentinel Search 🛡️")
         label.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         label.setStyleSheet("font-size: 30px")
 
@@ -126,11 +126,15 @@ class BrowserWindow(OrbitMainWindow):
 
     def on_search_button_clicked(self, checked) -> None:
         query = self.search_bar.text()
-        if not (query.startswith('https://www.') or query.startswith('http://www.')):
-            query = "https://www." + query
+        if len(query) == 0:
+            query = "https://www.example.com"
+        else:
+            if not (query.startswith('https://www.') or query.startswith('http://www.')):
+                query = "https://www." + query
             if query.count('.') <= 1:
                 query = query + ".com"
-            self.search_bar.setText(query)
+        
+        self.search_bar.setText(query)
 
         self.error_label.setText("")
 
