@@ -1,4 +1,4 @@
-
+docker desktop must be open and already logged and you need to change the user name in the docker file to yours 
 python installations
 yaml
 
