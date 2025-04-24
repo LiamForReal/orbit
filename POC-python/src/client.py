@@ -23,6 +23,16 @@ class Client:
                     print("Bad input")
                     client_socket.close()
                     exit(1)
+                
+                if int(nodes) > 20 or int(path_nodes) > 20:
+                    print("Input exceeds limit of nodes")
+                    client_socket.close()
+                    exit(1)                    
+                
+                if int(nodes) < int(path_nodes):
+                    print("Path cannot be greater than total amount of nodes!")
+                    client_socket.close()
+                    exit(1)
                     
                 message = {
                     NODES : int(nodes),
