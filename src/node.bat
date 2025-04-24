@@ -1,2 +1,0 @@
-python node.py
-pause

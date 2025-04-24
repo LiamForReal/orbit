@@ -1,0 +1,45 @@
+/*
+This file servers as an example of how to use Pipe.h file.
+It is recommended to use the following code in your project,
+in order to read and write information from and to the Backend
+*/
+
+//1. include pipe.h
+#include "Pipe.h"
+
+
+function //inside function
+{
+	srand(time_t(NULL));
+
+	Pipe p; //2. create pipe object
+	bool isConnect = p.connect(); // 3. check connection
+
+	string ans;
+	while (!isConnect) //reconnect manganon optional
+	{
+		cout << "cant connect to graphics" << endl;
+		cout << "Do you try to connect again or exit? (0-try again, 1-exit)" << endl;
+		std::cin >> ans;
+
+		if (ans == "0")
+		{
+			cout << "trying connect again.." << endl;
+			Sleep(5000);
+			isConnect = p.connect();
+		}
+		else
+		{
+			p.close();
+			return;
+		}
+	}
+
+	char msgToGraphics[10240]; //4. should be the length of the buffer size 10kb
+
+	p.sendMessageToGraphics(msgToGraphics);//5. send just sends the char buffer
+
+	string msgFromGraphics = p.getMessageFromGraphics(); //6. recv msg to string (depends on gavriel's pipe)
+
+	p.close();//7. closing the pipe
+}
