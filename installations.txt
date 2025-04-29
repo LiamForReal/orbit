@@ -3,12 +3,14 @@ python installations
 yaml
 
 docker installations
-docker desktop -> open docker account -> change C:\Users\Magshimim\orbit\src\dockerFiles\dockerFile according to the account
-docker basic image: mcr.microsoft.com/windows/nanoserver:ltsc2019 -> C:\Users\Magshimim\orbit\src\Node\build_node_image.bat
+first change the dockers platform to windows if it is on linox
+docker desktop -> open docker account -> change ...\orbit\src\dockerFiles\dockerFile according to the account
+download docker basic image: mcr.microsoft.com/windows/nanoserver:ltsc2019 -> run: ...\orbit\src\Node\build_node_image.bat
 
 vcpkg installations
-... 
+boost (in the lib uint2048_t,cpp_int, uint256_t)
 
 gui installations
 pyQt6
 
+after all this you all set up you can use orbit in the dir run_orbit run the server and then one or more clients there is a logs dir to the client backhand you can see. thanks for using orbit
