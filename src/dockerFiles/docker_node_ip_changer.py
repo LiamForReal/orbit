@@ -2,6 +2,7 @@ import random
 import ipaddress
 import yaml
 import sys
+from pathlib import Path
 
 # Define the network range
 subnet = ipaddress.IPv4Network("192.168.2.0/24")
@@ -26,7 +27,7 @@ def main():
 
     services_to_update = sys.argv[1:]
 
-    with open("C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml", "r") as file:
+    with open(f"{Path(__file__).parent}/Docker-compose.yaml", "r") as file:
         compose_data = yaml.safe_load(file)
 
     # Filter services present in the Docker Compose file
@@ -42,7 +43,7 @@ def main():
         compose_data["services"][service]["networks"]["TOR_NETWORK"]["ipv4_address"] = ip
         compose_data["services"][service]["environment"]["NODE_IP"] = ip
 
-    with open("C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml", "w") as file:
+    with open(f"{Path(__file__).parent}/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)
 
     print("Assigned random IPs:", random_ips)

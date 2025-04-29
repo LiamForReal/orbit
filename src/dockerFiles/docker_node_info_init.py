@@ -2,6 +2,7 @@ import random
 import ipaddress
 import yaml
 import socket
+from pathlib import Path
 
 # Define the network range
 subnet = ipaddress.IPv4Network("192.168.2.0/24")
@@ -35,7 +36,7 @@ def generate_random_port(count):
     return ports
 
 def main():
-    with open("C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml", "r") as file:
+    with open(f"{Path(__file__).parent}/Docker-compose.yaml", "r") as file:
         compose_data = yaml.safe_load(file)
 
     num_services = len(compose_data["services"])
@@ -61,7 +62,7 @@ def main():
         compose_data["services"][service]["ports"] = updated_ports
 
     # Write back to the Docker-compose file
-    with open("C:/Users/Magshimim/orbit/src/dockerFiles/Docker-compose.yaml", "w") as file:
+    with open(f"{Path(__file__).parent}/Docker-compose.yaml", "w") as file:
         yaml.dump(compose_data, file)
     
     content = ""
