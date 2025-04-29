@@ -1,6 +1,6 @@
 # ORBit
 
-
+visit orbit/SETUP_INSTRACTIONS.txt
 
 ## Getting started
 
