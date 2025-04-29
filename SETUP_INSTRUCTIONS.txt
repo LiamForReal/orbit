@@ -1,57 +1,40 @@
-ORBIT TOOL INSRACTIONS!!!
+ORBit – Setup Instructions
+==========================
 
+Follow the steps below to set up and run ORBit successfully.
 
-first: 
+----------------------------------
+1. Install and Set Up Docker Desktop
+----------------------------------
 
-open docker desktop you must be open and already logged
+- If you don’t have Docker Desktop installed:
+  • Download from: https://www.docker.com/products/docker-desktop/
+  • Run the installer.
+  • During installation, **select**:
+    "Use WSL 2 instead of Hyper-V" (recommended).
+  • Restart your PC if prompted.
+  • Open Docker Desktop and **sign up** or **log in** to your Docker account.
 
-if you dont have docker desktop yet:
-Download Docker Desktop from https://www.docker.com/products/docker-desktop/
+- If you already have Docker Desktop:
+  • Ensure it is set to use **Windows containers** (not Linux).
+    To switch: right-click the Docker icon in the system tray → “Switch to Windows containers…”
 
-Run the installer.
+----------------------------------
+2. Update Docker Username in Build Script
+----------------------------------
 
-During installation, make sure:
+- Edit the following file:
+  `...\orbit\src\Node\build_node_image.bat`
 
-"Use WSL 2 instead of Hyper-V" is selected (recommended for most users). importent!!!
+- Replace the existing Docker username with **your own Docker Hub username**.
 
-Restart your PC if prompted.
+----------------------------------
+3. Required Installations
+----------------------------------
 
-Then open the app and signUp a new docker user
-
-
-seconed (only if you already had a docker desktop) : 
-
-make sure your docker desktop oparate on windows workspace and not on linox
-
-
-thired:
-
-you need to change the user name in the ...\orbit\src\Node\build_node_image.bat to yours docker user name
-
-
-last - recomended installations if you lake of:
-
-
-python installations:
-
-install python on https://www.python.org/downloads/ if you dont already have 
-where python -> copy path without python.exe -> pip install yaml
-
-docker installations:
-
-download docker basic image: mcr.microsoft.com/windows/nanoserver:ltsc2019 from here https://hub.docker.com/r/microsoft/windows-nanoserver
--> excute: ...\orbit\src\Node\build_node_image.bat
-
-
-vs vcpkg installations:
-boost (in the lib uint2048_t,cpp_int, uint256_t)
-
-if you dont have boost lib via vcpkg you can download via .../src/vcpkg_install_boost.bat
-
-gui installations:
-where python -> copy path without python.exe -> pip install pyQt6
-
-
-after all this you all set up!!!
-you can use orbit in the dir run_orbit run the server and then one or more clients there is a logs dir to the client backhand you can see. 
-thanks for using orbit
+Python:
+-------
+- Download from: https://www.python.org/downloads/
+- Once installed, run:
+  ```bash
+  where python
